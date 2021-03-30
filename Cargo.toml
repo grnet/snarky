@@ -5,6 +5,7 @@ authors = ["fmerg <fmerg@grnet.gr>"]
 edition = "2018"
 
 [dependencies]
+ark-ec = { path="./depends/algebra/ec" }
 
 [dev-dependencies]
 criterion = "0.3.4"

@@ -1,3 +1,5 @@
+use ark_ec::PairingEngine;
+
 pub struct SRS {
 }
 
