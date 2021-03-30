@@ -4,42 +4,41 @@ use ark_ec::{
     models::{ModelParameters, SWModelParameters},
     short_weierstrass_jacobian::*,
 };
-use ark_poly;
+use ark_poly::univariate::DensePolynomial as Polynomial;    // TODO: Maybe use sparse?
 
 use crate::context::Sample;
 
-type BigNum = u64;  // TODO: Alias correct type from ark-ec
+type Scalar = u64;  // TODO: Alias correct type from ark-ec
 type G1 = u32;      // TODO: Alias correct type from ark-ec
 type G2 = u64;      // TODO: Alias correct type from ark-ec
 type U = (Vec<(G1, G2)>, Vec<(G1, G1, G2, G2)>);
 type V = (G1, G2, Vec<G1>, Vec<G1>);
-type dim = u32; // QAP dimension
 
 pub struct QAP {
-    l: dim,
-    m: dim,
-    n: dim,
-    // u: u32,
-    // v: u32,
-    // w: u32,
-    // t: u32,
+    l: usize,
+    m: usize,
+    n: usize,
+    // u: Polynomial<...>,
+    // v: Polynomial<...>,
+    // w: Polynomial<...>,
+    // t: Polynomial<...>,
 }
 
 impl QAP {
-    pub fn create_default(m: dim, n: dim, l: dim) -> Self {
+    pub fn create_default(m: usize, n: usize, l: usize) -> Self {
         Self { l, m, n }
     }
 }
 
 pub struct Trapdoor {
-    a: BigNum,
-    b: BigNum,
-    d: BigNum,
-    x: BigNum,
+    a: Scalar,
+    b: Scalar,
+    d: Scalar,
+    x: Scalar,
 }
 
 impl Trapdoor {
-    fn create(a: BigNum, b: BigNum, d: BigNum, x: BigNum) -> Self {
+    fn create(a: Scalar, b: Scalar, d: Scalar, x: Scalar) -> Self {
         Self { a, b, d, x }
     }
     pub fn create_from_units() -> Self {
