@@ -1,0 +1,3 @@
+[submodule "depends/algebra"]
+	path = depends/algebra
+	url = https://github.com/arkworks-rs/algebra.git

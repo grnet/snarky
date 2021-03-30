@@ -2,7 +2,11 @@
 
 Rust implementation of [Snarky Ceremonies](https://eprint.iacr.org/2021/219.pdf).
 
-## Prerequisites
+## Setup
+
+```commandline
+git clone https://gitlab.grnet.gr/priviledge/snarky.git --recurse-submodules
+```
 
 ## Demo
 
@@ -13,6 +17,10 @@ Rust implementation of [Snarky Ceremonies](https://eprint.iacr.org/2021/219.pdf)
 ## Usage
 
 ## Development
+
+```commandline
+git submodule update --remote
+```
 
 ```commandline
 ./run-container.sh
