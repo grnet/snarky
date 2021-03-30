@@ -9,15 +9,20 @@ use criterion::{
 };
 use snarky::flow::{QAP, Trapdoor, setup, update, verify};
 
+type dimensions = (u32, u32, u32);
+
 
 fn bench_setup(c: &mut Criterion) {
     let mut group = c.benchmark_group("setup");
-    // TODO: Parametrize with QAP dimensions instead
-    for size in [10, 100, 1000].iter() {
-        let qap = QAP {};
-        let trapdoor = Trapdoor {};
+    for (l, m, n) in [
+        (10, 10, 10),
+        (100, 100, 100),
+        (1000, 1000, 100),
+    ].iter() {
+        let qap = QAP::create_default(*l, *m, *n);
+        let trapdoor = Trapdoor::create_from_units();
         group.bench_function(
-            format!("Generate SRS with size {}", size),
+            format!("Generate SRS with l:{}, m:{}, n:{}", l, m, n),
             |b| b.iter(|| setup(&trapdoor, &qap)),
         );
     }
@@ -26,13 +31,16 @@ fn bench_setup(c: &mut Criterion) {
 
 fn bench_update(c: &mut Criterion) {
     let mut group = c.benchmark_group("update");
-    // TODO: Parametrize with QAP dimensions instead
-    for size in [10, 100, 1000].iter() {
-        let qap = QAP {};
-        let trapdoor = Trapdoor {};
+    for (l, m, n) in [
+        (10, 10, 10),
+        (100, 100, 100),
+        (1000, 1000, 100),
+    ].iter() {
+        let qap = QAP::create_default(*l, *m, *n);
+        let trapdoor = Trapdoor::create_from_units();
         let srs = setup(&trapdoor, &qap);
         group.bench_function(
-            format!("Update SRS with size {}", size),
+            format!("Update SRS with l:{}, m:{}, n:{}", l, m, n),
             |b| b.iter(|| update(&qap, &srs)),
         );
     }
@@ -41,14 +49,17 @@ fn bench_update(c: &mut Criterion) {
 
 fn bench_verify(c: &mut Criterion) {
     let mut group = c.benchmark_group("verify");
-    // TODO: Parametrize with QAP dimensions instead
-    for size in [10, 100, 1000].iter() {
-        let qap = QAP {};
-        let trapdoor = Trapdoor {};
+    for (l, m, n) in [
+        (10, 10, 10),
+        (100, 100, 100),
+        (1000, 1000, 100),
+    ].iter() {
+        let qap = QAP::create_default(*l, *m, *n);
+        let trapdoor = Trapdoor::create_from_units();
         let srs = setup(&trapdoor, &qap);
         let srs = update(&qap, &srs);
         group.bench_function(
-            format!("Verify SRS with size {}", size),
+            format!("Verify SRS with l:{}, m:{}, n:{}", l, m, n),
             |b| b.iter(|| verify(&qap, &srs)),
         );
     }
@@ -58,12 +69,16 @@ fn bench_verify(c: &mut Criterion) {
 fn bench_flow(c: &mut Criterion) {
     let mut group = c.benchmark_group("flow");
     // TODO: Parametrize with QAP dimensions instead
-    for size in [10, 100, 1000].iter() {
+    for (l, m, n) in [
+        (10, 10, 10),
+        (100, 100, 100),
+        (1000, 1000, 100),
+    ].iter() {
         group.bench_function(
-            format!("Bench overall flow with size {}", size),
+            format!("Verify SRS with l:{}, m:{}, n:{}", l, m, n),
             |b| b.iter(|| {
-                let qap = QAP {};
-                let trapdoor = Trapdoor {};
+                let qap = QAP::create_default(*l, *m, *n);
+                let trapdoor = Trapdoor::create_from_units();
                 let srs = setup(&trapdoor, &qap);
                 let srs = update(&qap, &srs);
                 verify(&qap, &srs)
