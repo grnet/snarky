@@ -6,6 +6,7 @@ edition = "2018"
 
 [dependencies]
 ark-ec = { path="./depends/algebra/ec" }
+ark-poly = { path="./depends/algebra/poly" }
 
 [dev-dependencies]
 criterion = "0.3.4"

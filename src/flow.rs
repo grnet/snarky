@@ -4,6 +4,7 @@ use ark_ec::{
     models::{ModelParameters, SWModelParameters},
     short_weierstrass_jacobian::*,
 };
+use ark_poly;
 
 use crate::context::Sample;
 
