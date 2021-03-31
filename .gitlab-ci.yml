@@ -1,0 +1,10 @@
+stages:
+  - build
+
+test lib:
+  stage: build
+  image: rust:latest
+  interruptible: true
+  script:
+    - cargo build --verbose
+    - cargo test --verbose
