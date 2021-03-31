@@ -8,6 +8,7 @@ edition = "2018"
 ark-ec = { path="./depends/algebra/ec" }
 ark-poly = { path="./depends/algebra/poly" }
 bls12_381 = "0.4.0"
+rand = "0.8.3"
 
 [dev-dependencies]
 criterion = "0.3.4"

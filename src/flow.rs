@@ -1,12 +1,4 @@
-// use ark_ec::models::bn::{g1, g2};
-
-use ark_ec::{
-    models::{ModelParameters, SWModelParameters},
-    short_weierstrass_jacobian::*,
-};
 use ark_poly::univariate::DensePolynomial as Polynomial;    // TODO: Maybe use sparse?
-
-use crate::context::Sample;
 
 type Scalar = u64;  // TODO: Alias correct type from ark-ec
 type G1 = u32;      // TODO: Alias correct type from ark-ec

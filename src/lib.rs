@@ -2,6 +2,6 @@
 //!
 //! The `snarky` crate implements ...
 
-mod macros;
-mod context;
 pub mod flow;
+mod backend;
+mod util;
