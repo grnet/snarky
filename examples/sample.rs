@@ -32,6 +32,17 @@ fn main() {
     let right = mult_2!(H, factor_2);   // 9H
     let res = pair!(left, right);       // 7G * 9H
 
+    // How to use polynomial
+    
+    use snarky::Univariate;
+    let poly = Univariate::create(vec![
+        scalar!(1), scalar!(2), scalar!(3),
+    ]);
+    let r = poly.evaluate(scalar!(7)).unwrap();
+    println!("{}", r);
+    println!("{}", poly.coeff(1));
+    println!("{}", poly.degree());
+
 
     let start = Instant::now();
     println!("--------------------------");

@@ -4,4 +4,5 @@
 
 pub mod flow;
 mod backend;
+pub use backend::Univariate;
 mod util;
