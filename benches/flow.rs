@@ -9,9 +9,6 @@ use criterion::{
 };
 use snarky::flow::{QAP, Trapdoor, setup, update, verify};
 
-type dimensions = (u32, u32, u32);
-
-
 fn bench_setup(c: &mut Criterion) {
     let mut group = c.benchmark_group("setup");
     for (l, m, n) in [
