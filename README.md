@@ -11,7 +11,7 @@ git clone https://gitlab.grnet.gr/priviledge/snarky.git --recurse-submodules
 ## Demo
 
 ```commandline
-./demo.sh
+./demo.sh [--release]
 ```
 
 ## Usage

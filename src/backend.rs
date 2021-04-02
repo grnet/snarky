@@ -52,9 +52,36 @@ macro_rules! mult_1 {
 }
 
 #[macro_export]
+macro_rules! __mult_1 {
+    ($elem: expr, $factor: expr) => {
+        ::bls12_381::G1Affine::from($elem * $factor)
+    }
+}
+
+#[macro_export]
 macro_rules! mult_2 {
     ($elem: expr, $factor: expr) => {
         ::bls12_381::G2Affine::from($elem * $factor)
+    }
+}
+
+#[macro_export]
+macro_rules! G1_zero {
+    () => {
+        ::bls12_381::G1Affine::from(
+            ::bls12_381::G1Affine::generator() * 
+            ::bls12_381::Scalar::zero()
+        )
+    }
+}
+
+#[macro_export]
+macro_rules! G2_zero {
+    () => {
+        ::bls12_381::G2Affine::from(
+            ::bls12_381::G2Affine::generator() * 
+            ::bls12_381::Scalar::zero()
+        )
     }
 }
 
@@ -65,7 +92,7 @@ macro_rules! pair {
     }
 }
 
-type F = ::bls12_381::Scalar;
+pub type F = ::bls12_381::Scalar;
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Univariate {
@@ -120,6 +147,11 @@ impl Univariate {
     }
 }
 
+// Export type aliases to be uniformly used accross the project
+pub type Scalar = ::bls12_381::Scalar;
+pub type G1Elem = ::bls12_381::G1Affine;
+pub type G2Elem = ::bls12_381::G2Affine;
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -156,6 +188,22 @@ mod tests {
     #[test]
     fn test_G2_gen() {
         assert_eq!(G2Affine::generator(), G2_gen!());
+    }
+
+    #[test]
+    fn test_G1_zero() {
+        assert_eq!(
+            G1Affine::from(G1Affine::generator() * Scalar::zero()), 
+            G1_zero!()
+        );
+    }
+
+    #[test]
+    fn test_G2_zero() {
+        assert_eq!(
+            G2Affine::from(G2Affine::generator() * Scalar::zero()), 
+            G2_zero!()
+        );
     }
 
     #[test]

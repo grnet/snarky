@@ -1,3 +1,3 @@
 #!/bin/bash
 
-cargo run --example flow
+cargo run --example flow $*

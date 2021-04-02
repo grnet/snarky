@@ -10,7 +10,7 @@ use criterion::{
 
 use snarky::{
     scalar, zero, one, rand_scalar, G1_gen, G2_gen,
-    mult_1, mult_2, pair,
+    G1_zero, G2_zero, mult_1, mult_2, pair,
 };
 
 fn bench_scalar(c: &mut Criterion) {
@@ -54,6 +54,20 @@ fn bench_G2_gen(c: &mut Criterion) {
     c.bench_function(
         "G2_gen!",
         |b| b.iter(|| G2_gen!())
+    );
+}
+
+fn bench_G1_zero(c: &mut Criterion) {
+    c.bench_function(
+        "G1_zero!",
+        |b| b.iter(|| G1_zero!())
+    );
+}
+
+fn bench_G2_zero(c: &mut Criterion) {
+    c.bench_function(
+        "G2_zero!",
+        |b| b.iter(|| G2_zero!())
     );
 }
 

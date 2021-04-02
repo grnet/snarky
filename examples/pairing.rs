@@ -1,3 +1,4 @@
+use std::time::Instant;
 use snarky::{
     scalar, zero, one, rand_scalar, G1_gen, G2_gen,
     mult_1, mult_2, pair,
@@ -19,7 +20,15 @@ fn main() {
     // Pairing
     let G = G1_gen!();                  // G1 generator
     let H = G2_gen!();                  // G2 generator
+
+    let start_1 = Instant::now();
     let left  = mult_1!(G, factor_1);   // 7G
+    // let left  = G * factor_1;   // 7G
+    println!("[+] mult_1 in ({:.2?})", start_1.elapsed());
+
+    let start_2 = Instant::now();
     let right = mult_2!(H, factor_2);   // 9H
-    let res = pair!(left, right);       // 7G * 9H
+    println!("[+] mult_2 in ({:.2?})", start_1.elapsed());
+
+    // let res = pair!(left, right);       // 7G * 9H
 }
