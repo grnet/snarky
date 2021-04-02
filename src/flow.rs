@@ -40,7 +40,7 @@ impl QAP {
                 }
             }
             match failed {
-                true => Err("Could not create: unequal lengths encoutered"),
+                true => Err("Could not create: unequal lengths encountered"),
                 _    => Ok(Self { m, n, l, u, v, w, t })
             }
         }

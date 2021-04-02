@@ -52,13 +52,6 @@ macro_rules! mult_1 {
 }
 
 #[macro_export]
-macro_rules! __mult_1 {
-    ($elem: expr, $factor: expr) => {
-        ::bls12_381::G1Affine::from($elem * $factor)
-    }
-}
-
-#[macro_export]
 macro_rules! mult_2 {
     ($elem: expr, $factor: expr) => {
         ::bls12_381::G2Affine::from($elem * $factor)
