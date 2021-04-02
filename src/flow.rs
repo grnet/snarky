@@ -117,7 +117,7 @@ impl SRS {
         // pow macro after testing verification
      
         // Compute first component
-        let c_1 = (0..2 * n - 1)
+        let c1 = (0..2 * n - 1)
             .map(|i| {
                 let exponent = [(i as u64), 0, 0, 0];
                 let res = (
@@ -129,7 +129,7 @@ impl SRS {
             .collect();
 
         // Compute second component
-        let c_2 = (0..n)
+        let c2 = (0..n)
             .map(|i| {
                 let exponent = [(i as u64), 0, 0, 0];
                 let res = (
@@ -142,11 +142,48 @@ impl SRS {
             })
             .collect();
 
-        (c_1, c_2)
+        (c1, c2)
     }
 
     fn generate_v(trapdoor: &Trapdoor, qap: &QAP) -> V {
-        (G1_zero!(), G2_zero!(), Vec::<G1>::new(), Vec::<G1>::new())
+        let a = trapdoor.a;
+        let b = trapdoor.b;
+        let d = trapdoor.d;
+        let x = trapdoor.x;
+        let n = qap.n;
+        let m = qap.m;
+        let l = qap.l;
+        let u = &qap.u;
+        let v = &qap.v;
+        let w = &qap.w;
+        let t = &qap.t;
+
+        let G = G1_gen!();
+        let H = G2_gen!();
+
+        let dinv = d.invert().unwrap();
+
+        let c1 = mult_1!(G, d);
+        let c2 = mult_2!(H, d);
+
+        let c_3 = (l + 1..m + 1)
+            .map(|i| {
+                let ux_i = u[i].evaluate(&x).unwrap();
+                let vx_i = v[i].evaluate(&x).unwrap();
+                let wx_i = w[i].evaluate(&x).unwrap();
+                mult_1!(G, (b * ux_i + a * vx_i + wx_i) * dinv)
+            })
+            .collect();
+
+        let tx = t.evaluate(&x).unwrap();
+        let c_4 = (0..n - 1)
+            .map(|i| {
+                let exponent = [(i as u64), 0, 0, 0];
+                mult_1!(G, x.pow(&exponent) * tx * dinv)
+            })
+            .collect();
+
+        (c1, c2, c_3, c_4)
     }
 }
 

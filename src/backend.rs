@@ -113,7 +113,7 @@ impl Univariate {
     // Horner's method NOTE: Sparse polynomial evaluation can be
     // more efficient with exponentiation optimized with 
     // square-and-add method which is log(N).
-    pub fn evaluate(&self, elm: F) -> Result<F, &'static str> {
+    pub fn evaluate(&self, elm: &F) -> Result<F, &'static str> {
         match self.degree {
             -1 => Err("Cannot evaluate: degree -1"),
             _  => {
@@ -122,7 +122,7 @@ impl Univariate {
                     let n = self.coeffs.len() - 1;
                     result = self.coeffs[n];
                     for i in 0..n {
-                        result *= &elm;
+                        result *= elm;
                         result += &self.coeffs[n - i - 1];
                     }
                 }
@@ -363,12 +363,12 @@ mod tests {
 
             // Degree -1 edge case
             assert_eq!(
-                edge.evaluate(scalar!(elm)), Err("Cannot evaluate: degree -1"));
+                edge.evaluate(&scalar!(elm)), Err("Cannot evaluate: degree -1"));
 
             // Normal case
             let poly = Univariate::create_from_u64(&coeffs);
             assert_eq!(
-                poly.evaluate(scalar!(elm)).unwrap(), scalar!(value));
+                poly.evaluate(&scalar!(elm)).unwrap(), scalar!(value));
         }
     }
 }
