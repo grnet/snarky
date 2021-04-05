@@ -33,7 +33,14 @@ macro_rules! rand_scalar {
 #[macro_export]
 macro_rules! pow {
     ($base:expr, $exp:expr) => {
-        $base.pow(&[$exp, 0, 0, 0])
+        $base.pow(&[$exp as u64, 0, 0, 0])
+    }
+}
+
+#[macro_export]
+macro_rules! contained_in_group {
+    ($elem:expr) => {
+        bool::from($elem.is_on_curve())
     }
 }
 
@@ -207,6 +214,32 @@ mod tests {
     }
 
     #[test]
+    fn test_pow() {
+        let parametrization = map! {
+            (0, 0) => 1, (1, 0) => 1, (2, 0) => 1, (3, 0) =>  1, (7, 0) =>   1,
+            (0, 1) => 0, (1, 1) => 1, (2, 1) => 2, (3, 1) =>  3, (7, 1) =>   7,
+            (0, 2) => 0, (1, 2) => 1, (2, 2) => 4, (3, 2) =>  9, (7, 2) =>  49,
+            (0, 3) => 0, (1, 3) => 1, (2, 3) => 8, (3, 3) => 27, (7, 3) => 343,
+            (0, 4) => 0
+        };
+        for ((base, exp), result) in parametrization {
+            assert_eq!(pow!(scalar!(base), exp), scalar!(result));
+        }
+    }
+
+    #[test]
+    fn test_contained_in_group() {
+        let G = G1_gen!();
+        let H = G2_gen!();
+        let factors = vec![0, 1, 2, 7, 11, 666, 389473847];
+        for factor in factors {
+            let factor = scalar!(factor);
+            assert!(contained_in_group!(mult_1!(G, factor)));
+            assert!(contained_in_group!(mult_2!(H, factor)));
+        }
+    }
+
+    #[test]
     fn test_G1_gen() {
         assert_eq!(G1Affine::generator(), G1_gen!());
     }
@@ -230,6 +263,38 @@ mod tests {
             G2Affine::from(G2Affine::generator() * Scalar::zero()), 
             G2_zero!()
         );
+    }
+
+    #[test]
+    fn test_add_1() {
+        assert_eq!(add_1!(), G1_zero!());
+
+        let G = G1_gen!();
+        assert_eq!(add_1!(G), G);
+        assert_eq!(add_1!(G, G), mult_1!(G, scalar!(2)));
+        assert_eq!(add_1!(G, G, G), mult_1!(G, scalar!(3)));
+        assert_eq!(add_1!(mult_1!(G, scalar!(2)), G), mult_1!(G, scalar!(3)));
+        assert_eq!(add_1!(G, mult_1!(G, scalar!(2))), mult_1!(G, scalar!(3)));
+        assert_eq!(add_1!(G, G, G, G), mult_1!(G, scalar!(4)));
+        assert_eq!(add_1!(mult_1!(G, scalar!(3)), G), mult_1!(G, scalar!(4)));
+        assert_eq!(add_1!(G, mult_1!(G, scalar!(3))), mult_1!(G, scalar!(4)));
+        assert_eq!(add_1!(mult_1!(G, scalar!(2)), mult_1!(G, scalar!(2))), mult_1!(G, scalar!(4)));
+    }
+
+    #[test]
+    fn test_add_2() {
+        assert_eq!(add_2!(), G2_zero!());
+
+        let H = G2_gen!();
+        assert_eq!(add_2!(H), H);
+        assert_eq!(add_2!(H, H), mult_2!(H, scalar!(2)));
+        assert_eq!(add_2!(H, H, H), mult_2!(H, scalar!(3)));
+        assert_eq!(add_2!(mult_2!(H, scalar!(2)), H), mult_2!(H, scalar!(3)));
+        assert_eq!(add_2!(H, mult_2!(H, scalar!(2))), mult_2!(H, scalar!(3)));
+        assert_eq!(add_2!(H, H, H, H), mult_2!(H, scalar!(4)));
+        assert_eq!(add_2!(mult_2!(H, scalar!(3)), H), mult_2!(H, scalar!(4)));
+        assert_eq!(add_2!(H, mult_2!(H, scalar!(3))), mult_2!(H, scalar!(4)));
+        assert_eq!(add_2!(mult_2!(H, scalar!(2)), mult_2!(H, scalar!(2))), mult_2!(H, scalar!(4)));
     }
 
     #[test]

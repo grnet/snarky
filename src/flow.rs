@@ -1,5 +1,5 @@
 use crate::{
-    one, zero, scalar, pow, G1_gen, G2_gen, G1_zero, G2_zero, 
+    one, zero, scalar, pow, contained_in_group, G1_gen, G2_gen, G1_zero, G2_zero, 
     add_1, add_2, mult_1, mult_2, pair};
 use crate::backend::{Scalar, Univariate, 
     G1Elem as G1, 
@@ -21,13 +21,8 @@ pub struct QAP {
 
 impl QAP {
 
-    pub fn create(
-        u: Vec<Univariate>, 
-        v: Vec<Univariate>, 
-        w: Vec<Univariate>, 
-        t: Univariate, 
-        l: usize
-    ) -> Result<Self, &'static str> {
+    pub fn create(u: Vec<Univariate>, v: Vec<Univariate>, w: Vec<Univariate>, 
+        t: Univariate, l: usize) -> Result<Self, &'static str> {
         let m = u.len() - 1;
         if v.len() != m + 1 || w.len() != m + 1 {
             Err("Could not create: unequal lengths for u, v, w")
@@ -65,6 +60,23 @@ impl QAP {
 
         Self::create(u, v, w, t, l).unwrap()    // TODO: Handle error
     }
+
+    pub fn dimensions(&self) -> (usize, usize, usize) {
+        let m = self.m;
+        let n = self.n;
+        let l = self.l;
+        (m, n, l)
+    }
+
+    pub fn collections(&self) -> 
+        (&Vec<Univariate>, &Vec<Univariate>, &Vec<Univariate>, &Univariate) 
+    {
+        let u = &self.u;
+        let v = &self.v;
+        let w = &self.w;
+        let t = &self.t;
+        (u, v, w, t)
+    }
 }
 
 pub struct Trapdoor {
@@ -94,6 +106,14 @@ impl Trapdoor {
             x: rand_scalar!(rng),
         }
     }
+
+    fn extract(&self) -> (Scalar, Scalar, Scalar, Scalar) {
+        let a = self.a;
+        let b = self.b;
+        let d = self.d;
+        let x = self.x;
+        (a, b, d, x)
+    }
 }
 
 pub struct SRS {
@@ -110,26 +130,18 @@ impl SRS {
     }
 
     fn generate_u(trapdoor: &Trapdoor, qap: &QAP) -> U {
-        let a = trapdoor.a;
-        let b = trapdoor.b;
-        let x = trapdoor.x;
+        let (a, b, _, x) = trapdoor.extract();
         let n = qap.n;
 
         let G = G1_gen!();
         let H = G2_gen!();
 
-        // TODO: Create and use backend agnostic 
-        // pow macro after testing verification
-     
         // Compute first component
         let c1 = (0..2 * n - 1)
             .map(|i| {
-                let exponent = [(i as u64), 0, 0, 0];
                 let res = (
-                    mult_1!(G, x.pow(&exponent)),
-                    mult_2!(H, x.pow(&exponent)),
-                    // mult_1!(G, pow!(x, i as u64)),
-                    // mult_2!(H, pow!(x, i as u64)),
+                    mult_1!(G, pow!(x, i)),
+                    mult_2!(H, pow!(x, i)),
                 );
                 res
             })
@@ -137,18 +149,12 @@ impl SRS {
 
         // Compute second component
         let c2 = (0..n)
-        // let c2 = (0..n as u64)
             .map(|i| {
-                let exponent = [(i as u64), 0, 0, 0];
                 let res = (
-                    mult_1!(G, a * x.pow(&exponent)),
-                    mult_1!(G, b * x.pow(&exponent)),
-                    mult_2!(H, a * x.pow(&exponent)),
-                    mult_2!(H, b * x.pow(&exponent)),
-                    // mult_1!(G, a * pow!(x, i)),
-                    // mult_1!(G, b * pow!(x, i)),
-                    // mult_2!(H, a * pow!(x, i)),
-                    // mult_2!(H, b * pow!(x, i)),
+                    mult_1!(G, a * pow!(x, i)),
+                    mult_1!(G, b * pow!(x, i)),
+                    mult_2!(H, a * pow!(x, i)),
+                    mult_2!(H, b * pow!(x, i)),
                 );
                 res
             })
@@ -158,17 +164,9 @@ impl SRS {
     }
 
     fn generate_s(trapdoor: &Trapdoor, qap: &QAP) -> S {
-        let a = trapdoor.a;
-        let b = trapdoor.b;
-        let d = trapdoor.d;
-        let x = trapdoor.x;
-        let n = qap.n;
-        let m = qap.m;
-        let l = qap.l;
-        let u = &qap.u;
-        let v = &qap.v;
-        let w = &qap.w;
-        let t = &qap.t;
+        let (a, b, d, x) = trapdoor.extract();
+        let (m, n, l) = qap.dimensions();
+        let (u, v, w, t) = qap.collections();
 
         let G = G1_gen!();
         let H = G2_gen!();
@@ -189,11 +187,7 @@ impl SRS {
 
         let tx = t.evaluate(&x).unwrap();
         let c_4 = (0..n - 1)
-            .map(|i| {
-                let exponent = [(i as u64), 0, 0, 0];
-                mult_1!(G, x.pow(&exponent) * tx * dinv)
-                // mult_1!(G, pow!(x, i as u64) * tx * dinv)
-            })
+            .map(|i| mult_1!(G, pow!(x, i) * tx * dinv))
             .collect();
 
         (c1, c2, c_3, c_4)
@@ -212,13 +206,8 @@ pub fn update(qap: &QAP, srs: &SRS) -> SRS {
 }
 
 pub fn verify(qap: &QAP, srs: &SRS) -> bool {
-    let n = qap.n;
-    let m = qap.m;
-    let l = qap.l;
-    let u = &qap.u;
-    let v = &qap.v;
-    let w = &qap.w;
-    let t = &qap.t;
+    let (m, n, l) = qap.dimensions();
+    let (u, v, w, t) = qap.collections();
     let G = G1_gen!();
     let H = G2_gen!();
 
@@ -227,18 +216,17 @@ pub fn verify(qap: &QAP, srs: &SRS) -> bool {
     let srs_s = &srs.s;
 
     // step 2
-    assert_eq!(srs_u.0.len(), 2 * n - 1);   // TODO: Handle error
-    assert_eq!(srs_u.1.len(), n);           // TODO: Handle error
-    // TODO: Implement and use backend agnostic isG1Elem, isG2Elem macros
+    assert_eq!(srs_u.0.len(), 2 * n - 1);
+    assert_eq!(srs_u.1.len(), n);
     for i in 0..2 * n - 1 {
-        assert!(bool::from(srs_u.0[i].0.is_on_curve()));
-        assert!(bool::from(srs_u.0[i].1.is_on_curve()));
+        assert!(contained_in_group!(srs_u.0[i].0));
+        assert!(contained_in_group!(srs_u.0[i].1));
     }
     for i in 0..n {
-        assert!(bool::from(srs_u.1[i].0.is_on_curve()));
-        assert!(bool::from(srs_u.1[i].1.is_on_curve()));
-        assert!(bool::from(srs_u.1[i].2.is_on_curve()));
-        assert!(bool::from(srs_u.1[i].3.is_on_curve()));
+        assert!(contained_in_group!(srs_u.1[i].0));
+        assert!(contained_in_group!(srs_u.1[i].1));
+        assert!(contained_in_group!(srs_u.1[i].2));
+        assert!(contained_in_group!(srs_u.1[i].3));
     }
 
     // step 3
@@ -259,8 +247,8 @@ pub fn verify(qap: &QAP, srs: &SRS) -> bool {
     }
 
     // step ~7
-    assert!(bool::from(srs_s.0.is_on_curve()));
-    assert!(bool::from(srs_s.1.is_on_curve()));
+    assert!(contained_in_group!(srs_s.0));
+    assert!(contained_in_group!(srs_s.1));
 
     // step 8
 
@@ -268,9 +256,9 @@ pub fn verify(qap: &QAP, srs: &SRS) -> bool {
     assert_eq!(pair!(srs_s.0, H), pair!(G, srs_s.1));
 
     // step 10
-    for i in (0..m - l) {
+    for i in 0..m - l {
         let mut s_i = G1_zero!();
-        for j in (0..n) {
+        for j in 0..n {
             let tmp = add_1!(
                 mult_1!(srs_u.1[j].1, u[i].coeff(j)),
                 mult_1!(srs_u.1[j].0, v[i].coeff(j)),
@@ -283,10 +271,10 @@ pub fn verify(qap: &QAP, srs: &SRS) -> bool {
 
     // step 11
     let mut Gt = G1_zero!();
-    for j in (0..n - 1) {
+    for j in 0..n - 1 {
         Gt = add_1!(Gt, mult_1!(srs_u.0[j].0, t.coeff(j)));
     }
-    for i in (0..n - 1) {
+    for i in 0..n - 1 {
         assert_eq!(pair!(srs_s.3[i], srs_s.1), pair!(Gt, srs_u.0[i].1));
     }
     
