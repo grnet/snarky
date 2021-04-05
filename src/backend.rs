@@ -31,6 +31,13 @@ macro_rules! rand_scalar {
 }
 
 #[macro_export]
+macro_rules! pow {
+    ($base:expr, $exp:expr) => {
+        $base.pow(&[$exp, 0, 0, 0])
+    }
+}
+
+#[macro_export]
 macro_rules! G1_gen {
     () => {
         ::bls12_381::G1Affine::generator()
@@ -41,6 +48,32 @@ macro_rules! G1_gen {
 macro_rules! G2_gen {
     () => {
         ::bls12_381::G2Affine::generator()
+    }
+}
+
+#[macro_export]
+macro_rules! add_1 {
+    ($($elem:expr), *) => {
+        {
+            let mut elems = Vec::new();
+            $(elems.push(::bls12_381::G1Projective::from($elem));)*
+            ::bls12_381::G1Affine::from(
+                elems.iter().sum::<::bls12_381::G1Projective>()
+            )
+        }
+    }
+}
+
+#[macro_export]
+macro_rules! add_2 {
+    ($($elem:expr), *) => {
+        {
+            let mut elems = Vec::new();
+            $(elems.push(::bls12_381::G2Projective::from($elem));)*
+            ::bls12_381::G2Affine::from(
+                elems.iter().sum::<::bls12_381::G2Projective>()
+            )
+        }
     }
 }
 

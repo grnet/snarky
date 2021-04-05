@@ -19,9 +19,12 @@ fn main() {
     let srs = setup(&trapdoor, &qap);
     println!("[+] Initialized SRS ({:.2?})", srs_start.elapsed());
 
-    let srs = update(&qap, &srs);
+    // let srs = update(&qap, &srs);
+
+    let ver_start = Instant::now();
     let res = verify(&qap, &srs);
     assert!(res);
+    println!("[+] Verified SRS ({:.2?})", ver_start.elapsed());
 
     println!("--------------------------");
     println!("Time elaped: {:.2?}", start.elapsed());
