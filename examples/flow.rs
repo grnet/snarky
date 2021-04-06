@@ -1,14 +1,23 @@
 use std::time::Instant;
 use snarky::flow::{QAP, Trapdoor, setup, update, verify};
 
+fn parse_arg(pos: usize, default: &str, message: &str) -> usize {
+    std::env::args()
+        .nth(pos)
+        .unwrap_or(default.to_string())
+        .parse::<usize>()
+        .ok()
+        .expect(message)
+}
+
 fn main() {
+
+    let m = parse_arg(1, "50", "m should be a positive integer");
+    let n = parse_arg(2, "40", "n should be a positive integer");
+    let l = parse_arg(3, "30", "l should be a positive integer");
 
     let start = Instant::now();
     println!("--------------------------");
-
-    let m = 50;
-    let n = 40;
-    let l = 30;
 
     let qap_start = Instant::now();
     let qap = QAP::create_default(m, n, l);
