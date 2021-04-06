@@ -19,46 +19,54 @@ pub struct QAP {
     t: Univariate,
 }
 
+use crate::error::QAPError;
+
 impl QAP {
 
     pub fn create(u: Vec<Univariate>, v: Vec<Univariate>, w: Vec<Univariate>, 
-        t: Univariate, l: usize) -> Result<Self, &'static str> {
+        t: Univariate, l: usize) -> Result<Self, QAPError> {
         let m = u.len() - 1;
         if v.len() != m + 1 || w.len() != m + 1 {
-            Err("Could not create: unequal lengths for u, v, w")
+            let line = line!() - 1;
+            Err(QAPError::create("Unequal lengths for u, v, w", file!(), line))
         } else if l + 1 > m {
-            Err("Could not create: l is not < m")
+            let line = line!() - 1;
+            Err(QAPError::create("l is not < m", file!(), line))
         } else {
             let n = t.degree() as usize;
-            let mut failed = false;
+            let mut line = 0;
             'outer: for p in [&u, &v, &w].iter() {
                 for i in 0..m + 1 {
                     if p[i].degree() as usize != n - 1 {
-                        failed = true;
+                        line = line!() - 1;
                         break 'outer;
                     }
                 }
             }
-            match failed {
-                true => Err("Could not create: unequal lengths encountered"),
-                _    => Ok(Self { m, n, l, u, v, w, t })
+            match line {
+                0 => Ok(Self { m, n, l, u, v, w, t }),
+                _ => Err(QAPError::create(
+                        "Detected degree unequal to n-1", 
+                        file!(), 
+                        line,
+                    ))
             }
         }
     }
 
-    pub fn create_default(m: usize, n: usize, l: usize) -> Self {
+    pub fn create_default(m: usize, n: usize, l: usize) -> Result<Self, QAPError> {
 
         let mut coeffs1 = vec![1];
-        coeffs1.append(&mut vec![0; n - 1]);
+        coeffs1.append(&mut vec![0; n - 1]); // [1] + (n - 1) * [0]
         let u = vec![Univariate::create_from_u64(&coeffs1); m + 1];
         let v = vec![Univariate::create_from_u64(&coeffs1); m + 1];
         let w = vec![Univariate::create_from_u64(&coeffs1); m + 1];
 
         let mut coeffs2 = vec![1];
-        coeffs2.append(&mut vec![0; n]);
+        coeffs2.append(&mut vec![0; n]);    // [1] + n * [0]
         let t = Univariate::create_from_u64(&coeffs2);
 
-        Self::create(u, v, w, t, l).unwrap()    // TODO: Handle error
+        Self::create(u, v, w, t, l)
     }
 
     pub fn dimensions(&self) -> (usize, usize, usize) {
