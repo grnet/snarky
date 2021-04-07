@@ -26,6 +26,11 @@ fn main() {
             println!("{}", e); std::process::exit(1);
         }
     };
+    let qap = QAP::create_default(m, n, l)
+        .unwrap_or_else(|err| {
+            println!("{}", err);
+            std::process::exit(1)
+        });
     println!("[+] Created QAP with m:{} n:{} l:{} ({:.2?})", m, n, l, qap_start.elapsed());
 
     let srs_start = Instant::now();
