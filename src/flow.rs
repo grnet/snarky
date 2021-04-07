@@ -37,23 +37,20 @@ impl QAP {
         } else {
             let n = t.degree() as usize;
             let mut line = 0;
-            'outer: for p in [&u, &v, &w].iter() {
+            for p in [&u, &v, &w].iter() {
                 for i in 0..m + 1 {
                     if p[i].degree() as usize != n - 1 {
                         line = line!() - 1;
-                        break 'outer;
+                        return Err(QAPError::create(
+                            "Detected degree unequal to n-1", 
+                            file!(), 
+                            line,
+                            103,
+                        ))
                     }
                 }
             }
-            match line {
-                0 => Ok(Self { m, n, l, u, v, w, t }),
-                _ => Err(QAPError::create(
-                        "Detected degree unequal to n-1", 
-                        file!(), 
-                        line,
-                        103,
-                    ))
-            }
+            Ok(Self { m, n, l, u, v, w, t })
         }
     }
 
