@@ -9,6 +9,21 @@ use crate::backend::{Scalar, Univariate,
 type U = (Vec<(G1, G2)>, Vec<(G1, G1, G2, G2)>);
 type S = (G1, G2, Vec<G1>, Vec<G1>);
 
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum Verification {
+    FAILURE = 0,
+    SUCCESS = 1,
+}
+
+impl Verification {
+    pub fn as_bool(&self) -> bool {
+        match self {
+            Verification::FAILURE => false,
+            Verification::SUCCESS => true,
+        }
+    }
+}
+
 
 #[derive(Debug, PartialEq)]
 pub struct QAP {
@@ -213,7 +228,7 @@ pub fn update(qap: &QAP, srs: &SRS) -> SRS {
     }
 }
 
-pub fn verify(qap: &QAP, srs: &SRS) -> bool {
+pub fn verify(qap: &QAP, srs: &SRS) -> Verification {
     let (m, n, l) = qap.dimensions();
     let (u, v, w, t) = qap.collections();
     let G = G1_gen!();
@@ -286,8 +301,7 @@ pub fn verify(qap: &QAP, srs: &SRS) -> bool {
         assert_eq!(pair!(srs_s.3[i], srs_s.1), pair!(Gt, srs_u.0[i].1));
     }
     
-
-    true
+    Verification::SUCCESS
 }
 
 #[cfg(test)]

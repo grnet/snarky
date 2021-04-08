@@ -14,5 +14,5 @@ fn test_flow() {
     let srs = setup(&trapdoor, &qap);
     // let srs = update(&qap, &srs);    // TODO: Enable
     let res = verify(&qap, &srs);
-    assert!(res);
+    assert!(res.as_bool());
 }

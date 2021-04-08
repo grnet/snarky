@@ -42,8 +42,8 @@ fn main() {
 
     let ver_start = Instant::now();
     let res = verify(&qap, &srs);
-    assert!(res);
-    println!("[+] Verified SRS ({:.2?})", ver_start.elapsed());
+    assert!(res.as_bool());
+    println!("[+] {:?} ({:.2?})", res, ver_start.elapsed());
 
     println!("--------------------------");
     println!("Time elaped: {:.2?}", start.elapsed());
