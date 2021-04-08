@@ -16,7 +16,7 @@ fn bench_setup(c: &mut Criterion) {
         (100, 100, 100),
         (1000, 1000, 100),
     ].iter() {
-        let qap = QAP::create_default(*l, *m, *n);
+        let qap = QAP::create_default(*l, *m, *n).unwrap();
         let trapdoor = Trapdoor::create_from_units();
         group.bench_function(
             format!("Generate SRS with l:{}, m:{}, n:{}", l, m, n),
@@ -33,7 +33,7 @@ fn bench_update(c: &mut Criterion) {
         (100, 100, 100),
         (1000, 1000, 100),
     ].iter() {
-        let qap = QAP::create_default(*l, *m, *n);
+        let qap = QAP::create_default(*l, *m, *n).unwrap();
         let trapdoor = Trapdoor::create_from_units();
         let srs = setup(&trapdoor, &qap);
         group.bench_function(
@@ -51,7 +51,7 @@ fn bench_verify(c: &mut Criterion) {
         (100, 100, 100),
         (1000, 1000, 100),
     ].iter() {
-        let qap = QAP::create_default(*l, *m, *n);
+        let qap = QAP::create_default(*l, *m, *n).unwrap();
         let trapdoor = Trapdoor::create_from_units();
         let srs = setup(&trapdoor, &qap);
         let srs = update(&qap, &srs);
@@ -74,7 +74,7 @@ fn bench_flow(c: &mut Criterion) {
         group.bench_function(
             format!("Verify SRS with l:{}, m:{}, n:{}", l, m, n),
             |b| b.iter(|| {
-                let qap = QAP::create_default(*l, *m, *n);
+                let qap = QAP::create_default(*l, *m, *n).unwrap();
                 let trapdoor = Trapdoor::create_from_units();
                 let srs = setup(&trapdoor, &qap);
                 let srs = update(&qap, &srs);

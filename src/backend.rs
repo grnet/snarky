@@ -125,6 +125,7 @@ macro_rules! pair {
     }
 }
 
+use crate::error::PolyError;
 pub type F = ::bls12_381::Scalar;
 
 #[derive(Clone, PartialEq, Debug)]
@@ -153,9 +154,13 @@ impl Univariate {
     // Horner's method NOTE: Sparse polynomial evaluation can be
     // more efficient with exponentiation optimized with 
     // square-and-add method which is log(N).
-    pub fn evaluate(&self, elm: &F) -> Result<F, &'static str> {
+    pub fn evaluate(&self, elm: &F) -> Result<F, PolyError> {
         match self.degree {
-            -1 => Err("Cannot evaluate: degree -1"),
+            -1 => Err(PolyError::create("Cannot evaluate: degree -1", 
+                    file!(), 
+                    line!() - 4, 
+                    201
+                )),
             _  => {
                 let mut result = F::zero();
                 if self.coeffs.len() > 0 {
@@ -422,7 +427,6 @@ mod tests {
     #[test]
     fn test_coeff() {
         let parametrization = vec! {
-            // vec![] => -1,
             vec![0],
             vec![0, 1],
             vec![0, 1, 2],
@@ -460,13 +464,11 @@ mod tests {
         for ((coeffs, elm), value) in parametrization {
 
             // Degree -1 edge case
-            assert_eq!(
-                edge.evaluate(&scalar!(elm)), Err("Cannot evaluate: degree -1"));
+            assert_eq!(edge.evaluate(&scalar!(elm)).unwrap_err().code, 201);
 
             // Normal case
             let poly = Univariate::create_from_u64(&coeffs);
-            assert_eq!(
-                poly.evaluate(&scalar!(elm)).unwrap(), scalar!(value));
+            assert_eq!(poly.evaluate(&scalar!(elm)).unwrap(), scalar!(value));
         }
     }
 }
