@@ -1,7 +1,8 @@
 //! Contains integration tests involving `snarky` public functions.
 //! Common test setup taken from the `common` module.
 
-use snarky::flow::{QAP, Trapdoor, setup, update, verify};
+use snarky::QAP;
+use snarky::flow::{Trapdoor, setup, update, verify};
 mod common;
 
 #[test]

@@ -7,7 +7,8 @@ use criterion::{
     Criterion, 
     BenchmarkId,
 };
-use snarky::flow::{QAP, Trapdoor, setup, update, verify};
+use snarky::QAP;
+use snarky::flow::{Trapdoor, setup, update, verify};
 
 fn bench_setup(c: &mut Criterion) {
     let mut group = c.benchmark_group("setup");

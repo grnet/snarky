@@ -1,5 +1,6 @@
 use std::time::Instant;
-use snarky::flow::{QAP, Trapdoor, setup, update, verify};
+use snarky::QAP;
+use snarky::flow::{Trapdoor, setup, update, verify};
 
 fn parse_arg(pos: usize, default: &str, message: &str) -> usize {
     std::env::args()
