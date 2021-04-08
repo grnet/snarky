@@ -162,17 +162,28 @@ pub fn verify(qap: &QAP, srs: &SRS) -> Verification {
     let srs_s = &srs.s;
 
     // step 2
-    assert_eq!(srs_u.0.len(), 2 * n - 1);
-    assert_eq!(srs_u.1.len(), n);
+    if !(srs_u.0.len() == 2 * n - 1 && srs_u.1.len() == n) {
+        return Verification::FAILURE
+    }
     for i in 0..2 * n - 1 {
-        assert!(contained_in_group!(srs_u.0[i].0));
-        assert!(contained_in_group!(srs_u.0[i].1));
+        match
+            contained_in_group!(srs_u.0[i].0) &&
+            contained_in_group!(srs_u.0[i].1)
+        {
+            true    => continue,
+            _       => return Verification::FAILURE
+        }
     }
     for i in 0..n {
-        assert!(contained_in_group!(srs_u.1[i].0));
-        assert!(contained_in_group!(srs_u.1[i].1));
-        assert!(contained_in_group!(srs_u.1[i].2));
-        assert!(contained_in_group!(srs_u.1[i].3));
+        match
+            contained_in_group!(srs_u.1[i].0) &&
+            contained_in_group!(srs_u.1[i].1) &&
+            contained_in_group!(srs_u.1[i].2) &&
+            contained_in_group!(srs_u.1[i].3)
+        {
+            true    => continue,
+            _       => return Verification::FAILURE
+        }
     }
 
     // step 3
@@ -180,26 +191,42 @@ pub fn verify(qap: &QAP, srs: &SRS) -> Verification {
     
     // step 5
     for i in 1..2 * n - 1 {
-        assert_eq!(pair!(srs_u.0[i].0, H), pair!(G, srs_u.0[i].1));
-        assert_eq!(pair!(srs_u.0[i].0, H), pair!(srs_u.0[i - 1].0, srs_u.0[1].1));
+        match 
+            pair!(srs_u.0[i].0, H) == pair!(G, srs_u.0[i].1) &&
+            pair!(srs_u.0[i].0, H) == pair!(srs_u.0[i - 1].0, srs_u.0[1].1)
+        {
+            true    => continue,
+            _       => return Verification::FAILURE
+        }
     }
 
     // step 6
     for i in 0..n {
-        assert_eq!(pair!(srs_u.1[i].0, H), pair!(G, srs_u.1[i].2));
-        assert_eq!(pair!(srs_u.1[i].0, H), pair!(srs_u.0[i].0, srs_u.1[0].2));
-        assert_eq!(pair!(srs_u.1[i].1, H), pair!(G, srs_u.1[i].3));
-        assert_eq!(pair!(srs_u.1[i].1, H), pair!(srs_u.0[i].0, srs_u.1[0].3));
+        match
+            pair!(srs_u.1[i].0, H) == pair!(G, srs_u.1[i].2) &&
+            pair!(srs_u.1[i].0, H) == pair!(srs_u.0[i].0, srs_u.1[0].2) &&
+            pair!(srs_u.1[i].1, H) == pair!(G, srs_u.1[i].3) &&
+            pair!(srs_u.1[i].1, H) == pair!(srs_u.0[i].0, srs_u.1[0].3)
+        {
+            true    => continue,
+            _       => return Verification::FAILURE
+        }
     }
 
     // step ~7
-    assert!(contained_in_group!(srs_s.0));
-    assert!(contained_in_group!(srs_s.1));
+    if !(
+        contained_in_group!(srs_s.0) && 
+        contained_in_group!(srs_s.1)
+    ) {
+        return Verification::FAILURE
+    }
 
     // step 8
 
     // ~step 9 
-    assert_eq!(pair!(srs_s.0, H), pair!(G, srs_s.1));
+    if !(pair!(srs_s.0, H) == pair!(G, srs_s.1)) {
+        return Verification::FAILURE
+    }
 
     // step 10
     for i in 0..m - l {
@@ -212,7 +239,12 @@ pub fn verify(qap: &QAP, srs: &SRS) -> Verification {
             );
             s_i = add_1!(s_i, tmp);
         }
-        assert_eq!(pair!(srs_s.2[i], srs_s.1), pair!(s_i, H));
+        match
+            pair!(srs_s.2[i], srs_s.1) == pair!(s_i, H)
+        {
+            true    => continue,
+            _       => return Verification::FAILURE
+        }
     }
 
     // step 11
@@ -221,7 +253,12 @@ pub fn verify(qap: &QAP, srs: &SRS) -> Verification {
         Gt = add_1!(Gt, mult_1!(srs_u.0[j].0, t.coeff(j)));
     }
     for i in 0..n - 1 {
-        assert_eq!(pair!(srs_s.3[i], srs_s.1), pair!(Gt, srs_u.0[i].1));
+        match
+            pair!(srs_s.3[i], srs_s.1) == pair!(Gt, srs_u.0[i].1)
+        {
+            true    => continue,
+            _       => return Verification::FAILURE
+        }
     }
     
     Verification::SUCCESS

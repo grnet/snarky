@@ -21,16 +21,9 @@ fn main() {
     println!("--------------------------");
 
     let qap_start = Instant::now();
-    let qap = match QAP::create_default(m, n, l) {
-        Ok(qap) => qap,
-        Err(e)  => {
-            println!("{}", e); std::process::exit(1);
-        }
-    };
     let qap = QAP::create_default(m, n, l)
         .unwrap_or_else(|err| {
-            println!("{}", err);
-            std::process::exit(1)
+            println!("{}", err); std::process::exit(1);
         });
     println!("[+] Created QAP with m:{} n:{} l:{} ({:.2?})", m, n, l, qap_start.elapsed());
 
