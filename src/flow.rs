@@ -1,5 +1,3 @@
-use rand::RngCore;                  // Must be present for update
-
 use crate::{
     one, zero, rand_scalar, scalar, pow, contained_in_group, 
     G1_gen, G2_gen, G1_zero, G2_zero, add_1, add_2, 
@@ -150,6 +148,9 @@ pub enum Phase {
     TWO = 2,
 }
 
+use rand::RngCore;                  // Must be present for update
+use crate::dlog::prove_dlog;
+
 pub fn update(qap: &QAP, srs: &SRS, phase: Phase, rng: &mut RngCore) -> SRS {
     let (G, H) = (G1_gen!(), G2_gen!());
     let (m, n, l) = qap.dimensions();
@@ -161,6 +162,10 @@ pub fn update(qap: &QAP, srs: &SRS, phase: Phase, rng: &mut RngCore) -> SRS {
             let a_2 = rand_scalar!(rng);
             let b_2 = rand_scalar!(rng);
             let x_2 = rand_scalar!(rng);
+            // step3
+            let pi_a_2 = prove_dlog((mult_1!(G, a_2), mult_2!(H, a_2)), a_2);
+            let pi_b_2 = prove_dlog((mult_1!(G, b_2), mult_2!(H, b_2)), b_2);
+            let pi_x_2 = prove_dlog((mult_1!(G, x_2), mult_2!(H, x_2)), x_2);
             SRS {
                 u: (Vec::<(G1, G2)>::new(), Vec::<(G1, G1, G2, G2)>::new()),
                 s: (G1_zero!(), G2_zero!(), Vec::<G1>::new(), Vec::<G1>::new()),
