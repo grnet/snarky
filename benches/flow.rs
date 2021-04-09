@@ -37,9 +37,11 @@ fn bench_update_phase_1(c: &mut Criterion) {
         let qap = QAP::create_default(*m, *n, *l).unwrap();
         let trapdoor = Trapdoor::create_from_units();
         let srs = setup(&trapdoor, &qap);
+        use rand::RngCore;
+        let mut rng = rand::thread_rng();
         group.bench_function(
             format!("Phase 1 SRS update with l:{}, m:{}, n:{}", m, n, l),
-            |b| b.iter(|| update(&qap, &srs, Phase::ONE)),
+            |b| b.iter(|| update(&qap, &srs, Phase::ONE, &mut rng)),
         );
     }
     group.finish();
@@ -55,9 +57,11 @@ fn bench_update_phase_2(c: &mut Criterion) {
         let qap = QAP::create_default(*m, *n, *l).unwrap();
         let trapdoor = Trapdoor::create_from_units();
         let srs = setup(&trapdoor, &qap);
+        use rand::RngCore;
+        let mut rng = rand::thread_rng();
         group.bench_function(
             format!("Phase 2 SRS update with l:{}, m:{}, n:{}", m, n, l),
-            |b| b.iter(|| update(&qap, &srs, Phase::TWO)),
+            |b| b.iter(|| update(&qap, &srs, Phase::TWO, &mut rng)),
         );
     }
     group.finish();
@@ -74,8 +78,10 @@ fn bench_verify(c: &mut Criterion) {
         let qap = QAP::create_default(*m, *n, *l).unwrap();
         let trapdoor = Trapdoor::create_from_units();
         let srs = setup(&trapdoor, &qap);
-        let srs = update(&qap, &srs, Phase::ONE);
-        let srs = update(&qap, &srs, Phase::ONE);
+        use rand::RngCore;
+        let mut rng = rand::thread_rng();
+        let srs = update(&qap, &srs, Phase::ONE, &mut rng);
+        let srs = update(&qap, &srs, Phase::ONE, &mut rng);
         group.bench_function(
             format!("Verify SRS with l:{}, m:{}, n:{}", m, n, l),
             |b| b.iter(|| verify(&qap, &srs)),
@@ -92,14 +98,16 @@ fn bench_flow(c: &mut Criterion) {
         (100, 100, 100),
         (1000, 1000, 100),
     ].iter() {
+        use rand::RngCore;
+        let mut rng = rand::thread_rng();
         group.bench_function(
             format!("Verify SRS with l:{}, m:{}, n:{}", m, n, l),
             |b| b.iter(|| {
                 let qap = QAP::create_default(*m, *n, *l).unwrap();
                 let trapdoor = Trapdoor::create_from_units();
                 let srs = setup(&trapdoor, &qap);
-                let srs = update(&qap, &srs, Phase::ONE);
-                let srs = update(&qap, &srs, Phase::TWO);
+                let srs = update(&qap, &srs, Phase::ONE, &mut rng);
+                let srs = update(&qap, &srs, Phase::TWO, &mut rng);
                 verify(&qap, &srs)
             }),
         );

@@ -17,6 +17,9 @@ fn main() {
     let n = parse_arg(2, "40", "n should be a positive integer");
     let l = parse_arg(3, "30", "l should be a positive integer");
 
+    use rand::RngCore;                  // Must be present for update
+    let mut rng = rand::thread_rng();
+
     let start = Instant::now();
     println!("--------------------------");
 
@@ -33,11 +36,11 @@ fn main() {
     println!("[+] Initialized SRS ({:.2?})", srs_start.elapsed());
 
     let phase1_start = Instant::now();
-    let _srs = update(&qap, &srs, Phase::ONE);
+    let _srs = update(&qap, &srs, Phase::ONE, &mut rng);
     println!("[+] Phase 1 SRS update ({:.2?})", phase1_start.elapsed());
 
     let phase2_start = Instant::now();
-    let _srs = update(&qap, &srs, Phase::TWO);
+    let _srs = update(&qap, &srs, Phase::TWO, &mut rng);
     println!("[+] Phase 2 SRS update ({:.2?})", phase2_start.elapsed());
 
     let ver_start = Instant::now();

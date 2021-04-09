@@ -1,6 +1,9 @@
+use rand::RngCore;                  // Must be present for update
+
 use crate::{
-    one, zero, scalar, pow, contained_in_group, G1_gen, G2_gen, G1_zero, G2_zero, 
-    add_1, add_2, mult_1, mult_2, pair};
+    one, zero, rand_scalar, scalar, pow, contained_in_group, 
+    G1_gen, G2_gen, G1_zero, G2_zero, add_1, add_2, 
+    mult_1, mult_2, pair};
 use crate::backend::{Scalar,
     G1Elem as G1, 
     G2Elem as G2,
@@ -41,7 +44,6 @@ impl Trapdoor {
     }
 
     fn create_from_random(rng: &mut ::rand::RngCore) -> Self {
-        use crate::rand_scalar;
         Self {
             a: rand_scalar!(rng), 
             b: rand_scalar!(rng), 
@@ -148,11 +150,17 @@ pub enum Phase {
     TWO = 2,
 }
 
-pub fn update(qap: &QAP, srs: &SRS, phase: Phase) -> SRS {
+pub fn update(qap: &QAP, srs: &SRS, phase: Phase, rng: &mut RngCore) -> SRS {
     let (G, H) = (G1_gen!(), G2_gen!());
     let (m, n, l) = qap.dimensions();
     match phase {
         ONE => {
+            // step 1
+            let srs_u = &srs.u;
+            // step 2
+            let a_2 = rand_scalar!(rng);
+            let b_2 = rand_scalar!(rng);
+            let x_2 = rand_scalar!(rng);
             SRS {
                 u: (Vec::<(G1, G2)>::new(), Vec::<(G1, G1, G2, G2)>::new()),
                 s: (G1_zero!(), G2_zero!(), Vec::<G1>::new(), Vec::<G1>::new()),
