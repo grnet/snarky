@@ -82,7 +82,6 @@ impl SRS {
         let G = G1_gen!();
         let H = G2_gen!();
 
-        // Compute first component
         let c1 = (0..2 * n - 1)
             .map(|i| {
                 let res = (
@@ -93,7 +92,6 @@ impl SRS {
             })
             .collect();
 
-        // Compute second component
         let c2 = (0..n)
             .map(|i| {
                 let res = (
@@ -144,10 +142,28 @@ pub fn setup(trapdoor: &Trapdoor, qap: &QAP) -> SRS {
     SRS::generate(&trapdoor, &qap)
 }
 
-pub fn update(qap: &QAP, srs: &SRS) -> SRS {
-    SRS {
-        u: (Vec::<(G1, G2)>::new(), Vec::<(G1, G1, G2, G2)>::new()),
-        s: (G1_zero!(), G2_zero!(), Vec::<G1>::new(), Vec::<G1>::new()),
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum Phase {
+    ONE = 1,
+    TWO = 2,
+}
+
+pub fn update(qap: &QAP, srs: &SRS, phase: Phase) -> SRS {
+    let (G, H) = (G1_gen!(), G2_gen!());
+    let (m, n, l) = qap.dimensions();
+    match phase {
+        ONE => {
+            SRS {
+                u: (Vec::<(G1, G2)>::new(), Vec::<(G1, G1, G2, G2)>::new()),
+                s: (G1_zero!(), G2_zero!(), Vec::<G1>::new(), Vec::<G1>::new()),
+            }
+        },
+        TWO => {
+            SRS {
+                u: (Vec::<(G1, G2)>::new(), Vec::<(G1, G1, G2, G2)>::new()),
+                s: (G1_zero!(), G2_zero!(), Vec::<G1>::new(), Vec::<G1>::new()),
+            }
+        }
     }
 }
 

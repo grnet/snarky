@@ -1,6 +1,6 @@
 use std::time::Instant;
 use snarky::QAP;
-use snarky::flow::{Trapdoor, setup, update, verify};
+use snarky::flow::{Trapdoor, Phase, setup, update, verify};
 
 fn parse_arg(pos: usize, default: &str, message: &str) -> usize {
     std::env::args()
@@ -32,7 +32,13 @@ fn main() {
     let srs = setup(&trapdoor, &qap);
     println!("[+] Initialized SRS ({:.2?})", srs_start.elapsed());
 
-    // let srs = update(&qap, &srs);
+    let phase1_start = Instant::now();
+    let _srs = update(&qap, &srs, Phase::ONE);
+    println!("[+] Phase 1 SRS update ({:.2?})", phase1_start.elapsed());
+
+    let phase2_start = Instant::now();
+    let _srs = update(&qap, &srs, Phase::TWO);
+    println!("[+] Phase 2 SRS update ({:.2?})", phase2_start.elapsed());
 
     let ver_start = Instant::now();
     let res = verify(&qap, &srs);
