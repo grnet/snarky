@@ -158,14 +158,37 @@ pub fn update(qap: &QAP, srs: &SRS, phase: Phase, rng: &mut RngCore) -> SRS {
         ONE => {
             // step 1
             let srs_u = &srs.u;
-            // step 2
+            // step 2 (fix witnesses)
             let a_2 = rand_scalar!(rng);
             let b_2 = rand_scalar!(rng);
             let x_2 = rand_scalar!(rng);
-            // step3
+            // step 3
             let pi_a_2 = prove_dlog((mult_1!(G, a_2), mult_2!(H, a_2)), a_2);
             let pi_b_2 = prove_dlog((mult_1!(G, b_2), mult_2!(H, b_2)), b_2);
             let pi_x_2 = prove_dlog((mult_1!(G, x_2), mult_2!(H, x_2)), x_2);
+            // step 4
+            let rho_a_2 = (
+                mult_1!(srs_u.1[0].0, a_2), 
+                mult_1!(G, a_2),
+                mult_2!(H, a_2), 
+                pi_a_2,
+            );
+            // step 5
+            let rho_b_2 = (
+                mult_1!(srs_u.1[0].1, b_2), 
+                mult_1!(G, b_2),
+                mult_2!(H, b_2), 
+                pi_b_2,
+            );
+            // step 6
+            let rho_x_2 = (
+                mult_1!(srs_u.0[1].0, x_2), 
+                mult_1!(G, x_2),
+                mult_2!(H, x_2), 
+                pi_x_2,
+            );
+            // step 7
+            let rho = (rho_a_2, rho_b_2, rho_x_2);
             SRS {
                 u: (Vec::<(G1, G2)>::new(), Vec::<(G1, G1, G2, G2)>::new()),
                 s: (G1_zero!(), G2_zero!(), Vec::<G1>::new(), Vec::<G1>::new()),

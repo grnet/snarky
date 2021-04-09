@@ -36,11 +36,11 @@ fn main() {
     println!("[+] Initialized SRS ({:.2?})", srs_start.elapsed());
 
     let phase1_start = Instant::now();
-    let _srs = update(&qap, &srs, Phase::ONE, &mut rng);
+    let _srs = update(&qap, &srs, Phase::ONE, &mut rng);    // TODO: Enable
     println!("[+] Phase 1 SRS update ({:.2?})", phase1_start.elapsed());
 
     let phase2_start = Instant::now();
-    let _srs = update(&qap, &srs, Phase::TWO, &mut rng);
+    let _srs = update(&qap, &srs, Phase::TWO, &mut rng);    // TODO: Enable
     println!("[+] Phase 2 SRS update ({:.2?})", phase2_start.elapsed());
 
     let ver_start = Instant::now();
