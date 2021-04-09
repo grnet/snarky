@@ -16,9 +16,13 @@ sha2 = "0.9.3"
 criterion = "0.3.4"
 
 [[bench]]
-name = "flow"
+name = "backend"
 harness = false
 
 [[bench]]
-name = "backend"
+name = "dlog"
+harness = false
+
+[[bench]]
+name = "flow"
 harness = false
