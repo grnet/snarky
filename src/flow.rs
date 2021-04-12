@@ -148,12 +148,11 @@ pub enum Phase {
     TWO = 2,
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct Rho(G1, G1, G2, G1);
+type Rho = (G1, G1, G2, G1);
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct BatchProof {
-    pub phase_1: Vec<(Rho, Rho, Rho)>,
+    pub phase_1: Vec<[Rho; 3]>,
     pub phase_2: Vec<Rho>,
 }
 
@@ -165,7 +164,7 @@ impl BatchProof {
         }
     }
 
-    pub fn phase_1_append(&mut self, proof: (Rho, Rho, Rho)) {
+    pub fn phase_1_append(&mut self, proof: [Rho; 3]) {
         self.phase_1.push(proof);
     }
 
@@ -199,28 +198,28 @@ pub fn update(
             let pi_b_2 = prove_dlog((mult_1!(G, b_2), mult_2!(H, b_2)), b_2);
             let pi_x_2 = prove_dlog((mult_1!(G, x_2), mult_2!(H, x_2)), x_2);
             // step 4
-            let rho_a_2 = Rho(
+            let rho_a_2 = (
                 mult_1!(srs_u.1[0].0, a_2), 
                 mult_1!(G, a_2),
                 mult_2!(H, a_2), 
                 pi_a_2,
             );
             // step 5
-            let rho_b_2 = Rho(
+            let rho_b_2 = (
                 mult_1!(srs_u.1[0].1, b_2), 
                 mult_1!(G, b_2),
                 mult_2!(H, b_2), 
                 pi_b_2,
             );
             // step 6
-            let rho_x_2 = Rho(
+            let rho_x_2 = (
                 mult_1!(srs_u.0[1].0, x_2), 
                 mult_1!(G, x_2),
                 mult_2!(H, x_2), 
                 pi_x_2,
             );
             // step 7
-            let rho = (rho_a_2, rho_b_2, rho_x_2);
+            let rho = [rho_a_2, rho_b_2, rho_x_2];
             batch.phase_1_append(rho);    // Append here instead of returning like in the paper
 
             // phase 8
@@ -239,7 +238,7 @@ pub fn update(
             // step 3
             let pi_d_2 = prove_dlog((mult_1!(G, d_2), mult_2!(H, d_2)), d_2);
             // step 4
-            let rho = Rho(
+            let rho = (
                 mult_1!(srs_s.0, d_2),
                 mult_1!(G, d_2),
                 mult_2!(H, d_2),
@@ -254,6 +253,8 @@ pub fn update(
         }
     }
 }
+
+use crate::dlog::verify_dlog;
 
 pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     let (m, n, l) = qap.dimensions();
@@ -291,6 +292,25 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     }
 
     // step 3
+    for i in 0..batch.phase_1.len() {
+        for j in 0..3 {
+            let rho = batch.phase_1[i][j];
+            match verify_dlog(&G, &H, (rho.1, rho.2), rho.3) {
+                true    => {
+                    if i != 0 {
+                        match 
+                            pair!(rho.0, H) == pair!(batch.phase_1[i - 1][j].0, rho.2) 
+                        {
+                            true    => continue,
+                            _       => return Verification::FAILURE
+                        }
+                    }
+                },
+                _       => return Verification::FAILURE
+            }
+        }
+    }
+    
     // step 4
     
     // step 5
