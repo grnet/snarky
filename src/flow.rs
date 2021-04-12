@@ -292,14 +292,15 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     }
 
     // step 3
-    for i in 0..batch.phase_1.len() {
+    let batch_u = &batch.phase_1;
+    for i in 0..batch_u.len() {
         for j in 0..3 {
-            let rho = batch.phase_1[i][j];
+            let rho = batch_u[i][j];
             match verify_dlog(&G, &H, (rho.1, rho.2), rho.3) {
                 true    => {
                     if i != 0 {
                         match 
-                            pair!(rho.0, H) == pair!(batch.phase_1[i - 1][j].0, rho.2) 
+                            pair!(rho.0, H) == pair!(batch_u[i - 1][j].0, rho.2) 
                         {
                             true    => continue,
                             _       => return Verification::FAILURE
@@ -311,7 +312,25 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
         }
     }
     
-    // step 4
+    // // step 4
+    // let len = batch_u.len();
+    // if batch_u.len() > 0 {
+    //     if 
+    //         // srs_u.0[1].0 == batch_u[len - 1][2].0 &&
+    //         // srs_u.1[0].0 == batch_u[len - 1][0].0 &&
+    //         srs_u.1[0].1 == batch_u[len - 1][1].0 &&
+    //         1 == 1
+    //     {
+
+    //         println!("{:?}", srs_u.0[1].0);
+    //         println!("{:?}", batch_u[len - 1][2].0);
+    //         println!("-- OK --");
+    //     } else {
+    //         println!("{:?}", srs_u.0[1].0);
+    //         println!("{:?}", batch_u[len - 1][2].0);
+    //         println!("-- NOT OK --")
+    //     }
+    // }
     
     // step 5
     for i in 1..2 * n - 1 {
@@ -346,6 +365,23 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     }
 
     // step 8
+    let batch_s = &batch.phase_2;
+    for i in 0..batch_s.len() {
+        let rho = batch_s[i];
+        match verify_dlog(&G, &H, (rho.1, rho.2), rho.3) {
+            true    => {
+                if i != 0 {
+                    match 
+                        pair!(rho.0, H) == pair!(batch_s[i - 1].0, rho.2) 
+                    {
+                        true    => continue,
+                        _       => return Verification::FAILURE
+                    }
+                }
+            },
+            _       => return Verification::FAILURE
+        }
+    }
 
     // ~step 9 
     if !(pair!(srs_s.0, H) == pair!(G, srs_s.1)) {
