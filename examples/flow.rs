@@ -1,6 +1,6 @@
 use std::time::Instant;
 use snarky::QAP;
-use snarky::flow::{Trapdoor, Phase, setup, update, verify};
+use snarky::flow::{Trapdoor, Phase, BatchProof, setup, update, verify};
 
 fn parse_arg(pos: usize, default: &str, message: &str) -> usize {
     std::env::args()
@@ -35,16 +35,18 @@ fn main() {
     let srs = setup(&trapdoor, &qap);
     println!("[+] Initialized SRS ({:.2?})", srs_start.elapsed());
 
+    let mut batch = BatchProof::initiate();
+
     let phase1_start = Instant::now();
-    let _srs = update(&qap, &srs, Phase::ONE, &mut rng);    // TODO: Enable
+    let _srs = update(&qap, &srs, &mut batch, Phase::ONE, &mut rng);    // TODO: Enable
     println!("[+] Phase 1 SRS update ({:.2?})", phase1_start.elapsed());
 
     let phase2_start = Instant::now();
-    let _srs = update(&qap, &srs, Phase::TWO, &mut rng);    // TODO: Enable
+    let _srs = update(&qap, &srs, &mut batch, Phase::TWO, &mut rng);    // TODO: Enable
     println!("[+] Phase 2 SRS update ({:.2?})", phase2_start.elapsed());
 
     let ver_start = Instant::now();
-    let res = verify(&qap, &srs);
+    let res = verify(&qap, &srs, &batch);
     assert!(res.as_bool());
     println!("[+] {:?} ({:.2?})", res, ver_start.elapsed());
 

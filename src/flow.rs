@@ -148,10 +148,42 @@ pub enum Phase {
     TWO = 2,
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct Rho(G1, G1, G2, G1);
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct BatchProof {
+    pub phase_1: Vec<(Rho, Rho, Rho)>,
+    pub phase_2: Vec<Rho>,
+}
+
+impl BatchProof {
+    pub fn initiate() -> Self {
+        Self {
+            phase_1: Vec::new(), 
+            phase_2: Vec::new()
+        }
+    }
+
+    pub fn phase_1_append(&mut self, proof: (Rho, Rho, Rho)) {
+        self.phase_1.push(proof);
+    }
+
+    pub fn phase_2_append(&mut self, proof: Rho) {
+        self.phase_2.push(proof);
+    }
+}
+
 use rand::RngCore;                  // Must be present for update
 use crate::dlog::prove_dlog;
 
-pub fn update(qap: &QAP, srs: &SRS, phase: Phase, rng: &mut RngCore) -> SRS {
+pub fn update(
+    qap: &QAP, 
+    srs: &SRS, 
+    batch: &mut BatchProof, 
+    phase: Phase, 
+    rng: &mut RngCore
+) -> SRS {
     let (G, H) = (G1_gen!(), G2_gen!());
     let (m, n, l) = qap.dimensions();
     match phase {
@@ -167,21 +199,21 @@ pub fn update(qap: &QAP, srs: &SRS, phase: Phase, rng: &mut RngCore) -> SRS {
             let pi_b_2 = prove_dlog((mult_1!(G, b_2), mult_2!(H, b_2)), b_2);
             let pi_x_2 = prove_dlog((mult_1!(G, x_2), mult_2!(H, x_2)), x_2);
             // step 4
-            let rho_a_2 = (
+            let rho_a_2 = Rho(
                 mult_1!(srs_u.1[0].0, a_2), 
                 mult_1!(G, a_2),
                 mult_2!(H, a_2), 
                 pi_a_2,
             );
             // step 5
-            let rho_b_2 = (
+            let rho_b_2 = Rho(
                 mult_1!(srs_u.1[0].1, b_2), 
                 mult_1!(G, b_2),
                 mult_2!(H, b_2), 
                 pi_b_2,
             );
             // step 6
-            let rho_x_2 = (
+            let rho_x_2 = Rho(
                 mult_1!(srs_u.0[1].0, x_2), 
                 mult_1!(G, x_2),
                 mult_2!(H, x_2), 
@@ -189,6 +221,11 @@ pub fn update(qap: &QAP, srs: &SRS, phase: Phase, rng: &mut RngCore) -> SRS {
             );
             // step 7
             let rho = (rho_a_2, rho_b_2, rho_x_2);
+            batch.phase_1_append(rho);    // Append here instead of returning like in the paper
+
+            // phase 8
+            // phase 9
+            // phase 10
             SRS {
                 u: (Vec::<(G1, G2)>::new(), Vec::<(G1, G1, G2, G2)>::new()),
                 s: (G1_zero!(), G2_zero!(), Vec::<G1>::new(), Vec::<G1>::new()),
@@ -203,7 +240,7 @@ pub fn update(qap: &QAP, srs: &SRS, phase: Phase, rng: &mut RngCore) -> SRS {
     }
 }
 
-pub fn verify(qap: &QAP, srs: &SRS) -> Verification {
+pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     let (m, n, l) = qap.dimensions();
     let (u, v, w, t) = qap.collections();
     let G = G1_gen!();
