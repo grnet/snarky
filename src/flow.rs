@@ -187,7 +187,7 @@ pub fn update(
     let (G, H) = (G1_gen!(), G2_gen!());
     let (m, n, l) = qap.dimensions();
     match phase {
-        ONE => {
+        Phase::ONE => {
             // step 1
             let srs_u = &srs.u;
             // step 2 (fix witnesses)
@@ -231,7 +231,22 @@ pub fn update(
                 s: (G1_zero!(), G2_zero!(), Vec::<G1>::new(), Vec::<G1>::new()),
             }
         },
-        TWO => {
+        Phase::TWO => {
+            // step 1
+            let srs_s = &srs.s;
+            // step 2 (fix witness)
+            let d_2 = rand_scalar!(rng);
+            // step 3
+            let pi_d_2 = prove_dlog((mult_1!(G, d_2), mult_2!(H, d_2)), d_2);
+            // step 4
+            let rho = Rho(
+                mult_1!(srs_s.0, d_2),
+                mult_1!(G, d_2),
+                mult_2!(H, d_2),
+                pi_d_2,
+            );
+            batch.phase_2_append(rho);  // Append here instead of returning like in the paper
+
             SRS {
                 u: (Vec::<(G1, G2)>::new(), Vec::<(G1, G1, G2, G2)>::new()),
                 s: (G1_zero!(), G2_zero!(), Vec::<G1>::new(), Vec::<G1>::new()),
