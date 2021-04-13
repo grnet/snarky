@@ -52,21 +52,17 @@ fn main() {
         }
     }
 
-    // TODO: Enable
-    // // phase 2 updates
-    // let mut count = 0;
-    // loop {
-    //     let start = Instant::now();
-    //     srs = update(&qap, &srs, &mut batch, Phase::TWO, &mut rng);
-    //     println!("[+] Phase 2 SRS update ({:.2?})", start.elapsed());
-    //     count += 1;
-    //     if count == nr_2 {
-    //         break;
-    //     }
-    // }
-    let phase2_start = Instant::now();
-    let _srs = update(&qap, &srs, &mut batch, Phase::TWO, &mut rng);
-    println!("[+] Phase 2 SRS update ({:.2?})", phase2_start.elapsed());
+    // phase 2 updates
+    let mut count = 0;
+    loop {
+        let start = Instant::now();
+        srs = update(&qap, &srs, &mut batch, Phase::TWO, &mut rng);
+        println!("[+] Phase 2 SRS update ({:.2?})", start.elapsed());
+        count += 1;
+        if count == nr_2 {
+            break;
+        }
+    }
 
     let ver_start = Instant::now();
     let res = verify(&qap, &srs, &batch);

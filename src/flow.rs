@@ -309,9 +309,23 @@ pub fn update(
             );
             batch.phase_2_append(rho);  // Append here instead of returning like in the paper
 
+            // step 5
+            let dinv = d_2.invert().unwrap();
+            let c1 = mult_1!(srs_s.0, d_2);
+            let c2 = mult_2!(srs_s.1, d_2);
+            let c3 = (0..m - l)
+                .map(|i| {
+                     mult_1!(srs_s.2[i], dinv)
+                })
+                .collect();
+            let c4 = (0..n - 1)
+                .map(|i| {
+                     mult_1!(srs_s.3[i], dinv)
+                })
+                .collect();
             SRS {
-                u: (Vec::<(G1, G2)>::new(), Vec::<(G1, G1, G2, G2)>::new()),
-                s: (G1_zero!(), G2_zero!(), Vec::<G1>::new(), Vec::<G1>::new()),
+                u: srs.u.clone(),
+                s: (c1, c2, c3, c4),
             }
         }
     }
