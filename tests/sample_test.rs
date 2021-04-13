@@ -16,7 +16,7 @@ fn test_flow() {
     let srs = setup(&trapdoor, &qap);
     let mut batch = BatchProof::initiate();
     let mut rng = rand::thread_rng();
-    let _srs = update(&qap, &srs, &mut batch, Phase::ONE, &mut rng);    // TODO: Enable
+    let srs = update(&qap, &srs, &mut batch, Phase::ONE, &mut rng);
     let _srs = update(&qap, &srs, &mut batch, Phase::TWO, &mut rng);    // TODO: Enable
     let res = verify(&qap, &srs, &batch);
     assert!(res.as_bool());

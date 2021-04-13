@@ -62,6 +62,7 @@ impl Trapdoor {
 type U = (Vec<(G1, G2)>, Vec<(G1, G1, G2, G2)>);
 type S = (G1, G2, Vec<G1>, Vec<G1>);
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct SRS {
     u: U,
     s: S,
