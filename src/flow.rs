@@ -222,7 +222,29 @@ pub fn update(
             let rho = [rho_a_2, rho_b_2, rho_x_2];
             batch.phase_1_append(rho);    // Append here instead of returning like in the paper
 
-            // phase 8
+            // phase 8 (compute u-component)
+            let c1 = (0..2 * n - 1)
+                .map(|i| {
+                    let res = (
+                        mult_1!(srs_u.0[i].0, pow!(x_2, i)),
+                        mult_2!(srs_u.0[i].1, pow!(x_2, i)),
+                    );
+                    res
+                })
+                .collect();
+            let c2 = (0..n)
+                .map(|i| {
+                    let res = (
+                        mult_1!(srs_u.1[i].0, a_2 * pow!(x_2, i)),
+                        mult_1!(srs_u.1[i].1, b_2 * pow!(x_2, i)),
+                        mult_2!(srs_u.1[i].2, a_2 * pow!(x_2, i)),
+                        mult_2!(srs_u.1[i].3, b_2 * pow!(x_2, i)),
+                    );
+                    res
+                })
+                .collect();
+            let u_new: U =  (c1, c2);
+
             // phase 9
             // phase 10
             SRS {
