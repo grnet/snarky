@@ -375,25 +375,22 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
         }
     }
     
-    // // step 4
-    // let len = batch_u.len();
-    // if batch_u.len() > 0 {
-    //     if 
-    //         // srs_u.0[1].0 == batch_u[len - 1][2].0 &&
-    //         // srs_u.1[0].0 == batch_u[len - 1][0].0 &&
-    //         srs_u.1[0].1 == batch_u[len - 1][1].0 &&
-    //         1 == 1
-    //     {
-
-    //         println!("{:?}", srs_u.0[1].0);
-    //         println!("{:?}", batch_u[len - 1][2].0);
-    //         println!("-- OK --");
-    //     } else {
-    //         println!("{:?}", srs_u.0[1].0);
-    //         println!("{:?}", batch_u[len - 1][2].0);
-    //         println!("-- NOT OK --")
-    //     }
-    // }
+    // step 4
+    let len = batch_u.len();
+    if len > 0 {
+        let zero = G1_zero!();
+        if !(
+            srs_u.0[1].0 == batch_u[len - 1][2].0 &&
+            srs_u.1[0].0 == batch_u[len - 1][0].0 &&
+            srs_u.1[0].1 == batch_u[len - 1][1].0 &&
+            batch_u[len - 1][2].0 != zero &&
+            batch_u[len - 1][0].0 != zero &&
+            batch_u[len - 1][1].0 != zero
+        ) 
+        {
+            return Verification::FAILURE
+        }
+    }
     
     // step 5
     for i in 1..2 * n - 1 {
