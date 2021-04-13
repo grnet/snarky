@@ -14,8 +14,10 @@ fn main() {
 
     // Random scalar definition
     use rand::RngCore;                  // Must be present for rand_scalar
+    let start = Instant::now();
     let mut rng = rand::thread_rng();
     let r = rand_scalar!(rng);
+    println!("[+] rand_scalar ({:.2?})", start.elapsed());
 
     // Raising scalars to power
     let base = scalar!(666);
