@@ -176,6 +176,44 @@ impl BatchProof {
 use rand::RngCore;                  // Must be present for update
 use crate::dlog::prove_dlog;
 
+pub fn specialize(qap: &QAP, u_comp: &U) -> S {
+    let (m, n, l) = qap.dimensions();
+    let (u, v, w, t) = qap.collections();
+
+    let c1 = G1_gen!();
+    let c2 = G2_gen!();
+    let c3 = (0..m - l)
+        .map(|i| {
+            let mut s_i = G1_zero!();
+            for j in 0..n {
+                s_i = add_1!(
+                    s_i,
+                    add_1!(
+                        mult_1!(u_comp.1[j].1, u[i].coeff(j)),
+                        mult_1!(u_comp.1[j].0, v[i].coeff(j)),
+                        mult_1!(u_comp.0[j].0, w[i].coeff(j))
+                    )
+                );
+            }
+            s_i
+        })
+        .collect();
+    let c4 = (0..n - 1)
+        .map(|i| {
+            let mut s_i = G1_zero!();
+            for j in 0..n {
+                s_i = add_1!(
+                    s_i,
+                    mult_1!(u_comp.0[i + j].0, t.coeff(j))
+                );
+            }
+            s_i
+        })
+        .collect();
+
+    (c1, c2, c3, c4)
+}
+
 pub fn update(
     qap: &QAP, 
     srs: &SRS, 
@@ -222,7 +260,7 @@ pub fn update(
             let rho = [rho_a_2, rho_b_2, rho_x_2];
             batch.phase_1_append(rho);    // Append here instead of returning like in the paper
 
-            // phase 8 (compute u-component)
+            // step 8 (compute u-component)
             let c1 = (0..2 * n - 1)
                 .map(|i| {
                     let res = (
@@ -245,11 +283,13 @@ pub fn update(
                 .collect();
             let u_new: U =  (c1, c2);
 
-            // phase 9
-            // phase 10
+            // step 9
+            let s_new = specialize(&qap, &u_new);
+
+            // step 10
             SRS {
-                u: (Vec::<(G1, G2)>::new(), Vec::<(G1, G1, G2, G2)>::new()),
-                s: (G1_zero!(), G2_zero!(), Vec::<G1>::new(), Vec::<G1>::new()),
+                u: u_new,
+                s: s_new,
             }
         },
         Phase::TWO => {
