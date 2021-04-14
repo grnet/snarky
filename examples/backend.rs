@@ -1,7 +1,7 @@
 use std::time::Instant;
 use snarky::{
     scalar, zero, one, rndscalar, pow, G1_gen, G2_gen, contained_in_group, 
-    add_1, add_2, G1_zero, G2_zero, mult_1, mult_2, pair, hashG1,
+    add_1, add_2, G1_zero, G2_zero, mult_1, mult_2, pair, bytes_1, bytes_2, hashG1,
 };
 
 fn main() {
@@ -65,6 +65,18 @@ fn main() {
     let start = Instant::now();
     let res = pair!(_7G, _9H);                              // 7G * 9H
     println!("[+] pair ({:.2?})", start.elapsed());
+
+    // Bytes exports
+    
+    let z1 = G1_zero!();
+    let start = Instant::now();
+    bytes_1!(z1);
+    println!("[+] bytes_1 ({:.2?})", start.elapsed());
+
+    let z2 = G2_zero!();
+    let start = Instant::now();
+    bytes_2!(z2);
+    println!("[+] bytes_2 ({:.2?})", start.elapsed());
 
     // hash-G1
     use sha2::Digest;

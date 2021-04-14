@@ -10,7 +10,7 @@ use criterion::{
 
 use snarky::{
     scalar, zero, one, rndscalar, pow, G1_gen, G2_gen, contained_in_group, 
-    add_1, add_2, G1_zero, G2_zero, mult_1, mult_2, pair, hashG1, 
+    add_1, add_2, G1_zero, G2_zero, mult_1, mult_2, pair, bytes_1, bytes_2, hashG1, 
 };
 
 fn bench_scalar(c: &mut Criterion) {
@@ -184,12 +184,28 @@ fn bench_pair(c: &mut Criterion) {
     group.finish();
 }
 
+fn bench_bytes_1(c: &mut Criterion) {
+    let zero = G1_zero!();
+    c.bench_function(
+        "bytes_1!",
+        |b| b.iter(|| bytes_1!(zero))
+    );
+}
+
+fn bench_bytes_2(c: &mut Criterion) {
+    let zero = G2_zero!();
+    c.bench_function(
+        "bytes_2!",
+        |b| b.iter(|| bytes_2!(zero))
+    );
+}
+
 fn bench_hashG1(c: &mut Criterion) {
     use sha2::Digest;
     use std::convert::TryInto;
     let bytes: Vec<u8> = (0..5).collect();
     c.bench_function(
-        "scalar!",
+        "hashG1!",
         |b| b.iter(|| hashG1!(&bytes))
     );
 }
@@ -212,6 +228,8 @@ criterion_group!(
     bench_mult_1,
     bench_mult_2,
     bench_pair,
+    bench_bytes_1,
+    bench_bytes_2,
     bench_hashG1,
 );
 criterion_main!(benches);

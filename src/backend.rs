@@ -125,6 +125,19 @@ macro_rules! pair {
     }
 }
 
+#[macro_export]
+macro_rules! bytes_1 {
+    ($elem:expr) => {
+        $elem.to_uncompressed()     // 96 bytes
+    }
+}
+
+#[macro_export]
+macro_rules! bytes_2 {
+    ($elem:expr) => {
+        $elem.to_compressed()       // 96 bytes
+    }
+}
 
 #[macro_export]
 macro_rules! hashG1 {
@@ -318,5 +331,19 @@ mod tests {
             let right = mult_2!(G2_gen!(), scalar!(f2));
             assert_eq!(pair!(left, right), pairing(&left, &right));
         }
+    }
+
+    #[test]
+    fn test_bytes_1() {
+        let mut expected: [u8; 96] = [0; 96];
+        expected[0] = 64;
+        assert!(bytes_1!(G1_zero!()) == expected);
+    }
+
+    #[test]
+    fn test_bytes_2() {
+        let mut expected: [u8; 96] = [0; 96];
+        expected[0] = 192;
+        assert!(bytes_2!(G2_zero!()) == expected);
     }
 }

@@ -1,4 +1,5 @@
-use crate::{scalar, G1_gen, G2_gen, mult_1, mult_2, pair, contained_in_group, hashG1};
+use crate::{scalar, G1_gen, G2_gen, mult_1, mult_2, pair, contained_in_group, 
+    bytes_1, bytes_2, hashG1};
 use crate::backend::{
     G1Elem as G1,
     G2Elem as G2,
@@ -9,7 +10,7 @@ use sha2::Digest;               // Must be in scope for hashG1
 use std::convert::TryInto;      // Must be in scope for hashG1
 
 pub fn rndoracle(phi: (G1, G2)) -> G1 {
-    hashG1!(&[phi.0.to_uncompressed(), phi.1.to_compressed()].concat())
+    hashG1!(&[bytes_1!(phi.0), bytes_2!(phi.1)].concat())
 }
 
 pub fn prove_dlog(phi: (G1, G2), witness: Scalar) -> G1 {
