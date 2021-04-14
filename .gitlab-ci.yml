@@ -1,17 +1,23 @@
 image: rust:latest
 
-stages:
-  - test
-  - demo
+# stages:
+#   - test
+#   - demo
 
 test:
   # stage: test
   interruptible: true
   script:
-    - cargo test --verbose
+    - ./test.sh
 
 demo:
   # stage: demo
   interruptible: true
   script:
     - ./demo.sh --release 50 40 30 3 2 
+
+compile-benches:
+  # stage: ...
+  interruptible: true
+  script:
+    - cargo bench --no-run
