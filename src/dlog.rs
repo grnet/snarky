@@ -1,6 +1,6 @@
-use crate::{scalar, G1_gen, G2_gen, mult_1, mult_2, pair, contained_in_group, 
+use backend::{scalar, G1_gen, G2_gen, mult_1, mult_2, pair, contained_in_group, 
     bytes_1, bytes_2, hashG1};
-use crate::backend::{
+use backend::{
     G1Elem as G1,
     G2Elem as G2,
     Scalar,

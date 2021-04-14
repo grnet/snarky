@@ -1,7 +1,8 @@
 use std::time::Instant;
-use snarky::{
-    scalar, zero, one, rndscalar, pow, G1_gen, G2_gen, contained_in_group, 
-    add_1, add_2, G1_zero, G2_zero, mult_1, mult_2, pair, bytes_1, bytes_2, hashG1,
+use backend::{
+    scalar, zero, one, rndscalar, pow, G1_gen, G2_gen, G1_zero, G2_zero,
+    contained_in_group, add_1, add_2, mult_1, mult_2, pair, 
+    bytes_1, bytes_2, hashG1,
 };
 
 fn main() {

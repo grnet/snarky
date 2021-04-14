@@ -1,5 +1,3 @@
-// Note: Criterion only supports benchmarking of package level public functions
-
 use criterion::{
     black_box, 
     criterion_group, 
@@ -8,75 +6,18 @@ use criterion::{
     BenchmarkId,
 };
 
-use snarky::{
-    scalar, zero, one, rndscalar, pow, G1_gen, G2_gen, contained_in_group, 
-    add_1, add_2, G1_zero, G2_zero, mult_1, mult_2, pair, bytes_1, bytes_2, hashG1, 
+use backend::{scalar, G1_gen, G2_gen, G1_zero, G2_zero,
+    pow, contained_in_group, add_1, add_2, mult_1, mult_2, pair, 
+    bytes_1, bytes_2, hashG1,
 };
 
-fn bench_scalar(c: &mut Criterion) {
-    c.bench_function(
-        "scalar!",
-        |b| b.iter(|| scalar!(1000))
-    );
-}
-
-fn bench_zero(c: &mut Criterion) {
-    c.bench_function(
-        "zero!",
-        |b| b.iter(|| zero!())
-    );
-}
-
-fn bench_one(c: &mut Criterion) {
-    c.bench_function(
-        "one!",
-        |b| b.iter(|| one!())
-    );
-}
-
-fn bench_rndscalar(c: &mut Criterion) {
-    use rand::RngCore;
-    let mut rng = rand::thread_rng();
-    c.bench_function(
-        "rndscalar!",
-        |b| b.iter(|| rndscalar!(rng))
-    );
-}
 
 fn bench_power(c: &mut Criterion) {
-    c.bench_function(
-        "power!",
-        |b| b.iter(|| one!())
-    );
-}
-
-fn bench_G1_gen(c: &mut Criterion) {
     let base = scalar!(666);
     let exp = 999_usize;
     c.bench_function(
-        "G1_gen!",
+        "power!",
         |b| b.iter(|| pow!(base, exp))
-    );
-}
-
-fn bench_G2_gen(c: &mut Criterion) {
-    c.bench_function(
-        "G2_gen!",
-        |b| b.iter(|| G2_gen!())
-    );
-}
-
-fn bench_G1_zero(c: &mut Criterion) {
-    c.bench_function(
-        "G1_zero!",
-        |b| b.iter(|| G1_zero!())
-    );
-}
-
-fn bench_G2_zero(c: &mut Criterion) {
-    c.bench_function(
-        "G2_zero!",
-        |b| b.iter(|| G2_zero!())
     );
 }
 
@@ -210,19 +151,10 @@ fn bench_hashG1(c: &mut Criterion) {
     );
 }
 
-
-
 criterion_group!(
     benches,
-    bench_scalar,
-    bench_zero,
-    bench_one,
-    bench_rndscalar,
-    bench_G1_zero,
-    bench_G2_zero,
+    bench_power,
     bench_contained_in_group,
-    bench_G1_gen,
-    bench_G2_gen,
     bench_add_1,
     bench_add_2,
     bench_mult_1,

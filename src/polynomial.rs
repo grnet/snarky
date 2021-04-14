@@ -1,6 +1,6 @@
 use crate::error::PolyError;
-use crate::scalar;
-use crate::backend::Scalar as F;
+use backend::scalar;
+use backend::Scalar as F;
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Univariate {

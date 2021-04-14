@@ -1,8 +1,8 @@
-use crate::{
+use backend::{
     one, zero, rndscalar, scalar, pow, contained_in_group, 
     G1_gen, G2_gen, G1_zero, G2_zero, add_1, add_2, 
     mult_1, mult_2, pair};
-use crate::backend::{Scalar,
+use backend::{Scalar,
     G1Elem as G1, 
     G2Elem as G2,
 };

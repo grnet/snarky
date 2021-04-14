@@ -2,7 +2,6 @@
 //!
 //! The `snarky` crate implements ...
 
-mod backend;
 mod polynomial;
 mod constraints;
 mod util;
