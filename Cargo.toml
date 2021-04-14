@@ -5,8 +5,8 @@ authors = ["fmerg <fmerg@grnet.gr>"]
 edition = "2018"
 
 [dependencies]
-ark-ec = { path="./depends/algebra/ec" }
-ark-poly = { path="./depends/algebra/poly" }
+# ark-ec = { path="./depends/algebra/ec" }
+# ark-poly = { path="./depends/algebra/poly" }
 bls12_381 = "0.4.0"
 rand = "0.8.3"
 sha2 = "0.9.3"

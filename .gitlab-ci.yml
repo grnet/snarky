@@ -1,10 +1,17 @@
-stages:
-  - build
+image: rust:latest
 
-test lib:
-  stage: build
-  image: rust:latest
+stages:
+  - test
+  - demo
+
+test:
+  # stage: test
   interruptible: true
   script:
-    - cargo build --verbose
     - cargo test --verbose
+
+demo:
+  # stage: demo
+  interruptible: true
+  script:
+    - ./demo.sh --release 50 40 30 3 2 
