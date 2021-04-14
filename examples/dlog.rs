@@ -1,5 +1,5 @@
 use std::time::Instant;
-use snarky::dlog::{hashG1, random_oracle, prove_dlog, verify_dlog};
+use snarky::dlog::{hashG1, rndoracle, prove_dlog, verify_dlog};
 use snarky::{scalar, G1_gen, G2_gen, mult_1, mult_2};
 
 pub fn main() {
@@ -15,7 +15,7 @@ pub fn main() {
     let elem_2 = G2_gen!();
     let phi = (elem_1, elem_2);
     let start = Instant::now();
-    random_oracle(phi);
+    rndoracle(phi);
     println!("[+] Random oracle ({:.2?})", start.elapsed());
 
     let elem_1 = mult_1!(G1_gen!(), scalar!(100));

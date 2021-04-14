@@ -9,7 +9,7 @@ use criterion::{
 };
 
 use snarky::{
-    scalar, zero, one, rand_scalar, pow, G1_gen, G2_gen, contained_in_group, 
+    scalar, zero, one, rndscalar, pow, G1_gen, G2_gen, contained_in_group, 
     add_1, add_2, G1_zero, G2_zero, mult_1, mult_2, pair,
 };
 
@@ -34,12 +34,12 @@ fn bench_one(c: &mut Criterion) {
     );
 }
 
-fn bench_rand_scalar(c: &mut Criterion) {
+fn bench_rndscalar(c: &mut Criterion) {
     use rand::RngCore;
     let mut rng = rand::thread_rng();
     c.bench_function(
-        "rand_scalar!",
-        |b| b.iter(|| rand_scalar!(rng))
+        "rndscalar!",
+        |b| b.iter(|| rndscalar!(rng))
     );
 }
 
@@ -191,7 +191,7 @@ criterion_group!(
     bench_scalar,
     bench_zero,
     bench_one,
-    bench_rand_scalar,
+    bench_rndscalar,
     bench_G1_zero,
     bench_G2_zero,
     bench_contained_in_group,

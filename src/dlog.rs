@@ -22,17 +22,17 @@ pub fn hashG1(bytes: &[u8]) -> G1 {
     ::bls12_381::G1Affine::from(::bls12_381::G1Affine::generator() * factor)
 }
 
-pub fn random_oracle(phi: (G1, G2)) -> G1 {
+pub fn rndoracle(phi: (G1, G2)) -> G1 {
     hashG1(&[phi.0.to_uncompressed(), phi.1.to_compressed()].concat())
 }
 
 pub fn prove_dlog(phi: (G1, G2), witness: Scalar) -> G1 {
-    mult_1!(random_oracle(phi), witness)
+    mult_1!(rndoracle(phi), witness)
 }
 
 pub fn verify_dlog(G: &G1, H: &G2, phi: (G1, G2), proof: G1) -> bool {
     pair!(phi.0, H) == pair!(G, phi.1) && 
-    pair!(proof, H) == pair!(random_oracle(phi), phi.1)
+    pair!(proof, H) == pair!(rndoracle(phi), phi.1)
 }
 
 

@@ -1,6 +1,6 @@
 use std::time::Instant;
 use snarky::{
-    scalar, zero, one, rand_scalar, pow, G1_gen, G2_gen, contained_in_group, 
+    scalar, zero, one, rndscalar, pow, G1_gen, G2_gen, contained_in_group, 
     add_1, add_2, G1_zero, G2_zero, mult_1, mult_2, pair,
 };
 
@@ -13,11 +13,11 @@ fn main() {
     let nine = scalar!(9);
 
     // Random scalar definition
-    use rand::RngCore;                  // Must be present for rand_scalar
+    use rand::RngCore;                  // Must be present for rndscalar
     let start = Instant::now();
     let mut rng = rand::thread_rng();
-    let r = rand_scalar!(rng);
-    println!("[+] rand_scalar ({:.2?})", start.elapsed());
+    let r = rndscalar!(rng);
+    println!("[+] rndscalar ({:.2?})", start.elapsed());
 
     // Raising scalars to power
     let base = scalar!(666);

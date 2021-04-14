@@ -1,5 +1,5 @@
 use crate::{
-    one, zero, rand_scalar, scalar, pow, contained_in_group, 
+    one, zero, rndscalar, scalar, pow, contained_in_group, 
     G1_gen, G2_gen, G1_zero, G2_zero, add_1, add_2, 
     mult_1, mult_2, pair};
 use crate::backend::{Scalar,
@@ -43,10 +43,10 @@ impl Trapdoor {
 
     fn create_from_random(rng: &mut ::rand::RngCore) -> Self {
         Self {
-            a: rand_scalar!(rng), 
-            b: rand_scalar!(rng), 
-            d: rand_scalar!(rng), 
-            x: rand_scalar!(rng),
+            a: rndscalar!(rng), 
+            b: rndscalar!(rng), 
+            d: rndscalar!(rng), 
+            x: rndscalar!(rng),
         }
     }
 
@@ -229,9 +229,9 @@ pub fn update(
             // step 1
             let srs_u = &srs.u;
             // step 2 (fix witnesses)
-            let a_2 = rand_scalar!(rng);
-            let b_2 = rand_scalar!(rng);
-            let x_2 = rand_scalar!(rng);
+            let a_2 = rndscalar!(rng);
+            let b_2 = rndscalar!(rng);
+            let x_2 = rndscalar!(rng);
             // step 3
             let pi_a_2 = prove_dlog((mult_1!(G, a_2), mult_2!(H, a_2)), a_2);
             let pi_b_2 = prove_dlog((mult_1!(G, b_2), mult_2!(H, b_2)), b_2);
@@ -297,7 +297,7 @@ pub fn update(
             // step 1
             let srs_s = &srs.s;
             // step 2 (fix witness)
-            let d_2 = rand_scalar!(rng);
+            let d_2 = rndscalar!(rng);
             // step 3
             let pi_d_2 = prove_dlog((mult_1!(G, d_2), mult_2!(H, d_2)), d_2);
             // step 4

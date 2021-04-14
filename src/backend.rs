@@ -20,7 +20,7 @@ macro_rules! one {
 }
 
 #[macro_export]
-macro_rules! rand_scalar {
+macro_rules! rndscalar {
     ($rng:expr) => {
         {
             let mut buf = [0; 64];
