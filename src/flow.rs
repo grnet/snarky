@@ -342,6 +342,8 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     // ~step 1
     let srs_u = &srs.u;
     let srs_s = &srs.s;
+    let batch_u = &batch.phase_1;
+    let batch_s = &batch.phase_2;
 
     // step 2
     if !(srs_u.0.len() == 2 * n - 1 && srs_u.1.len() == n) {
@@ -369,7 +371,6 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     }
 
     // step 3
-    let batch_u = &batch.phase_1;
     for i in 0..batch_u.len() {
         for j in 0..3 {
             let rho = batch_u[i][j];
@@ -430,16 +431,33 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
         }
     }
 
-    // step ~7
+    // step 7
     if !(
         contained_in_group!(srs_s.0) && 
-        contained_in_group!(srs_s.1)
+        contained_in_group!(srs_s.1) &&
+        srs_s.2.len() == m - l &&
+        srs_s.3.len() == n - 1
     ) {
         return Verification::FAILURE
     }
+    for i in 0..m - l {
+        match
+            contained_in_group!(srs_s.2[i])
+        {
+            true    => continue,
+            _       => return Verification::FAILURE
+        }
+    }
+    for i in 0..n - 1 {
+        match
+            contained_in_group!(srs_s.3[i])
+        {
+            true    => continue,
+            _       => return Verification::FAILURE
+        }
+    }
 
     // step 8
-    let batch_s = &batch.phase_2;
     for i in 0..batch_s.len() {
         let rho = batch_s[i];
         match verify_dlog(&G, &H, (rho.1, rho.2), rho.3) {
@@ -457,9 +475,19 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
         }
     }
 
-    // ~step 9 
+    // step 9 
     if !(pair!(srs_s.0, H) == pair!(G, srs_s.1)) {
         return Verification::FAILURE
+    }
+    let len = batch_s.len();
+    if len > 0 {
+        if !(
+            srs_s.0 == batch_s[len - 1].0 &&
+            batch_s[len - 1].0 != G1_zero!()
+        ) 
+        {
+            return Verification::FAILURE
+        }
     }
 
     // step 10
