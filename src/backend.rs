@@ -125,6 +125,29 @@ macro_rules! pair {
     }
 }
 
+
+#[macro_export]
+macro_rules! hashG1 {
+    // bytes must be of type &[u8]
+    ($bytes:expr) => {
+        {
+            // Alternative Sha256 version (not working well with bls12_381 scalars)
+            //
+            // let mut hasher = ::sha2::Sha256::default();
+            // hasher.update(bytes);
+            // let buffer: [u8; 32] = hasher.finalize().try_into().unwrap();
+            // let factor = ::bls12_381::Scalar::from_bytes(&buffer).unwrap();
+
+            let mut hasher = ::sha2::Sha512::default();
+            hasher.update($bytes);
+            let buffer: [u8; 64] = hasher.finalize().as_slice().try_into().unwrap();
+            let factor = ::bls12_381::Scalar::from_bytes_wide(&buffer);
+
+            ::bls12_381::G1Affine::from(::bls12_381::G1Affine::generator() * factor)
+        }
+    }
+}
+
 // Export type aliases to be uniformly used accross the project
 pub type Scalar = ::bls12_381::Scalar;
 pub type G1Elem = ::bls12_381::G1Affine;

@@ -1,7 +1,7 @@
 use std::time::Instant;
 use snarky::{
     scalar, zero, one, rndscalar, pow, G1_gen, G2_gen, contained_in_group, 
-    add_1, add_2, G1_zero, G2_zero, mult_1, mult_2, pair,
+    add_1, add_2, G1_zero, G2_zero, mult_1, mult_2, pair, hashG1,
 };
 
 fn main() {
@@ -58,11 +58,21 @@ fn main() {
     assert_eq!(add_2!(zero_2, _10H), _10H);
 
     // Check inclusion group
-    assert!(contained_in_group!(_8G));                      // 8G E G1
+    assert!(contained_in_group!(_8G));                      //  8G E G1
     assert!(contained_in_group!(_10H));                     // 10H E G2
 
     // Pairing
     let start = Instant::now();
     let res = pair!(_7G, _9H);                              // 7G * 9H
     println!("[+] pair ({:.2?})", start.elapsed());
+
+    // hash-G1
+    use sha2::Digest;
+    use std::convert::TryInto;
+
+    use std::iter::FromIterator;
+    let bytes: Vec<u8> = (0..5).collect();
+    let start = Instant::now();
+    hashG1!(&bytes);
+    println!("[+] Computed G1-hash ({:.2?})", start.elapsed());
 }

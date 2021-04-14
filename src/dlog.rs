@@ -1,29 +1,15 @@
-use crate::{scalar, G1_gen, G2_gen, mult_1, mult_2, pair, contained_in_group};
+use crate::{scalar, G1_gen, G2_gen, mult_1, mult_2, pair, contained_in_group, hashG1};
 use crate::backend::{
     G1Elem as G1,
     G2Elem as G2,
     Scalar,
 };
 
-use sha2::Digest;   // Must be in scope for Sha256/512
-use std::convert::TryInto;
-
-pub fn hashG1(bytes: &[u8]) -> G1 {
-    // let mut hasher = ::sha2::Sha256::default();
-    // hasher.update(bytes);
-    // let buffer: [u8; 32] = hasher.finalize().try_into().unwrap();
-    // let factor = ::bls12_381::Scalar::from_bytes(&buffer).unwrap();
-
-    let mut hasher = ::sha2::Sha512::default();
-    hasher.update(bytes);
-    let buffer: [u8; 64] = hasher.finalize().as_slice().try_into().unwrap();
-    let factor = ::bls12_381::Scalar::from_bytes_wide(&buffer);
-
-    ::bls12_381::G1Affine::from(::bls12_381::G1Affine::generator() * factor)
-}
+use sha2::Digest;               // Must be in scope for hashG1
+use std::convert::TryInto;      // Must be in scope for hashG1
 
 pub fn rndoracle(phi: (G1, G2)) -> G1 {
-    hashG1(&[phi.0.to_uncompressed(), phi.1.to_compressed()].concat())
+    hashG1!(&[phi.0.to_uncompressed(), phi.1.to_compressed()].concat())
 }
 
 pub fn prove_dlog(phi: (G1, G2), witness: Scalar) -> G1 {
