@@ -11,7 +11,9 @@ bls12_381 = "0.4.0"
 rand = "0.8.3"
 sha2 = "0.9.3"
 # sha3 = "0.9.3"
+util = { path = "./util" }
 backend = { path = "./backend" }
+polynomials = { path = "./polynomials" }
 
 [dev-dependencies]
 criterion = "0.3.4"

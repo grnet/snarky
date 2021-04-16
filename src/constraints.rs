@@ -1,4 +1,4 @@
-use crate::polynomial::Univariate;
+use polynomials::Univariate;
 
 #[derive(Debug, PartialEq)]
 pub struct QAP {

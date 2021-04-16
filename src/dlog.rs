@@ -6,8 +6,9 @@ use backend::{
     Scalar,
 };
 
-use sha2::Digest;               // Must be in scope for hashG1
-use std::convert::TryInto;      // Must be in scope for hashG1
+// Must both be in scope for hashG1
+use sha2::Digest;
+use std::convert::TryInto;
 
 pub fn rndoracle(phi: (G1, G2)) -> G1 {
     hashG1!(&[bytes_1!(phi.0), bytes_2!(phi.1)].concat())
@@ -26,7 +27,7 @@ pub fn verify_dlog(G: &G1, H: &G2, phi: (G1, G2), proof: G1) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::map;
+    use util::map;
 
     #[test]
     fn test_dlog_proof() {
