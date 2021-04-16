@@ -1,30 +1,21 @@
 use std::time::Instant;
-use snarky::QAP;
+use circuits::QAP;
 use snarky::flow::{Trapdoor, Phase, BatchProof, setup, update, verify};
-
-fn parse_arg(pos: usize, default: &str, message: &str) -> usize {
-    std::env::args()
-        .nth(pos)
-        .unwrap_or(default.to_string())
-        .parse::<usize>()
-        .ok()
-        .expect(message)
-}
 
 fn main() {
 
-    let m = parse_arg(1, "50", "m should be a positive integer");
-    let n = parse_arg(2, "40", "n should be a positive integer");
-    let l = parse_arg(3, "30", "l should be a positive integer");
+    let m = util::parse_arg(1, "50", "m should be a positive integer");
+    let n = util::parse_arg(2, "40", "n should be a positive integer");
+    let l = util::parse_arg(3, "30", "l should be a positive integer");
 
-    let nr_1 = parse_arg(4, "3", "Number of phase 1 updates should be a non-negative integer");
-    let nr_2 = parse_arg(5, "2", "Number of phase 2 updates should be a non-negative integer");
+    let nr_1 = util::parse_arg(4, "3", "phase 1 repeats should be a non-negative integer");
+    let nr_2 = util::parse_arg(5, "2", "phase 2 repeats should be a non-negative integer");
 
     use rand::RngCore;                  // Must be present for update
     let mut rng = rand::thread_rng();
 
-    let start = Instant::now();
     println!("--------------------------");
+    let start = Instant::now();
 
     let qap_start = Instant::now();
     let qap = QAP::create_default(m, n, l)
@@ -69,6 +60,7 @@ fn main() {
     assert!(res.as_bool());
     println!("[+] {:?} ({:.2?})", res, ver_start.elapsed());
 
+    let elapsed = start.elapsed();
     println!("--------------------------");
-    println!("Time elaped: {:.2?}", start.elapsed());
+    println!("Time elaped: {:.2?}", elapsed);
 }

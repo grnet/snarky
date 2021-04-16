@@ -6,7 +6,7 @@ use backend::{Scalar,
     G1Elem as G1, 
     G2Elem as G2,
 };
-use crate::constraints::QAP;
+use circuits::QAP;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Verification {

@@ -14,6 +14,7 @@ sha2 = "0.9.3"
 util = { path = "./util" }
 backend = { path = "./backend" }
 polynomials = { path = "./polynomials" }
+circuits = { path = "./circuits" }
 
 [dev-dependencies]
 criterion = "0.3.4"

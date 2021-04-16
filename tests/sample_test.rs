@@ -1,7 +1,7 @@
 //! Contains integration tests involving `snarky` public functions.
 //! Common test setup taken from the `common` module.
 
-use snarky::QAP;
+use circuits::QAP;
 use snarky::flow::{Trapdoor, Phase, BatchProof, setup, update, verify};
 use rand::RngCore;                  // Must be present for update
 mod common;
