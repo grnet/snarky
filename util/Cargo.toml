@@ -1,0 +1,5 @@
+[package]
+name = "util"
+version = "0.1.0"
+authors = ["fmerg <fmerg@grnet.gr>"]
+edition = "2018"
