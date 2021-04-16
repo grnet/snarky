@@ -1,6 +1,6 @@
 use std::time::Instant;
 use circuits::QAP;
-use snarky::flow::{Trapdoor, Phase, BatchProof, setup, update, verify};
+use protocol::flow::{Trapdoor, Phase, BatchProof, setup, update, verify};
 
 fn main() {
 
@@ -10,9 +10,6 @@ fn main() {
 
     let nr_1 = util::parse_arg(4, "3", "phase 1 repeats should be a non-negative integer");
     let nr_2 = util::parse_arg(5, "2", "phase 2 repeats should be a non-negative integer");
-
-    use rand::RngCore;                  // Must be present for update
-    let mut rng = rand::thread_rng();
 
     println!("--------------------------");
     let start = Instant::now();
@@ -35,7 +32,7 @@ fn main() {
     let mut count = 0;
     loop {
         let start = Instant::now();
-        srs = update(&qap, &srs, &mut batch, Phase::ONE, &mut rng);
+        srs = update(&qap, &srs, &mut batch, Phase::ONE);
         println!("[+] Phase 1 SRS update ({:.2?})", start.elapsed());
         count += 1;
         if count == nr_1 {
@@ -47,7 +44,7 @@ fn main() {
     let mut count = 0;
     loop {
         let start = Instant::now();
-        srs = update(&qap, &srs, &mut batch, Phase::TWO, &mut rng);
+        srs = update(&qap, &srs, &mut batch, Phase::TWO);
         println!("[+] Phase 2 SRS update ({:.2?})", start.elapsed());
         count += 1;
         if count == nr_2 {

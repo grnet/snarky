@@ -1,6 +1,6 @@
 use std::time::Instant;
 use backend::{
-    scalar, zero, one, rndscalar, pow, G1_gen, G2_gen, G1_zero, G2_zero,
+    scalar, zero, one, rscalar, pow, G1_gen, G2_gen, G1_zero, G2_zero,
     contained_in_group, add_1, add_2, mult_1, mult_2, pair, 
     bytes_1, bytes_2, hashG1,
 };
@@ -14,11 +14,11 @@ fn main() {
     let nine = scalar!(9);
 
     // Random scalar definition
-    use rand::RngCore;                  // Must be present for rndscalar
+    use rand::RngCore;                  // Must be present for rscalar
     let start = Instant::now();
     let mut rng = rand::thread_rng();
-    let r = rndscalar!(rng);
-    println!("[+] rndscalar ({:.2?})", start.elapsed());
+    let r = rscalar!(rng);
+    println!("[+] rscalar ({:.2?})", start.elapsed());
 
     // Raising scalars to power
     let base = scalar!(666);

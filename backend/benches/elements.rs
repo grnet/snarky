@@ -8,7 +8,7 @@ use criterion::{
 };
 
 use backend::{
-    scalar, zero, one, rndscalar, G1_gen, G2_gen, G1_zero, G2_zero,
+    scalar, zero, one, rscalar, G1_gen, G2_gen, G1_zero, G2_zero,
 };
 
 fn bench_scalar(c: &mut Criterion) {
@@ -32,12 +32,12 @@ fn bench_one(c: &mut Criterion) {
     );
 }
 
-fn bench_rndscalar(c: &mut Criterion) {
+fn bench_rscalar(c: &mut Criterion) {
     use rand::RngCore;
     let mut rng = rand::thread_rng();
     c.bench_function(
-        "rndscalar!",
-        |b| b.iter(|| rndscalar!(rng))
+        "rscalar!",
+        |b| b.iter(|| rscalar!(rng))
     );
 }
 
@@ -74,7 +74,7 @@ criterion_group!(
     bench_scalar,
     bench_zero,
     bench_one,
-    bench_rndscalar,
+    bench_rscalar,
     bench_G1_zero,
     bench_G2_zero,
     bench_G1_gen,

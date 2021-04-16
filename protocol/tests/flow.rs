@@ -2,8 +2,7 @@
 //! Common test setup taken from the `common` module.
 
 use circuits::QAP;
-use snarky::flow::{Trapdoor, Phase, BatchProof, setup, update, verify};
-use rand::RngCore;                  // Must be present for update
+use protocol::flow::{Trapdoor, Phase, BatchProof, setup, update, verify};
 
 #[test]
 fn test_flow() {
@@ -14,9 +13,8 @@ fn test_flow() {
     let trapdoor = Trapdoor::create_from_units();
     let srs = setup(&trapdoor, &qap);
     let mut batch = BatchProof::initiate();
-    let mut rng = rand::thread_rng();
-    let srs = update(&qap, &srs, &mut batch, Phase::ONE, &mut rng);
-    let srs = update(&qap, &srs, &mut batch, Phase::TWO, &mut rng);
+    let srs = update(&qap, &srs, &mut batch, Phase::ONE);
+    let srs = update(&qap, &srs, &mut batch, Phase::TWO);
     let res = verify(&qap, &srs, &batch);
     assert!(res.as_bool());
 }

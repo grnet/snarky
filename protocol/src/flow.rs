@@ -1,5 +1,5 @@
 use backend::{
-    one, zero, rndscalar, scalar, pow, contained_in_group, 
+    one, zero, rscalar, scalar, pow, contained_in_group, 
     G1_gen, G2_gen, G1_zero, G2_zero, add_1, add_2, 
     mult_1, mult_2, pair};
 use backend::{Scalar,
@@ -43,10 +43,10 @@ impl Trapdoor {
 
     fn create_from_random(rng: &mut ::rand::RngCore) -> Self {
         Self {
-            a: rndscalar!(rng), 
-            b: rndscalar!(rng), 
-            d: rndscalar!(rng), 
-            x: rndscalar!(rng),
+            a: rscalar!(rng), 
+            b: rscalar!(rng), 
+            d: rscalar!(rng), 
+            x: rscalar!(rng),
         }
     }
 
@@ -215,23 +215,18 @@ pub fn specialize(qap: &QAP, u_comp: &U) -> S {
     (c1, c2, c3, c4)
 }
 
-pub fn update(
-    qap: &QAP, 
-    srs: &SRS, 
-    batch: &mut BatchProof, 
-    phase: Phase, 
-    rng: &mut RngCore
-) -> SRS {
+pub fn update(qap: &QAP, srs: &SRS, batch: &mut BatchProof, phase: Phase) -> SRS {
     let (G, H) = (G1_gen!(), G2_gen!());
     let (m, n, l) = qap.dimensions();
+    let mut rng = rand::thread_rng();
     match phase {
         Phase::ONE => {
             // step 1
             let srs_u = &srs.u;
             // step 2 (fix witnesses)
-            let a_2 = rndscalar!(rng);
-            let b_2 = rndscalar!(rng);
-            let x_2 = rndscalar!(rng);
+            let a_2 = rscalar!(rng);
+            let b_2 = rscalar!(rng);
+            let x_2 = rscalar!(rng);
             // step 3
             let pi_a_2 = prove_dlog((mult_1!(G, a_2), mult_2!(H, a_2)), a_2);
             let pi_b_2 = prove_dlog((mult_1!(G, b_2), mult_2!(H, b_2)), b_2);
@@ -297,7 +292,7 @@ pub fn update(
             // step 1
             let srs_s = &srs.s;
             // step 2 (fix witness)
-            let d_2 = rndscalar!(rng);
+            let d_2 = rscalar!(rng);
             // step 3
             let pi_d_2 = prove_dlog((mult_1!(G, d_2), mult_2!(H, d_2)), d_2);
             // step 4

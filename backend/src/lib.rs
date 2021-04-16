@@ -20,7 +20,7 @@ macro_rules! one {
 }
 
 #[macro_export]
-macro_rules! rndscalar {
+macro_rules! rscalar {
     ($rng:expr) => {
         {
             let mut buf = [0; 64];
@@ -102,7 +102,7 @@ macro_rules! mult_2 {
 macro_rules! G1_zero {
     () => {
         ::bls12_381::G1Affine::from(
-            ::bls12_381::G1Affine::generator() * 
+            ::bls12_381::G1Affine::generator() *
             ::bls12_381::Scalar::zero()
         )
     }
@@ -112,7 +112,7 @@ macro_rules! G1_zero {
 macro_rules! G2_zero {
     () => {
         ::bls12_381::G2Affine::from(
-            ::bls12_381::G2Affine::generator() * 
+            ::bls12_381::G2Affine::generator() *
             ::bls12_381::Scalar::zero()
         )
     }

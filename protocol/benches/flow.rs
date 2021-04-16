@@ -1,5 +1,3 @@
-// Note: Criterion only supports benchmarking of package level public functions
-
 use criterion::{
     black_box, 
     criterion_group, 
@@ -8,7 +6,7 @@ use criterion::{
     BenchmarkId,
 };
 use circuits::QAP;
-use snarky::flow::{Trapdoor, Phase, BatchProof, setup, update, verify};
+use protocol::flow::{Trapdoor, Phase, BatchProof, setup, update, verify};
 
 fn bench_setup(c: &mut Criterion) {
     let mut group = c.benchmark_group("setup");
@@ -38,11 +36,9 @@ fn bench_update_phase_1(c: &mut Criterion) {
         let trapdoor = Trapdoor::create_from_units();
         let srs = setup(&trapdoor, &qap);
         let mut batch = BatchProof::initiate();
-        use rand::RngCore;
-        let mut rng = rand::thread_rng();
         group.bench_function(
             format!("Phase 1 SRS update with m:{}, n:{}, l{}", m, n, l),
-            |b| b.iter(|| update(&qap, &srs, &mut batch, Phase::ONE, &mut rng)),
+            |b| b.iter(|| update(&qap, &srs, &mut batch, Phase::ONE)),
         );
     }
     group.finish();
@@ -59,11 +55,9 @@ fn bench_update_phase_2(c: &mut Criterion) {
         let trapdoor = Trapdoor::create_from_units();
         let srs = setup(&trapdoor, &qap);
         let mut batch = BatchProof::initiate();
-        use rand::RngCore;
-        let mut rng = rand::thread_rng();
         group.bench_function(
             format!("Phase 2 SRS update with m:{}, n:{}, l{}", m, n, l),
-            |b| b.iter(|| update(&qap, &srs, &mut batch, Phase::TWO, &mut rng)),
+            |b| b.iter(|| update(&qap, &srs, &mut batch, Phase::TWO)),
         );
     }
     group.finish();
@@ -81,10 +75,8 @@ fn bench_verify(c: &mut Criterion) {
         let trapdoor = Trapdoor::create_from_units();
         let srs = setup(&trapdoor, &qap);
         let mut batch = BatchProof::initiate();
-        use rand::RngCore;
-        let mut rng = rand::thread_rng();
-        let srs = update(&qap, &srs, &mut batch, Phase::ONE, &mut rng);
-        let srs = update(&qap, &srs, &mut batch, Phase::ONE, &mut rng);
+        let srs = update(&qap, &srs, &mut batch, Phase::ONE);
+        let srs = update(&qap, &srs, &mut batch, Phase::TWO);
         group.bench_function(
             format!("Verify SRS with m:{}, n:{}, l{}", m, n, l),
             |b| b.iter(|| verify(&qap, &srs, &batch)),
@@ -102,16 +94,14 @@ fn bench_flow(c: &mut Criterion) {
         (1000, 1000, 1000),
     ].iter() {
         let mut batch = BatchProof::initiate();
-        use rand::RngCore;
-        let mut rng = rand::thread_rng();
         group.bench_function(
             format!("Verify SRS with m:{}, n:{}, l{}", m, n, l),
             |b| b.iter(|| {
                 let qap = QAP::create_default(*m, *n, *l).unwrap();
                 let trapdoor = Trapdoor::create_from_units();
                 let srs = setup(&trapdoor, &qap);
-                let srs = update(&qap, &srs, &mut batch, Phase::ONE, &mut rng);
-                let srs = update(&qap, &srs, &mut batch, Phase::TWO, &mut rng);
+                let srs = update(&qap, &srs, &mut batch, Phase::ONE);
+                let srs = update(&qap, &srs, &mut batch, Phase::TWO);
                 verify(&qap, &srs, &batch)
             }),
         );

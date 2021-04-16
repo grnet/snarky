@@ -7,7 +7,7 @@ use criterion::{
     Criterion, 
     BenchmarkId,
 };
-use snarky::dlog::{rndoracle, prove_dlog, verify_dlog};
+use protocol::dlog::{rndoracle, prove_dlog, verify_dlog};
 use backend::{scalar, G1_gen, G2_gen, mult_1, mult_2};
 
 fn bench_rndoracle(c: &mut Criterion) {
