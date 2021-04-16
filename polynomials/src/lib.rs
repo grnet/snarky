@@ -1,8 +1,6 @@
-mod error;
-
-use crate::error::PolyError;
 use backend::scalar;
 use backend::Scalar as F;
+use util::SnarkyError;
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Univariate {
@@ -30,10 +28,10 @@ impl Univariate {
     // Horner's method NOTE: Sparse polynomial evaluation can be
     // more efficient with exponentiation optimized with 
     // square-and-add method which is log(N).
-    pub fn evaluate(&self, elm: &F) -> Result<F, PolyError> {
+    pub fn evaluate(&self, elm: &F) -> Result<F, SnarkyError> {
         match self.degree {
             -1 => Err(
-                PolyError::create("Cannot evaluate: degree -1", 
+                SnarkyError::create("Cannot evaluate polynomial", "degree -1",
                     file!(), 
                     line!() - 4, 
                     201

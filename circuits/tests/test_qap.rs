@@ -24,7 +24,7 @@ fn test_QAP_creation() {
 }
 
 #[test]
-fn test_QAPError_with_code_101() {
+fn test_SnarkyError_with_code_101() {
     let (m, n, l) = (5, 4, 3);
     let u = vec![Univariate::create_from_u64(&vec![0; n]); m];
     let v = vec![Univariate::create_from_u64(&vec![0; n]); m + 1];
@@ -38,7 +38,7 @@ fn test_QAPError_with_code_101() {
 }
 
 #[test]
-fn test_QAPError_with_code_102() {
+fn test_SnarkyError_with_code_102() {
     let (m, n, l) = (3, 4, 3);
     let u = vec![Univariate::create_from_u64(&vec![0; n]); m + 1];
     let v = vec![Univariate::create_from_u64(&vec![0; n]); m + 1];
@@ -52,7 +52,7 @@ fn test_QAPError_with_code_102() {
 }
 
 #[test]
-fn test_QAPError_with_code_103() {
+fn test_SnarkyError_with_code_103() {
     let (m, n, l) = (5, 4, 3);
     let u = vec![Univariate::create_from_u64(&vec![0; n + 1]); m + 1];
     let v = vec![Univariate::create_from_u64(&vec![0; n]); m + 1];
@@ -84,7 +84,7 @@ fn test_QAP_default_creation() {
 }
 
 #[test]
-fn test_QAPError_upon_default_creation() {
+fn test_SnarkyError_upon_default_creation() {
     let (m, n, l) = (3, 4, 3);
     let result = QAP::create_default(m, n, l);
     assert!(result.is_err());

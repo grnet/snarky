@@ -8,6 +8,7 @@ edition = "2018"
 bls12_381 = "0.4.0"
 backend = { path="../backend" }
 polynomials = { path="../polynomials" }
+util = { path = "../util" }
 
 [dev-dependencies]
 util = { path = "../util" }
