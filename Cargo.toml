@@ -1,28 +1,13 @@
-[package]
-name = "snarky"
-version = "0.1.0"
-authors = ["fmerg <fmerg@grnet.gr>"]
-edition = "2018"
+[workspace]
+members = [
+    "util",
+    "backend",
+    "polynomials",
+    "circuits",
+    "protocol",
+]
 
-[dependencies]
-# ark-ec = { path="./depends/algebra/ec" }
-# ark-poly = { path="./depends/algebra/poly" }
-bls12_381 = "0.4.0"
-rand = "0.8.3"
-sha2 = "0.9.3"
-# sha3 = "0.9.3"
-util = { path = "./util" }
-backend = { path = "./backend" }
-polynomials = { path = "./polynomials" }
-circuits = { path = "./circuits" }
-
-[dev-dependencies]
-criterion = "0.3.4"
-
-[[bench]]
-name = "dlog"
-harness = false
-
-[[bench]]
-name = "flow"
-harness = false
+# [profile.release]
+# lto = true
+# panic = 'abort'
+# codegen-units = 1

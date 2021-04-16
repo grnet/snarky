@@ -1,6 +1,6 @@
 //! # snarky
 //!
-//! The `snarky` crate implements ...
+//! The `protocol` crate implements ...
 
 pub mod flow;
 pub mod dlog;
