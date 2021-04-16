@@ -1,23 +1,46 @@
 image: rust:latest
 
-# stages:
-#   - test
-#   - demo
+stages:
+  - backend
+  - polynomials
+  - circuits
+  - protocol
 
-test:
-  # stage: test
-  interruptible: true
-  script:
-    - ./test.sh
 
-demo:
-  # stage: demo
-  interruptible: true
+test_backend:
+  stage: backend
   script:
-    - ./demo.sh --release 50 40 30 3 2 
+    - cd backend
+    - cargo test --release --verbose
 
-compile-benches:
-  # stage: ...
-  interruptible: true
+test_polynomials:
+  stage: polynomials
+  needs: [test_backend]
   script:
-    - cargo bench --no-run
+    - cd polynomials
+    - cargo test --release --verbose
+
+test_circuits:
+  stage: circuits
+  needs: [test_polynomials]
+  script:
+    - cd circuits
+    - cargo test --release --verbose
+
+test_protocol:
+  stage: protocol
+  needs: [test_circuits]
+  script:
+    - cd protocol
+    - cargo test --release --verbose
+
+
+# check-benchmarks:
+#   interruptible: true
+#   script:
+#     - cargo bench --no-run
+# 
+# demo:
+#   interruptible: true
+#   script:
+#     - ./demo.sh --release 50 40 30 3 2 
