@@ -1,5 +1,5 @@
 use polynomials::Univariate;
-use backend::scalar;
+use backend::{scalar, Scalar};
 use util::map;
 
 #[test]
@@ -13,13 +13,13 @@ fn test_create() {
     };
     for coeffs in parametrization {
         assert_eq!(
-            Univariate::create(
+            Univariate::<Scalar>::create(
                 coeffs
                     .iter()
                     .map(|&c| scalar!(c))
                     .collect::<Vec<_>>()
             ),
-            Univariate {
+            Univariate::<Scalar> {
                 coeffs: coeffs
                     .iter()
                     .map(|&c| scalar!(c))
@@ -40,8 +40,8 @@ fn test_create_from_u64() {
     };
     for coeffs in parametrization {
         assert_eq!(
-            Univariate::create_from_u64(&coeffs),
-            Univariate {
+            Univariate::<Scalar>::create_from_u64(&coeffs),
+            Univariate::<Scalar> {
                 coeffs: coeffs
                     .iter()
                     .map(|&c| scalar!(c))
@@ -62,7 +62,7 @@ fn test_degree() {
         vec![0, 0, 0, 0] => 3
     };
     for (coeffs, degree) in parametrization {
-        let poly = Univariate::create_from_u64(&coeffs);
+        let poly = Univariate::<Scalar>::create_from_u64(&coeffs);
         assert_eq!(poly.degree(), degree);
     }
 }
@@ -76,7 +76,7 @@ fn test_coeff() {
         vec![0, 1, 2, 3],
     };
     for coeffs in parametrization {
-        let poly = Univariate::create_from_u64(&coeffs);
+        let poly = Univariate::<Scalar>::create_from_u64(&coeffs);
         for i in 0..coeffs.len() {
             assert_eq!(poly.coeff(i), scalar!(i as u64));
         }
@@ -86,7 +86,7 @@ fn test_coeff() {
 #[test]
 fn test_eval() {
 
-    let edge = Univariate::create(vec![]);  // degree -1
+    let edge = Univariate::<Scalar>::create(vec![]);  // degree -1
 
     let parametrization = map! {
         (vec![0], 0) => 0,
@@ -110,7 +110,7 @@ fn test_eval() {
         assert_eq!(edge.evaluate(&scalar!(elm)).unwrap_err().code, 201);
 
         // Normal case
-        let poly = Univariate::create_from_u64(&coeffs);
+        let poly = Univariate::<Scalar>::create_from_u64(&coeffs);
         assert_eq!(poly.evaluate(&scalar!(elm)).unwrap(), scalar!(value));
     }
 }

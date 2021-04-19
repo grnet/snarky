@@ -5,11 +5,11 @@ authors = ["fmerg <fmerg@grnet.gr>"]
 edition = "2018"
 
 [dependencies]
-bls12_381 = "0.4.0"
-backend = { path="../backend" }
 util = { path = "../util" }
 
 [dev-dependencies]
+bls12_381 = "0.4.0"
+backend = { path="../backend" }
 util = { path = "../util" }
 criterion = "0.3.4"
 

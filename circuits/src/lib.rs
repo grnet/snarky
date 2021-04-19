@@ -1,3 +1,4 @@
+use backend::Scalar as F;
 use polynomials::Univariate;
 use util::SnarkyError;
 
@@ -6,16 +7,21 @@ pub struct QAP {
     pub m: usize,
     pub n: usize,
     pub l: usize,
-    pub u: Vec<Univariate>,
-    pub v: Vec<Univariate>,
-    pub w: Vec<Univariate>,
-    pub t: Univariate,
+    pub u: Vec<Univariate<F>>,
+    pub v: Vec<Univariate<F>>,
+    pub w: Vec<Univariate<F>>,
+    pub t: Univariate<F>,
 }
 
 impl QAP {
 
-    pub fn create(u: Vec<Univariate>, v: Vec<Univariate>, w: Vec<Univariate>, 
-        t: Univariate, l: usize) -> Result<Self, SnarkyError> {
+    pub fn create(
+        u: Vec<Univariate<F>>, 
+        v: Vec<Univariate<F>>, 
+        w: Vec<Univariate<F>>, 
+        t: Univariate<F>, 
+        l: usize
+    ) -> Result<Self, SnarkyError> {
         let m = u.len() - 1;
         if v.len() != m + 1 || w.len() != m + 1 {
             let line = line!() - 1;
@@ -75,7 +81,7 @@ impl QAP {
     }
 
     pub fn collections(&self) -> 
-        (&Vec<Univariate>, &Vec<Univariate>, &Vec<Univariate>, &Univariate) 
+        (&Vec<Univariate<F>>, &Vec<Univariate<F>>, &Vec<Univariate<F>>, &Univariate<F>) 
     {
         let u = &self.u;
         let v = &self.v;

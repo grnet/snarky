@@ -1,14 +1,18 @@
-use backend::scalar;
-use backend::Scalar as F;
+use std::ops::Add;
+use std::ops::Mul;
+use std::ops::AddAssign;
+use std::ops::MulAssign;
+use core::default::Default;
+use core::convert::From;
 use util::SnarkyError;
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct Univariate {
+pub struct Univariate<F> {
     pub coeffs: Vec<F>,
     pub degree: isize,
 }
 
-impl Univariate {
+impl<F> Univariate<F> {
 
     pub fn create(coeffs: Vec<F>) -> Self {
         Self {
@@ -17,13 +21,29 @@ impl Univariate {
         }
     }
 
+    pub fn degree(&self) -> isize {
+        self.degree
+    }
+}
+
+impl<F: Copy> Univariate<F> {
+    pub fn coeff(&self, i: usize) -> F {
+        self.coeffs[i]
+    }
+}
+
+impl<F: From<u64>> Univariate<F> {
+
     pub fn create_from_u64(coeffs: &Vec<u64>) -> Self {
         let coeffs = coeffs
             .iter()
-            .map(|&c| scalar!(c))
+            .map(|&c| F::from(c))
             .collect::<Vec<_>>();
         Self::create(coeffs)
     }
+}
+
+impl<F: Default + Copy + AddAssign + MulAssign> Univariate<F> {
 
     // Horner's method NOTE: Sparse polynomial evaluation can be
     // more efficient with exponentiation optimized with 
@@ -37,26 +57,18 @@ impl Univariate {
                     201
                 )),
             _  => {
-                let mut result = F::zero();
+                let mut result = F::default();  // Should be zero
                 if self.coeffs.len() > 0 {
                     let n = self.coeffs.len() - 1;
                     result = self.coeffs[n];
                     for i in 0..n {
-                        result *= elm;
-                        result += &self.coeffs[n - i - 1];
+                        result *= *elm;
+                        result += self.coeffs[n - i - 1];
                     }
                 }
                 Ok(result)
             }
         }
-    }
-
-    pub fn degree(&self) -> isize {
-        self.degree
-    }
-
-    pub fn coeff(&self, i: usize) -> F {
-        self.coeffs[i]
     }
 }
 
