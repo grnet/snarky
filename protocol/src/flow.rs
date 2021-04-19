@@ -149,12 +149,14 @@ pub enum Phase {
     TWO = 2,
 }
 
-type Rho = (G1, G1, G2, G1);
+// ZK-proof of knowlendge of the values used in SRS update
+#[derive(Clone, Debug, PartialEq)]
+pub struct UpdateProof(G1, G1, G2, G1);
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct BatchProof {
-    pub phase_1: Vec<[Rho; 3]>,
-    pub phase_2: Vec<Rho>,
+    pub phase_1: Vec<[UpdateProof; 3]>,
+    pub phase_2: Vec<UpdateProof>,
 }
 
 impl BatchProof {
@@ -165,11 +167,11 @@ impl BatchProof {
         }
     }
 
-    pub fn phase_1_append(&mut self, proof: [Rho; 3]) {
+    pub fn phase_1_append(&mut self, proof: [UpdateProof; 3]) {
         self.phase_1.push(proof);
     }
 
-    pub fn phase_2_append(&mut self, proof: Rho) {
+    pub fn phase_2_append(&mut self, proof: UpdateProof) {
         self.phase_2.push(proof);
     }
 }
@@ -234,9 +236,9 @@ pub fn update(qap: &QAP, srs: &SRS, batch: &mut BatchProof, phase: Phase) -> SRS
             let pi_x = prove_dlog((smul1!(x, G), smul2!(x, H)), x);
 
             // step 4-6
-            let rho_a = (smul1!(a, srs_u.1[0].0), smul1!(a, G), smul2!(a, H), pi_a);
-            let rho_b = (smul1!(b, srs_u.1[0].1), smul1!(b, G), smul2!(b, H), pi_b);
-            let rho_x = (smul1!(x, srs_u.0[1].0), smul1!(x, G), smul2!(x, H), pi_x);
+            let rho_a = UpdateProof(smul1!(a, srs_u.1[0].0), smul1!(a, G), smul2!(a, H), pi_a);
+            let rho_b = UpdateProof(smul1!(b, srs_u.1[0].1), smul1!(b, G), smul2!(b, H), pi_b);
+            let rho_x = UpdateProof(smul1!(x, srs_u.0[1].0), smul1!(x, G), smul2!(x, H), pi_x);
 
             // step 7
             let rho = [rho_a, rho_b, rho_x];
@@ -282,7 +284,7 @@ pub fn update(qap: &QAP, srs: &SRS, batch: &mut BatchProof, phase: Phase) -> SRS
             let pi_d = prove_dlog((smul1!(d, G), smul2!(d, H)), d);
 
             // step 4
-            let rho = (smul1!(d, srs_s.0), smul1!(d, G), smul2!(d, H), pi_d);
+            let rho = UpdateProof(smul1!(d, srs_s.0), smul1!(d, G), smul2!(d, H), pi_d);
             batch.phase_2_append(rho);
 
             // step 5
@@ -342,10 +344,10 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
         }
     }
 
-    // step 3
+    // step 3 (batch phase 1 verification)
     for i in 0..batch_u.len() {
         for j in 0..3 {
-            let rho = batch_u[i][j];
+            let rho = &batch_u[i][j];
             match verify_dlog(&G, &H, (rho.1, rho.2), rho.3) {
                 true    => {
                     if i != 0 {
@@ -431,7 +433,7 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
 
     // step 8
     for i in 0..batch_s.len() {
-        let rho = batch_s[i];
+        let rho = &batch_s[i];
         match verify_dlog(&G, &H, (rho.1, rho.2), rho.3) {
             true    => {
                 if i != 0 {
