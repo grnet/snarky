@@ -149,9 +149,23 @@ pub enum Phase {
     TWO = 2,
 }
 
-// ZK-proof of knowlendge of the values used in SRS update
+// PoK for the value used in SRS update
 #[derive(Clone, Debug, PartialEq)]
 pub struct UpdateProof(G1, G1, G2, G1);
+
+impl UpdateProof {
+    
+    pub fn for_value(ctx: (&G1, &G2, G1), val: &Scalar) -> Self {
+        let (G, H, base) = ctx;
+        let prf = prove_dlog((smul1!(val, G), smul2!(val, H)), *val);
+        Self(
+            smul1!(val, base),
+            smul1!(val, G),
+            smul2!(val, H),
+            prf
+        )
+    }
+}
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct BatchProof {
@@ -230,19 +244,13 @@ pub fn update(qap: &QAP, srs: &SRS, batch: &mut BatchProof, phase: Phase) -> SRS
                 rscalar!(rng),
             );                  // step 2 (fix witnesses)
 
-            // step 3
-            let pi_a = prove_dlog((smul1!(a, G), smul2!(a, H)), a);
-            let pi_b = prove_dlog((smul1!(b, G), smul2!(b, H)), b);
-            let pi_x = prove_dlog((smul1!(x, G), smul2!(x, H)), x);
-
-            // step 4-6
-            let rho_a = UpdateProof(smul1!(a, srs_u.1[0].0), smul1!(a, G), smul2!(a, H), pi_a);
-            let rho_b = UpdateProof(smul1!(b, srs_u.1[0].1), smul1!(b, G), smul2!(b, H), pi_b);
-            let rho_x = UpdateProof(smul1!(x, srs_u.0[1].0), smul1!(x, G), smul2!(x, H), pi_x);
+            // step 3-6 (PoK for values used in update)
+            let rho_a = UpdateProof::for_value((&G, &H, srs_u.1[0].0), &a);
+            let rho_b = UpdateProof::for_value((&G, &H, srs_u.1[0].1), &b);
+            let rho_x = UpdateProof::for_value((&G, &H, srs_u.0[1].0), &x);
 
             // step 7
-            let rho = [rho_a, rho_b, rho_x];
-            batch.phase_1_append(rho);
+            batch.phase_1_append([rho_a, rho_b, rho_x]);
 
             // step 8 (compute u-component)
             let c1 = (0..2 * n - 1)
@@ -280,11 +288,8 @@ pub fn update(qap: &QAP, srs: &SRS, batch: &mut BatchProof, phase: Phase) -> SRS
             let srs_s = &srs.s;     // step 1
             let d = rscalar!(rng);  // step 2 (fix witnesses)
 
-            // step 3
-            let pi_d = prove_dlog((smul1!(d, G), smul2!(d, H)), d);
-
-            // step 4
-            let rho = UpdateProof(smul1!(d, srs_s.0), smul1!(d, G), smul2!(d, H), pi_d);
+            // step 3-4 (PoK for value used in update)
+            let rho = UpdateProof::for_value((&G, &H, srs_s.0), &d);
             batch.phase_2_append(rho);
 
             // step 5
