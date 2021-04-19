@@ -73,7 +73,7 @@ impl QAP {
         Self::create(u, v, w, t, l)
     }
 
-    pub fn dimensions(&self) -> (usize, usize, usize) {
+    pub fn shape(&self) -> (usize, usize, usize) {
         let m = self.m;
         let n = self.n;
         let l = self.l;

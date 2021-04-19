@@ -69,16 +69,16 @@ pub struct SRS {
 }
 
 impl SRS {
-    fn generate(trapdoor: &Trapdoor, qap: &QAP) -> Self {
+    fn create(trp: &Trapdoor, qap: &QAP) -> Self {
         Self {
-            u: Self::generate_u(&trapdoor, &qap),
-            s: Self::generate_s(&trapdoor, &qap),
+            u: Self::create_u(&trp, &qap),
+            s: Self::create_s(&trp, &qap),
         }
     }
 
-    fn generate_u(trapdoor: &Trapdoor, qap: &QAP) -> U {
-        let (a, b, _, x) = trapdoor.extract();
-        let (_, n, _) = qap.dimensions();
+    fn create_u(trp: &Trapdoor, qap: &QAP) -> U {
+        let (a, b, _, x) = trp.extract();
+        let (_, n, _) = qap.shape();
 
         let G = genG1!();
         let H = genG2!();
@@ -108,9 +108,9 @@ impl SRS {
         (c1, c2)
     }
 
-    fn generate_s(trapdoor: &Trapdoor, qap: &QAP) -> S {
-        let (a, b, d, x) = trapdoor.extract();
-        let (m, n, l) = qap.dimensions();
+    fn create_s(trp: &Trapdoor, qap: &QAP) -> S {
+        let (a, b, d, x) = trp.extract();
+        let (m, n, l) = qap.shape();
         let (u, v, w, t) = qap.collections();
 
         let G = genG1!();
@@ -121,7 +121,7 @@ impl SRS {
         let c1 = smul1!(d, G);
         let c2 = smul2!(d, H);
 
-        let c_3 = (l + 1..m + 1)
+        let c3 = (l + 1..m + 1)
             .map(|i| {
                 let ux_i = u[i].evaluate(&x).unwrap();
                 let vx_i = v[i].evaluate(&x).unwrap();
@@ -131,16 +131,16 @@ impl SRS {
             .collect();
 
         let tx = t.evaluate(&x).unwrap();
-        let c_4 = (0..n - 1)
+        let c4 = (0..n - 1)
             .map(|i| smul1!(pow!(x, i) * tx * dinv, G))
             .collect();
 
-        (c1, c2, c_3, c_4)
+        (c1, c2, c3, c4)
     }
 }
 
-pub fn setup(trapdoor: &Trapdoor, qap: &QAP) -> SRS {
-    SRS::generate(&trapdoor, &qap)
+pub fn setup(trp: &Trapdoor, qap: &QAP) -> SRS {
+    SRS::create(&trp, &qap)
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -177,8 +177,8 @@ impl BatchProof {
 use rand::RngCore;                  // Must be present for update
 use crate::dlog::prove_dlog;
 
-pub fn specialize(qap: &QAP, u_comp: &U) -> S {
-    let (m, n, l) = qap.dimensions();
+pub fn specialize(qap: &QAP, srs_u: &U) -> S {
+    let (m, n, l) = qap.shape();
     let (u, v, w, t) = qap.collections();
 
     let c1 = genG1!();
@@ -190,9 +190,9 @@ pub fn specialize(qap: &QAP, u_comp: &U) -> S {
                 s_i = add1!(
                     s_i,
                     add1!(
-                        smul1!(u[i].coeff(j), u_comp.1[j].1),
-                        smul1!(v[i].coeff(j), u_comp.1[j].0),
-                        smul1!(w[i].coeff(j), u_comp.0[j].0)
+                        smul1!(u[i].coeff(j), srs_u.1[j].1),
+                        smul1!(v[i].coeff(j), srs_u.1[j].0),
+                        smul1!(w[i].coeff(j), srs_u.0[j].0)
                     )
                 );
             }
@@ -205,7 +205,7 @@ pub fn specialize(qap: &QAP, u_comp: &U) -> S {
             for j in 0..n {
                 s_i = add1!(
                     s_i,
-                    smul1!(t.coeff(j), u_comp.0[i + j].0)
+                    smul1!(t.coeff(j), srs_u.0[i + j].0)
                 );
             }
             s_i
@@ -217,51 +217,37 @@ pub fn specialize(qap: &QAP, u_comp: &U) -> S {
 
 pub fn update(qap: &QAP, srs: &SRS, batch: &mut BatchProof, phase: Phase) -> SRS {
     let (G, H) = (genG1!(), genG2!());
-    let (m, n, l) = qap.dimensions();
+    let (m, n, l) = qap.shape();
     let mut rng = rand::thread_rng();
     match phase {
         Phase::ONE => {
-            // step 1
-            let srs_u = &srs.u;
-            // step 2 (fix witnesses)
-            let a_2 = rscalar!(rng);
-            let b_2 = rscalar!(rng);
-            let x_2 = rscalar!(rng);
+            let srs_u = &srs.u; // step 1
+            let (a, b, x) = (
+                rscalar!(rng), 
+                rscalar!(rng), 
+                rscalar!(rng),
+            );                  // step 2 (fix witnesses)
+
             // step 3
-            let pi_a_2 = prove_dlog((smul1!(a_2, G), smul2!(a_2, H)), a_2);
-            let pi_b_2 = prove_dlog((smul1!(b_2, G), smul2!(b_2, H)), b_2);
-            let pi_x_2 = prove_dlog((smul1!(x_2, G), smul2!(x_2, H)), x_2);
-            // step 4
-            let rho_a_2 = (
-                smul1!(a_2, srs_u.1[0].0),
-                smul1!(a_2, G),
-                smul2!(a_2, H),
-                pi_a_2,
-            );
-            // step 5
-            let rho_b_2 = (
-                smul1!(b_2, srs_u.1[0].1),
-                smul1!(b_2, G),
-                smul2!(b_2, H),
-                pi_b_2,
-            );
-            // step 6
-            let rho_x_2 = (
-                smul1!(x_2, srs_u.0[1].0),
-                smul1!(x_2, G),
-                smul2!(x_2, H),
-                pi_x_2,
-            );
+            let pi_a = prove_dlog((smul1!(a, G), smul2!(a, H)), a);
+            let pi_b = prove_dlog((smul1!(b, G), smul2!(b, H)), b);
+            let pi_x = prove_dlog((smul1!(x, G), smul2!(x, H)), x);
+
+            // step 4-6
+            let rho_a = (smul1!(a, srs_u.1[0].0), smul1!(a, G), smul2!(a, H), pi_a);
+            let rho_b = (smul1!(b, srs_u.1[0].1), smul1!(b, G), smul2!(b, H), pi_b);
+            let rho_x = (smul1!(x, srs_u.0[1].0), smul1!(x, G), smul2!(x, H), pi_x);
+
             // step 7
-            let rho = [rho_a_2, rho_b_2, rho_x_2];
-            batch.phase_1_append(rho);    // Append here instead of returning like in the paper
+            let rho = [rho_a, rho_b, rho_x];
+            batch.phase_1_append(rho);
 
             // step 8 (compute u-component)
             let c1 = (0..2 * n - 1)
                 .map(|i| {
                     let res = (
-                        smul1!(pow!(x_2, i), srs_u.0[i].0),
-                        smul2!(pow!(x_2, i), srs_u.0[i].1),
+                        smul1!(pow!(x, i), srs_u.0[i].0),
+                        smul2!(pow!(x, i), srs_u.0[i].1),
                     );
                     res
                 })
@@ -269,10 +255,10 @@ pub fn update(qap: &QAP, srs: &SRS, batch: &mut BatchProof, phase: Phase) -> SRS
             let c2 = (0..n)
                 .map(|i| {
                     let res = (
-                        smul1!(a_2 * pow!(x_2, i), srs_u.1[i].0),
-                        smul1!(b_2 * pow!(x_2, i), srs_u.1[i].1),
-                        smul2!(a_2 * pow!(x_2, i), srs_u.1[i].2),
-                        smul2!(b_2 * pow!(x_2, i), srs_u.1[i].3),
+                        smul1!(a * pow!(x, i), srs_u.1[i].0),
+                        smul1!(b * pow!(x, i), srs_u.1[i].1),
+                        smul2!(a * pow!(x, i), srs_u.1[i].2),
+                        smul2!(b * pow!(x, i), srs_u.1[i].3),
                     );
                     res
                 })
@@ -289,34 +275,25 @@ pub fn update(qap: &QAP, srs: &SRS, batch: &mut BatchProof, phase: Phase) -> SRS
             }
         },
         Phase::TWO => {
-            // step 1
-            let srs_s = &srs.s;
-            // step 2 (fix witness)
-            let d_2 = rscalar!(rng);
+            let srs_s = &srs.s;     // step 1
+            let d = rscalar!(rng);  // step 2 (fix witnesses)
+
             // step 3
-            let pi_d_2 = prove_dlog((smul1!(d_2, G), smul2!(d_2, H)), d_2);
+            let pi_d = prove_dlog((smul1!(d, G), smul2!(d, H)), d);
+
             // step 4
-            let rho = (
-                smul1!(d_2, srs_s.0),
-                smul1!(d_2, G),
-                smul2!(d_2, H),
-                pi_d_2,
-            );
-            batch.phase_2_append(rho);  // Append here instead of returning like in the paper
+            let rho = (smul1!(d, srs_s.0), smul1!(d, G), smul2!(d, H), pi_d);
+            batch.phase_2_append(rho);
 
             // step 5
-            let dinv = d_2.invert().unwrap();
-            let c1 = smul1!(d_2, srs_s.0);
-            let c2 = smul2!(d_2, srs_s.1);
+            let dinv = d.invert().unwrap();
+            let c1 = smul1!(d, srs_s.0);
+            let c2 = smul2!(d, srs_s.1);
             let c3 = (0..m - l)
-                .map(|i| {
-                     smul1!(dinv, srs_s.2[i])
-                })
+                .map(|i| smul1!(dinv, srs_s.2[i]))
                 .collect();
             let c4 = (0..n - 1)
-                .map(|i| {
-                     smul1!(dinv, srs_s.3[i])
-                })
+                .map(|i| smul1!(dinv, srs_s.3[i]))
                 .collect();
             SRS {
                 u: srs.u.clone(),
@@ -329,7 +306,7 @@ pub fn update(qap: &QAP, srs: &SRS, batch: &mut BatchProof, phase: Phase) -> SRS
 use crate::dlog::verify_dlog;
 
 pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
-    let (m, n, l) = qap.dimensions();
+    let (m, n, l) = qap.shape();
     let (u, v, w, t) = qap.collections();
     let G = genG1!();
     let H = genG2!();

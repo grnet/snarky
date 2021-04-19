@@ -22,8 +22,8 @@ fn main() {
     println!("[+] Created QAP with m:{} n:{} l:{} ({:.2?})", m, n, l, qap_start.elapsed());
 
     let srs_start = Instant::now();
-    let trapdoor = Trapdoor::create_from_units();
-    let mut srs = setup(&trapdoor, &qap);
+    let trp = Trapdoor::create_from_units();
+    let mut srs = setup(&trp, &qap);
     println!("[+] Initialized SRS ({:.2?})", srs_start.elapsed());
 
     let mut batch = BatchProof::initiate();
