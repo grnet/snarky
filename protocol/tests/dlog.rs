@@ -13,8 +13,8 @@ fn test_dlog_proof() {
     for ((f1, f2, w), expected) in parametrization {
         let G = genG1!();
         let H = genG2!();
-        let elem_1 = smul1!(genG1!(), scalar!(f1));
-        let elem_2 = smul2!(genG2!(), scalar!(f2));
+        let elem_1 = smul1!(scalar!(f1), genG1!());
+        let elem_2 = smul2!(scalar!(f2), genG2!());
         let phi = (elem_1, elem_2);
         let witness = scalar!(w);
         let proof = prove_dlog(phi, witness);

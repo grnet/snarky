@@ -1,7 +1,7 @@
 use std::time::Instant;
 use backend::{
     scalar, zero, one, rscalar, pow, genG1, genG2, zeroG1, zeroG2,
-    contained_in_group, add1, add2, smul1, smul2, pair, 
+    contained_in_group, add1, add2, smul1, smul2, pair,
     bytes1, bytes2, hashG1,
 };
 
@@ -37,10 +37,10 @@ fn main() {
 
     // Multiplication
     let start = Instant::now();
-    let _7G = smul1!(G, seven);                            // 7G
+    let _7G = smul1!(seven, G);                            // 7G
     println!("[+] smul1 ({:.2?})", start.elapsed());
     let start = Instant::now();
-    let _9H = smul2!(H, nine);                             // 9H
+    let _9H = smul2!(nine, H);                             // 9H
     println!("[+] smul2 ({:.2?})", start.elapsed());
 
     // Addition
@@ -52,7 +52,7 @@ fn main() {
     assert_eq!(add1!(zero_1, _8G), _8G);
 
     let start = Instant::now();
-    let _10H = smul2!(H, nine);                            // H + 9H
+    let _10H = smul2!(nine, H);                            // H + 9H
     println!("[+] add2 ({:.2?})", start.elapsed());
 
     assert_eq!(add2!(_10H, zero_2), _10H);
@@ -68,7 +68,7 @@ fn main() {
     println!("[+] pair ({:.2?})", start.elapsed());
 
     // Bytes exports
-    
+
     let z1 = zeroG1!();
     let start = Instant::now();
     bytes1!(z1);

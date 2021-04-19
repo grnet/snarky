@@ -26,14 +26,14 @@ macro_rules! add2 {
 
 #[macro_export]
 macro_rules! smul1 {
-    ($elem: expr, $factor: expr) => {
+    ($factor: expr, $elem: expr) => {
         ::bls12_381::G1Affine::from($elem * $factor)
     }
 }
 
 #[macro_export]
 macro_rules! smul2 {
-    ($elem: expr, $factor: expr) => {
+    ($factor: expr, $elem: expr) => {
         ::bls12_381::G2Affine::from($elem * $factor)
     }
 }

@@ -12,8 +12,8 @@ pub fn main() {
     rndoracle(phi);
     println!("[+] Random oracle ({:.2?})", start.elapsed());
 
-    let elem_1 = smul1!(genG1!(), scalar!(100));
-    let elem_2 = smul2!(genG2!(), scalar!(100));
+    let elem_1 = smul1!(scalar!(100), genG1!());
+    let elem_2 = smul2!(scalar!(100), genG2!());
     let phi = (elem_1, elem_2);
     let witness = scalar!(100);
     let start = Instant::now();

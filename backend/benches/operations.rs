@@ -1,13 +1,13 @@
 use criterion::{
-    black_box, 
-    criterion_group, 
-    criterion_main, 
-    Criterion, 
+    black_box,
+    criterion_group,
+    criterion_main,
+    Criterion,
     BenchmarkId,
 };
 
 use backend::{scalar, genG1, genG2, zeroG1, zeroG2,
-    pow, contained_in_group, add1, add2, smul1, smul2, pair, 
+    pow, contained_in_group, add1, add2, smul1, smul2, pair,
     bytes1, bytes2, hashG1,
 };
 
@@ -44,8 +44,8 @@ fn bench_add1(c: &mut Criterion) {
         let _f1 = scalar!(*f1 as u64);
         let _f2 = scalar!(*f2 as u64);
         let G = genG1!();
-        let left  = smul1!(G, _f1);
-        let right = smul1!(G, _f2);
+        let left  = smul1!(_f1, G);
+        let right = smul1!(_f2, G);
         group.bench_function(
             format!("Compute {}G + {}G", f1, f2),
             |b| b.iter(|| add1!(left, right)),
@@ -62,8 +62,8 @@ fn bench_add2(c: &mut Criterion) {
         let _f1 = scalar!(*f1 as u64);
         let _f2 = scalar!(*f2 as u64);
         let H = genG2!();
-        let left  = smul2!(H, _f1);
-        let right = smul2!(H, _f2);
+        let left  = smul2!(_f1, H);
+        let right = smul2!(_f2, H);
         group.bench_function(
             format!("Compute {}H + {}H", f1, f2),
             |b| b.iter(|| add2!(left, right)),
@@ -80,10 +80,10 @@ fn bench_smul1(c: &mut Criterion) {
         let _f1 = scalar!(*f1 as u64);
         let _f2 = scalar!(*f2 as u64);
         let G = genG1!();
-        let elm = smul1!(G, _f2);
+        let elm = smul1!(_f2, G);
         group.bench_function(
             format!("Compute {} * ({}G)", f1, f2),
-            |b| b.iter(|| smul1!(elm, _f1)),
+            |b| b.iter(|| smul1!(_f1, elm)),
         );
     }
     group.finish();
@@ -97,10 +97,10 @@ fn bench_smul2(c: &mut Criterion) {
         let _f1 = scalar!(*f1 as u64);
         let _f2 = scalar!(*f2 as u64);
         let H = genG2!();
-        let elm = smul2!(H, _f2);
+        let elm = smul2!(_f2, H);
         group.bench_function(
             format!("Compute {} * ({}H)", f1, f2),
-            |b| b.iter(|| smul2!(elm, _f1)),
+            |b| b.iter(|| smul2!(_f1, elm)),
         );
     }
     group.finish();
@@ -115,8 +115,8 @@ fn bench_pair(c: &mut Criterion) {
         let _f2 = scalar!(*f2 as u64);
         let G = genG1!();
         let H = genG2!();
-        let left  = smul1!(G, _f1);
-        let right = smul2!(H, _f2);
+        let left  = smul1!(_f1, G);
+        let right = smul2!(_f2, H);
         group.bench_function(
             format!("Compute {}G o {}H", f1, f2),
             |b| b.iter(|| pair!(left, right)),

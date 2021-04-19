@@ -7,7 +7,7 @@ use bls12_381::{Scalar, G1Affine, G2Affine};
 #[test]
 fn test_genG1() {
     assert_eq!(
-        G1Affine::generator(), 
+        G1Affine::generator(),
         genG1!()
     );
 }
@@ -15,7 +15,7 @@ fn test_genG1() {
 #[test]
 fn test_genG2() {
     assert_eq!(
-        G2Affine::generator(), 
+        G2Affine::generator(),
         genG2!()
     );
 }
@@ -23,7 +23,7 @@ fn test_genG2() {
 #[test]
 fn test_zeroG1() {
     assert_eq!(
-        G1Affine::from(G1Affine::generator() * Scalar::zero()), 
+        G1Affine::from(G1Affine::generator() * Scalar::zero()),
         zeroG1!()
     );
 }
@@ -31,7 +31,7 @@ fn test_zeroG1() {
 #[test]
 fn test_zeroG2() {
     assert_eq!(
-        G2Affine::from(G2Affine::generator() * Scalar::zero()), 
+        G2Affine::from(G2Affine::generator() * Scalar::zero()),
         zeroG2!()
     );
 }
@@ -43,8 +43,8 @@ fn test_contained_in_group() {
     let parametrization = [0, 1, 2, 7, 11, 666, 389473847];
     for factor in &parametrization {
         let f = scalar!(*factor);
-        let elem1 = smul1!(G, f);
-        let elem2 = smul2!(H, f);
+        let elem1 = smul1!(f, G);
+        let elem2 = smul2!(f, H);
         assert!(contained_in_group!(elem1));
         assert!(contained_in_group!(elem2));
     }

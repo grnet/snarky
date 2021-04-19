@@ -1,9 +1,9 @@
 use backend::{
-    one, zero, rscalar, scalar, pow, contained_in_group, 
-    genG1, genG2, zeroG1, zeroG2, add1, add2, 
+    one, zero, rscalar, scalar, pow, contained_in_group,
+    genG1, genG2, zeroG1, zeroG2, add1, add2,
     smul1, smul2, pair};
 use backend::{Scalar,
-    G1Elem as G1, 
+    G1Elem as G1,
     G2Elem as G2,
 };
 use circuits::QAP;
@@ -34,18 +34,18 @@ impl Trapdoor {
 
     pub fn create_from_units() -> Self {
         Self {
-            a: one!(), 
-            b: one!(), 
-            d: one!(), 
+            a: one!(),
+            b: one!(),
+            d: one!(),
             x: one!(),
         }
     }
 
     fn create_from_random(rng: &mut ::rand::RngCore) -> Self {
         Self {
-            a: rscalar!(rng), 
-            b: rscalar!(rng), 
-            d: rscalar!(rng), 
+            a: rscalar!(rng),
+            b: rscalar!(rng),
+            d: rscalar!(rng),
             x: rscalar!(rng),
         }
     }
@@ -86,8 +86,8 @@ impl SRS {
         let c1 = (0..2 * n - 1)
             .map(|i| {
                 let res = (
-                    smul1!(G, pow!(x, i)),
-                    smul2!(H, pow!(x, i)),
+                    smul1!(pow!(x, i), G),
+                    smul2!(pow!(x, i), H),
                 );
                 res
             })
@@ -96,10 +96,10 @@ impl SRS {
         let c2 = (0..n)
             .map(|i| {
                 let res = (
-                    smul1!(G, a * pow!(x, i)),
-                    smul1!(G, b * pow!(x, i)),
-                    smul2!(H, a * pow!(x, i)),
-                    smul2!(H, b * pow!(x, i)),
+                    smul1!(a * pow!(x, i), G),
+                    smul1!(b * pow!(x, i), G),
+                    smul2!(a * pow!(x, i), H),
+                    smul2!(b * pow!(x, i), H),
                 );
                 res
             })
@@ -118,21 +118,21 @@ impl SRS {
 
         let dinv = d.invert().unwrap();
 
-        let c1 = smul1!(G, d);
-        let c2 = smul2!(H, d);
+        let c1 = smul1!(d, G);
+        let c2 = smul2!(d, H);
 
         let c_3 = (l + 1..m + 1)
             .map(|i| {
                 let ux_i = u[i].evaluate(&x).unwrap();
                 let vx_i = v[i].evaluate(&x).unwrap();
                 let wx_i = w[i].evaluate(&x).unwrap();
-                smul1!(G, (b * ux_i + a * vx_i + wx_i) * dinv)
+                smul1!((b * ux_i + a * vx_i + wx_i) * dinv, G)
             })
             .collect();
 
         let tx = t.evaluate(&x).unwrap();
         let c_4 = (0..n - 1)
-            .map(|i| smul1!(G, pow!(x, i) * tx * dinv))
+            .map(|i| smul1!(pow!(x, i) * tx * dinv, G))
             .collect();
 
         (c1, c2, c_3, c_4)
@@ -160,7 +160,7 @@ pub struct BatchProof {
 impl BatchProof {
     pub fn initiate() -> Self {
         Self {
-            phase_1: Vec::new(), 
+            phase_1: Vec::new(),
             phase_2: Vec::new()
         }
     }
@@ -190,9 +190,9 @@ pub fn specialize(qap: &QAP, u_comp: &U) -> S {
                 s_i = add1!(
                     s_i,
                     add1!(
-                        smul1!(u_comp.1[j].1, u[i].coeff(j)),
-                        smul1!(u_comp.1[j].0, v[i].coeff(j)),
-                        smul1!(u_comp.0[j].0, w[i].coeff(j))
+                        smul1!(u[i].coeff(j), u_comp.1[j].1),
+                        smul1!(v[i].coeff(j), u_comp.1[j].0),
+                        smul1!(w[i].coeff(j), u_comp.0[j].0)
                     )
                 );
             }
@@ -205,7 +205,7 @@ pub fn specialize(qap: &QAP, u_comp: &U) -> S {
             for j in 0..n {
                 s_i = add1!(
                     s_i,
-                    smul1!(u_comp.0[i + j].0, t.coeff(j))
+                    smul1!(t.coeff(j), u_comp.0[i + j].0)
                 );
             }
             s_i
@@ -228,28 +228,28 @@ pub fn update(qap: &QAP, srs: &SRS, batch: &mut BatchProof, phase: Phase) -> SRS
             let b_2 = rscalar!(rng);
             let x_2 = rscalar!(rng);
             // step 3
-            let pi_a_2 = prove_dlog((smul1!(G, a_2), smul2!(H, a_2)), a_2);
-            let pi_b_2 = prove_dlog((smul1!(G, b_2), smul2!(H, b_2)), b_2);
-            let pi_x_2 = prove_dlog((smul1!(G, x_2), smul2!(H, x_2)), x_2);
+            let pi_a_2 = prove_dlog((smul1!(a_2, G), smul2!(a_2, H)), a_2);
+            let pi_b_2 = prove_dlog((smul1!(b_2, G), smul2!(b_2, H)), b_2);
+            let pi_x_2 = prove_dlog((smul1!(x_2, G), smul2!(x_2, H)), x_2);
             // step 4
             let rho_a_2 = (
-                smul1!(srs_u.1[0].0, a_2), 
-                smul1!(G, a_2),
-                smul2!(H, a_2), 
+                smul1!(a_2, srs_u.1[0].0),
+                smul1!(a_2, G),
+                smul2!(a_2, H),
                 pi_a_2,
             );
             // step 5
             let rho_b_2 = (
-                smul1!(srs_u.1[0].1, b_2), 
-                smul1!(G, b_2),
-                smul2!(H, b_2), 
+                smul1!(b_2, srs_u.1[0].1),
+                smul1!(b_2, G),
+                smul2!(b_2, H),
                 pi_b_2,
             );
             // step 6
             let rho_x_2 = (
-                smul1!(srs_u.0[1].0, x_2), 
-                smul1!(G, x_2),
-                smul2!(H, x_2), 
+                smul1!(x_2, srs_u.0[1].0),
+                smul1!(x_2, G),
+                smul2!(x_2, H),
                 pi_x_2,
             );
             // step 7
@@ -260,8 +260,8 @@ pub fn update(qap: &QAP, srs: &SRS, batch: &mut BatchProof, phase: Phase) -> SRS
             let c1 = (0..2 * n - 1)
                 .map(|i| {
                     let res = (
-                        smul1!(srs_u.0[i].0, pow!(x_2, i)),
-                        smul2!(srs_u.0[i].1, pow!(x_2, i)),
+                        smul1!(pow!(x_2, i), srs_u.0[i].0),
+                        smul2!(pow!(x_2, i), srs_u.0[i].1),
                     );
                     res
                 })
@@ -269,10 +269,10 @@ pub fn update(qap: &QAP, srs: &SRS, batch: &mut BatchProof, phase: Phase) -> SRS
             let c2 = (0..n)
                 .map(|i| {
                     let res = (
-                        smul1!(srs_u.1[i].0, a_2 * pow!(x_2, i)),
-                        smul1!(srs_u.1[i].1, b_2 * pow!(x_2, i)),
-                        smul2!(srs_u.1[i].2, a_2 * pow!(x_2, i)),
-                        smul2!(srs_u.1[i].3, b_2 * pow!(x_2, i)),
+                        smul1!(a_2 * pow!(x_2, i), srs_u.1[i].0),
+                        smul1!(b_2 * pow!(x_2, i), srs_u.1[i].1),
+                        smul2!(a_2 * pow!(x_2, i), srs_u.1[i].2),
+                        smul2!(b_2 * pow!(x_2, i), srs_u.1[i].3),
                     );
                     res
                 })
@@ -294,28 +294,28 @@ pub fn update(qap: &QAP, srs: &SRS, batch: &mut BatchProof, phase: Phase) -> SRS
             // step 2 (fix witness)
             let d_2 = rscalar!(rng);
             // step 3
-            let pi_d_2 = prove_dlog((smul1!(G, d_2), smul2!(H, d_2)), d_2);
+            let pi_d_2 = prove_dlog((smul1!(d_2, G), smul2!(d_2, H)), d_2);
             // step 4
             let rho = (
-                smul1!(srs_s.0, d_2),
-                smul1!(G, d_2),
-                smul2!(H, d_2),
+                smul1!(d_2, srs_s.0),
+                smul1!(d_2, G),
+                smul2!(d_2, H),
                 pi_d_2,
             );
             batch.phase_2_append(rho);  // Append here instead of returning like in the paper
 
             // step 5
             let dinv = d_2.invert().unwrap();
-            let c1 = smul1!(srs_s.0, d_2);
-            let c2 = smul2!(srs_s.1, d_2);
+            let c1 = smul1!(d_2, srs_s.0);
+            let c2 = smul2!(d_2, srs_s.1);
             let c3 = (0..m - l)
                 .map(|i| {
-                     smul1!(srs_s.2[i], dinv)
+                     smul1!(dinv, srs_s.2[i])
                 })
                 .collect();
             let c4 = (0..n - 1)
                 .map(|i| {
-                     smul1!(srs_s.3[i], dinv)
+                     smul1!(dinv, srs_s.3[i])
                 })
                 .collect();
             SRS {
@@ -372,8 +372,8 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
             match verify_dlog(&G, &H, (rho.1, rho.2), rho.3) {
                 true    => {
                     if i != 0 {
-                        match 
-                            pair!(rho.0, H) == pair!(batch_u[i - 1][j].0, rho.2) 
+                        match
+                            pair!(rho.0, H) == pair!(batch_u[i - 1][j].0, rho.2)
                         {
                             true    => continue,
                             _       => return Verification::FAILURE
@@ -384,7 +384,7 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
             }
         }
     }
-    
+
     // step 4
     let len = batch_u.len();
     if len > 0 {
@@ -396,15 +396,15 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
             batch_u[len - 1][2].0 != zero &&
             batch_u[len - 1][0].0 != zero &&
             batch_u[len - 1][1].0 != zero
-        ) 
+        )
         {
             return Verification::FAILURE
         }
     }
-    
+
     // step 5
     for i in 1..2 * n - 1 {
-        match 
+        match
             pair!(srs_u.0[i].0, H) == pair!(G, srs_u.0[i].1) &&
             pair!(srs_u.0[i].0, H) == pair!(srs_u.0[i - 1].0, srs_u.0[1].1)
         {
@@ -428,7 +428,7 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
 
     // step 7
     if !(
-        contained_in_group!(srs_s.0) && 
+        contained_in_group!(srs_s.0) &&
         contained_in_group!(srs_s.1) &&
         srs_s.2.len() == m - l &&
         srs_s.3.len() == n - 1
@@ -458,8 +458,8 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
         match verify_dlog(&G, &H, (rho.1, rho.2), rho.3) {
             true    => {
                 if i != 0 {
-                    match 
-                        pair!(rho.0, H) == pair!(batch_s[i - 1].0, rho.2) 
+                    match
+                        pair!(rho.0, H) == pair!(batch_s[i - 1].0, rho.2)
                     {
                         true    => continue,
                         _       => return Verification::FAILURE
@@ -470,7 +470,7 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
         }
     }
 
-    // step 9 
+    // step 9
     if !(pair!(srs_s.0, H) == pair!(G, srs_s.1)) {
         return Verification::FAILURE
     }
@@ -479,7 +479,7 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
         if !(
             srs_s.0 == batch_s[len - 1].0 &&
             batch_s[len - 1].0 != zeroG1!()
-        ) 
+        )
         {
             return Verification::FAILURE
         }
@@ -490,9 +490,9 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
         let mut s_i = zeroG1!();
         for j in 0..n {
             let tmp = add1!(
-                smul1!(srs_u.1[j].1, u[i].coeff(j)),
-                smul1!(srs_u.1[j].0, v[i].coeff(j)),
-                smul1!(srs_u.0[j].0, w[i].coeff(j))
+                smul1!(u[i].coeff(j), srs_u.1[j].1),
+                smul1!(v[i].coeff(j), srs_u.1[j].0),
+                smul1!(w[i].coeff(j), srs_u.0[j].0)
             );
             s_i = add1!(s_i, tmp);
         }
@@ -507,7 +507,7 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     // step 11
     let mut Gt = zeroG1!();
     for j in 0..n - 1 {
-        Gt = add1!(Gt, smul1!(srs_u.0[j].0, t.coeff(j)));
+        Gt = add1!(Gt, smul1!(t.coeff(j), srs_u.0[j].0));
     }
     for i in 0..n - 1 {
         match
@@ -517,7 +517,7 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
             _       => return Verification::FAILURE
         }
     }
-    
+
     Verification::SUCCESS
 }
 

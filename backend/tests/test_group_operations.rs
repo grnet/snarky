@@ -9,14 +9,14 @@ fn test_add1() {
     let G = genG1!();
     assert_eq!(add1!(), zeroG1!());
     assert_eq!(add1!(G), G);
-    assert_eq!(add1!(G, G), smul1!(G, scalar!(2)));
-    assert_eq!(add1!(G, G, G), smul1!(G, scalar!(3)));
-    assert_eq!(add1!(smul1!(G, scalar!(2)), G), smul1!(G, scalar!(3)));
-    assert_eq!(add1!(G, smul1!(G, scalar!(2))), smul1!(G, scalar!(3)));
-    assert_eq!(add1!(G, G, G, G), smul1!(G, scalar!(4)));
-    assert_eq!(add1!(smul1!(G, scalar!(3)), G), smul1!(G, scalar!(4)));
-    assert_eq!(add1!(G, smul1!(G, scalar!(3))), smul1!(G, scalar!(4)));
-    assert_eq!(add1!(smul1!(G, scalar!(2)), smul1!(G, scalar!(2))), smul1!(G, scalar!(4)));
+    assert_eq!(add1!(G, G), smul1!(scalar!(2), G));
+    assert_eq!(add1!(G, G, G), smul1!(scalar!(3), G));
+    assert_eq!(add1!(smul1!(scalar!(2), G), G), smul1!(scalar!(3), G));
+    assert_eq!(add1!(G, smul1!(scalar!(2), G)), smul1!(scalar!(3), G));
+    assert_eq!(add1!(G, G, G, G), smul1!(scalar!(4), G));
+    assert_eq!(add1!(smul1!(scalar!(3), G), G), smul1!(scalar!(4), G));
+    assert_eq!(add1!(G, smul1!(scalar!(3), G)), smul1!(scalar!(4), G));
+    assert_eq!(add1!(smul1!(scalar!(2), G), smul1!(scalar!(2), G)), smul1!(scalar!(4), G));
 }
 
 #[test]
@@ -24,14 +24,14 @@ fn test_add2() {
     let H = genG2!();
     assert_eq!(add2!(), zeroG2!());
     assert_eq!(add2!(H), H);
-    assert_eq!(add2!(H, H), smul2!(H, scalar!(2)));
-    assert_eq!(add2!(H, H, H), smul2!(H, scalar!(3)));
-    assert_eq!(add2!(smul2!(H, scalar!(2)), H), smul2!(H, scalar!(3)));
-    assert_eq!(add2!(H, smul2!(H, scalar!(2))), smul2!(H, scalar!(3)));
-    assert_eq!(add2!(H, H, H, H), smul2!(H, scalar!(4)));
-    assert_eq!(add2!(smul2!(H, scalar!(3)), H), smul2!(H, scalar!(4)));
-    assert_eq!(add2!(H, smul2!(H, scalar!(3))), smul2!(H, scalar!(4)));
-    assert_eq!(add2!(smul2!(H, scalar!(2)), smul2!(H, scalar!(2))), smul2!(H, scalar!(4)));
+    assert_eq!(add2!(H, H), smul2!(scalar!(2), H));
+    assert_eq!(add2!(H, H, H), smul2!(scalar!(3), H));
+    assert_eq!(add2!(smul2!(scalar!(2), H), H), smul2!(scalar!(3), H));
+    assert_eq!(add2!(H, smul2!(scalar!(2), H)), smul2!(scalar!(3), H));
+    assert_eq!(add2!(H, H, H, H), smul2!(scalar!(4), H));
+    assert_eq!(add2!(smul2!(scalar!(3), H), H), smul2!(scalar!(4), H));
+    assert_eq!(add2!(H, smul2!(scalar!(3), H)), smul2!(scalar!(4), H));
+    assert_eq!(add2!(smul2!(scalar!(2), H), smul2!(scalar!(2), H)), smul2!(scalar!(4), H));
 }
 
 #[test]
@@ -46,8 +46,8 @@ fn test_smul1() {
     ];
     for (f1, f2) in parametrization {
 
-        let a = smul1!(genG1!(), scalar!(f1));        // f1 * G
-        let b = smul1!(a, scalar!(f2));                // f2 * f1 * G
+        let a = smul1!(scalar!(f1), genG1!());        // f1 * G
+        let b = smul1!(scalar!(f2), a);                // f2 * f1 * G
 
         assert_eq!(a, G1Affine::from(G1Affine::generator() * Scalar::from(f1)));
         assert_eq!(b, G1Affine::from(a * Scalar::from(f2)));
@@ -66,8 +66,8 @@ fn test_smul2() {
     ];
     for (f1, f2) in parametrization {
 
-        let a = smul2!(genG2!(), scalar!(f1));        // f1 * H
-        let b = smul2!(a, scalar!(f2));                // f2 * f1 * H
+        let a = smul2!(scalar!(f1), genG2!());        // f1 * H
+        let b = smul2!(scalar!(f2), a);                // f2 * f1 * H
 
         assert_eq!(a, G2Affine::from(G2Affine::generator() * Scalar::from(f1)));
         assert_eq!(b, G2Affine::from(a * Scalar::from(f2)));
@@ -83,8 +83,8 @@ fn test_pair() {
         (666, 999), (999, 666), (666, 0), (0, 666),
     ];
     for (f1, f2) in parametrization {
-        let left  = smul1!(genG1!(), scalar!(f1));
-        let right = smul2!(genG2!(), scalar!(f2));
+        let left  = smul1!(scalar!(f1), genG1!());
+        let right = smul2!(scalar!(f2), genG2!());
         assert_eq!(pair!(left, right), pairing(&left, &right));
     }
 }
