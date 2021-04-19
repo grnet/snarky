@@ -1,5 +1,5 @@
 #[macro_export]
-macro_rules! add_1 {
+macro_rules! add1 {
     ($($elem:expr), *) => {
         {
             let mut elems = Vec::new();
@@ -12,7 +12,7 @@ macro_rules! add_1 {
 }
 
 #[macro_export]
-macro_rules! add_2 {
+macro_rules! add2 {
     ($($elem:expr), *) => {
         {
             let mut elems = Vec::new();
@@ -25,14 +25,14 @@ macro_rules! add_2 {
 }
 
 #[macro_export]
-macro_rules! mult_1 {
+macro_rules! smul1 {
     ($elem: expr, $factor: expr) => {
         ::bls12_381::G1Affine::from($elem * $factor)
     }
 }
 
 #[macro_export]
-macro_rules! mult_2 {
+macro_rules! smul2 {
     ($elem: expr, $factor: expr) => {
         ::bls12_381::G2Affine::from($elem * $factor)
     }

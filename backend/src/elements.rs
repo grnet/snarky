@@ -38,21 +38,21 @@ macro_rules! pow {
 }
 
 #[macro_export]
-macro_rules! G1_gen {
+macro_rules! genG1 {
     () => {
         ::bls12_381::G1Affine::generator()
     }
 }
 
 #[macro_export]
-macro_rules! G2_gen {
+macro_rules! genG2 {
     () => {
         ::bls12_381::G2Affine::generator()
     }
 }
 
 #[macro_export]
-macro_rules! G1_zero {
+macro_rules! zeroG1 {
     () => {
         ::bls12_381::G1Affine::from(
             ::bls12_381::G1Affine::generator() *
@@ -62,7 +62,7 @@ macro_rules! G1_zero {
 }
 
 #[macro_export]
-macro_rules! G2_zero {
+macro_rules! zeroG2 {
     () => {
         ::bls12_381::G2Affine::from(
             ::bls12_381::G2Affine::generator() *
@@ -79,14 +79,14 @@ macro_rules! contained_in_group {
 }
 
 #[macro_export]
-macro_rules! bytes_1 {
+macro_rules! bytes1 {
     ($elem:expr) => {
         $elem.to_uncompressed()     // 96 bytes
     }
 }
 
 #[macro_export]
-macro_rules! bytes_2 {
+macro_rules! bytes2 {
     ($elem:expr) => {
         $elem.to_compressed()       // 96 bytes
     }

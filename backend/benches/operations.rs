@@ -6,9 +6,9 @@ use criterion::{
     BenchmarkId,
 };
 
-use backend::{scalar, G1_gen, G2_gen, G1_zero, G2_zero,
-    pow, contained_in_group, add_1, add_2, mult_1, mult_2, pair, 
-    bytes_1, bytes_2, hashG1,
+use backend::{scalar, genG1, genG2, zeroG1, zeroG2,
+    pow, contained_in_group, add1, add2, smul1, smul2, pair, 
+    bytes1, bytes2, hashG1,
 };
 
 
@@ -23,8 +23,8 @@ fn bench_power(c: &mut Criterion) {
 
 fn bench_contained_in_group(c: &mut Criterion) {
     let mut group = c.benchmark_group("contained_in_group");
-    let G = G1_gen!();
-    let H = G2_gen!();
+    let G = genG1!();
+    let H = genG2!();
     group.bench_function(
         format!("Chech G in G_1"),
         |b| b.iter(|| contained_in_group!(G)),
@@ -36,71 +36,71 @@ fn bench_contained_in_group(c: &mut Criterion) {
     group.finish();
 }
 
-fn bench_add_1(c: &mut Criterion) {
-    let mut group = c.benchmark_group("add_1");
+fn bench_add1(c: &mut Criterion) {
+    let mut group = c.benchmark_group("add1");
     for (f1, f2) in [
         (1, 10), (10, 100), (100, 1000), (1000, 10000),
     ].iter() {
         let _f1 = scalar!(*f1 as u64);
         let _f2 = scalar!(*f2 as u64);
-        let G = G1_gen!();
-        let left  = mult_1!(G, _f1);
-        let right = mult_1!(G, _f2);
+        let G = genG1!();
+        let left  = smul1!(G, _f1);
+        let right = smul1!(G, _f2);
         group.bench_function(
             format!("Compute {}G + {}G", f1, f2),
-            |b| b.iter(|| add_1!(left, right)),
+            |b| b.iter(|| add1!(left, right)),
         );
     }
     group.finish();
 }
 
-fn bench_add_2(c: &mut Criterion) {
-    let mut group = c.benchmark_group("add_2");
+fn bench_add2(c: &mut Criterion) {
+    let mut group = c.benchmark_group("add2");
     for (f1, f2) in [
         (1, 10), (10, 100), (100, 1000), (1000, 10000),
     ].iter() {
         let _f1 = scalar!(*f1 as u64);
         let _f2 = scalar!(*f2 as u64);
-        let H = G2_gen!();
-        let left  = mult_2!(H, _f1);
-        let right = mult_2!(H, _f2);
+        let H = genG2!();
+        let left  = smul2!(H, _f1);
+        let right = smul2!(H, _f2);
         group.bench_function(
             format!("Compute {}H + {}H", f1, f2),
-            |b| b.iter(|| add_2!(left, right)),
+            |b| b.iter(|| add2!(left, right)),
         );
     }
     group.finish();
 }
 
-fn bench_mult_1(c: &mut Criterion) {
-    let mut group = c.benchmark_group("mult_1");
+fn bench_smul1(c: &mut Criterion) {
+    let mut group = c.benchmark_group("smul1");
     for (f1, f2) in [
         (1, 10), (10, 100), (100, 1000), (1000, 10000),
     ].iter() {
         let _f1 = scalar!(*f1 as u64);
         let _f2 = scalar!(*f2 as u64);
-        let G = G1_gen!();
-        let elm = mult_1!(G, _f2);
+        let G = genG1!();
+        let elm = smul1!(G, _f2);
         group.bench_function(
             format!("Compute {} * ({}G)", f1, f2),
-            |b| b.iter(|| mult_1!(elm, _f1)),
+            |b| b.iter(|| smul1!(elm, _f1)),
         );
     }
     group.finish();
 }
 
-fn bench_mult_2(c: &mut Criterion) {
-    let mut group = c.benchmark_group("mult_2");
+fn bench_smul2(c: &mut Criterion) {
+    let mut group = c.benchmark_group("smul2");
     for (f1, f2) in [
         (1, 10), (10, 100), (100, 1000), (1000, 10000),
     ].iter() {
         let _f1 = scalar!(*f1 as u64);
         let _f2 = scalar!(*f2 as u64);
-        let H = G2_gen!();
-        let elm = mult_2!(H, _f2);
+        let H = genG2!();
+        let elm = smul2!(H, _f2);
         group.bench_function(
             format!("Compute {} * ({}H)", f1, f2),
-            |b| b.iter(|| mult_2!(elm, _f1)),
+            |b| b.iter(|| smul2!(elm, _f1)),
         );
     }
     group.finish();
@@ -113,10 +113,10 @@ fn bench_pair(c: &mut Criterion) {
     ].iter() {
         let _f1 = scalar!(*f1 as u64);
         let _f2 = scalar!(*f2 as u64);
-        let G = G1_gen!();
-        let H = G2_gen!();
-        let left  = mult_1!(G, _f1);
-        let right = mult_2!(H, _f2);
+        let G = genG1!();
+        let H = genG2!();
+        let left  = smul1!(G, _f1);
+        let right = smul2!(H, _f2);
         group.bench_function(
             format!("Compute {}G o {}H", f1, f2),
             |b| b.iter(|| pair!(left, right)),
@@ -125,19 +125,19 @@ fn bench_pair(c: &mut Criterion) {
     group.finish();
 }
 
-fn bench_bytes_1(c: &mut Criterion) {
-    let zero = G1_zero!();
+fn bench_bytes1(c: &mut Criterion) {
+    let zero = zeroG1!();
     c.bench_function(
-        "bytes_1!",
-        |b| b.iter(|| bytes_1!(zero))
+        "bytes1!",
+        |b| b.iter(|| bytes1!(zero))
     );
 }
 
-fn bench_bytes_2(c: &mut Criterion) {
-    let zero = G2_zero!();
+fn bench_bytes2(c: &mut Criterion) {
+    let zero = zeroG2!();
     c.bench_function(
-        "bytes_2!",
-        |b| b.iter(|| bytes_2!(zero))
+        "bytes2!",
+        |b| b.iter(|| bytes2!(zero))
     );
 }
 
@@ -155,13 +155,13 @@ criterion_group!(
     benches,
     bench_power,
     bench_contained_in_group,
-    bench_add_1,
-    bench_add_2,
-    bench_mult_1,
-    bench_mult_2,
+    bench_add1,
+    bench_add2,
+    bench_smul1,
+    bench_smul2,
     bench_pair,
-    bench_bytes_1,
-    bench_bytes_2,
+    bench_bytes1,
+    bench_bytes2,
     bench_hashG1,
 );
 criterion_main!(benches);

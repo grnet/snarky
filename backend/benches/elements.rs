@@ -8,7 +8,7 @@ use criterion::{
 };
 
 use backend::{
-    scalar, zero, one, rscalar, G1_gen, G2_gen, G1_zero, G2_zero,
+    scalar, zero, one, rscalar, genG1, genG2, zeroG1, zeroG2,
 };
 
 fn bench_scalar(c: &mut Criterion) {
@@ -41,31 +41,31 @@ fn bench_rscalar(c: &mut Criterion) {
     );
 }
 
-fn bench_G1_gen(c: &mut Criterion) {
+fn bench_genG1(c: &mut Criterion) {
     c.bench_function(
-        "G1_gen!",
-        |b| b.iter(|| G1_gen!())
+        "genG1!",
+        |b| b.iter(|| genG1!())
     );
 }
 
-fn bench_G2_gen(c: &mut Criterion) {
+fn bench_genG2(c: &mut Criterion) {
     c.bench_function(
-        "G2_gen!",
-        |b| b.iter(|| G2_gen!())
+        "genG2!",
+        |b| b.iter(|| genG2!())
     );
 }
 
-fn bench_G1_zero(c: &mut Criterion) {
+fn bench_zeroG1(c: &mut Criterion) {
     c.bench_function(
-        "G1_zero!",
-        |b| b.iter(|| G1_zero!())
+        "zeroG1!",
+        |b| b.iter(|| zeroG1!())
     );
 }
 
-fn bench_G2_zero(c: &mut Criterion) {
+fn bench_zeroG2(c: &mut Criterion) {
     c.bench_function(
-        "G2_zero!",
-        |b| b.iter(|| G2_zero!())
+        "zeroG2!",
+        |b| b.iter(|| zeroG2!())
     );
 }
 
@@ -75,9 +75,9 @@ criterion_group!(
     bench_zero,
     bench_one,
     bench_rscalar,
-    bench_G1_zero,
-    bench_G2_zero,
-    bench_G1_gen,
-    bench_G2_gen,
+    bench_zeroG1,
+    bench_zeroG2,
+    bench_genG1,
+    bench_genG2,
 );
 criterion_main!(benches);

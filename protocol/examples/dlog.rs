@@ -1,27 +1,27 @@
 use std::time::Instant;
 use protocol::dlog::{rndoracle, prove_dlog, verify_dlog};
-use backend::{scalar, G1_gen, G2_gen, mult_1, mult_2};
+use backend::{scalar, genG1, genG2, smul1, smul2};
 
 pub fn main() {
     println!("---------------");
 
-    let elem_1 = G1_gen!();
-    let elem_2 = G2_gen!();
+    let elem_1 = genG1!();
+    let elem_2 = genG2!();
     let phi = (elem_1, elem_2);
     let start = Instant::now();
     rndoracle(phi);
     println!("[+] Random oracle ({:.2?})", start.elapsed());
 
-    let elem_1 = mult_1!(G1_gen!(), scalar!(100));
-    let elem_2 = mult_2!(G2_gen!(), scalar!(100));
+    let elem_1 = smul1!(genG1!(), scalar!(100));
+    let elem_2 = smul2!(genG2!(), scalar!(100));
     let phi = (elem_1, elem_2);
     let witness = scalar!(100);
     let start = Instant::now();
     let proof = prove_dlog(phi, witness);
     println!("[+] dlog proof ({:.2?})", start.elapsed());
 
-    let G = G1_gen!();
-    let H = G2_gen!();
+    let G = genG1!();
+    let H = genG2!();
     let start = Instant::now();
     let verified = verify_dlog(&G, &H, phi, proof);
     println!("[+] dlog verify ({:.2?})", start.elapsed());
