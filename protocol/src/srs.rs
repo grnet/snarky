@@ -26,11 +26,15 @@ pub struct Trapdoor(
 
 impl Trapdoor {
 
+    pub fn from_u64(a: u64, b: u64, d: u64, x: u64) -> Self {
+        Self(scalar!(a), scalar!(b), scalar!(d), scalar!(x))
+    }
+
     pub fn from_units() -> Self {
         Self(one!(), one!(), one!(), one!())
     }
 
-    fn from_random(rng: &mut ::rand::RngCore) -> Self {
+    pub fn from_random(rng: &mut ::rand::RngCore) -> Self {
         Self(
             rscalar!(rng),
             rscalar!(rng),
@@ -39,7 +43,7 @@ impl Trapdoor {
         )
     }
 
-    fn extract(&self) -> (Scalar, Scalar, Scalar, Scalar) {
+    pub fn extract(&self) -> (Scalar, Scalar, Scalar, Scalar) {
         (self.0, self.1, self.2, self.3)
     }
 }
@@ -55,6 +59,27 @@ pub struct SRS {
 }
 
 impl SRS {
+
+    pub fn setup_with_unit_trapdoor(qap: &QAP) -> (Self, Trapdoor) {
+        SRS::setup(&qap, Some(Trapdoor::from_units()))
+    }
+
+    pub fn setup_with_random_trapdoor(qap: &QAP) -> (Self, Trapdoor) {
+        SRS::setup(&qap, None)
+    }
+
+    pub fn setup(qap: &QAP, trapdoor: Option::<Trapdoor>) -> (Self, Trapdoor) {
+        let trp = match trapdoor {
+            Some(trp) => trp,
+            None => {
+                let mut rng = rand::thread_rng();
+                Trapdoor::from_random(&mut rng)
+            }
+        };
+        let srs = SRS::create(&trp, &qap);
+        (srs, trp)
+    }
+
     pub fn create(trp: &Trapdoor, qap: &QAP) -> Self {
         Self {
             u: Self::create_u(&trp, &qap),

@@ -46,11 +46,6 @@ impl Verification {
 }
 
 
-pub fn setup(trp: &Trapdoor, qap: &QAP) -> SRS {
-    SRS::create(&trp, &qap)
-}
-
-
 pub fn specialize(qap: &QAP, srs_u: &U) -> S {
     let (m, n, l) = qap.shape();
     let (u, v, w, t) = qap.collections();
@@ -129,7 +124,7 @@ pub fn update(qap: &QAP, srs: &mut SRS, batch: &mut BatchProof, phase: Phase) {
                         smul2!(b * pow!(x, i), srs_u.1[i].3),
                     );
                     res
-                })
+                }) 
                 .collect();
             let u_new: U =  (c1, c2);
 

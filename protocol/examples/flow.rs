@@ -1,6 +1,6 @@
 use std::time::Instant;
 use circuits::QAP;
-use protocol::flow::{Trapdoor, Phase, BatchProof, setup, update, verify};
+use protocol::flow::{Trapdoor, SRS, Phase, BatchProof, update, verify};
 
 fn main() {
 
@@ -14,17 +14,30 @@ fn main() {
     println!("--------------------------");
     let start = Instant::now();
 
-    let qap_start = Instant::now();
-    let qap = QAP::create_default(m, n, l)
-        .unwrap_or_else(|err| {
-            println!("{}", err); std::process::exit(1);
-        });
-    println!("[+] Created QAP with m:{} n:{} l:{} ({:.2?})", m, n, l, qap_start.elapsed());
+    let qap = {
+        let start = Instant::now();
+        match QAP::create_default(m, n, l) {
+            Ok(qap) => {
+                println!("[+] Created QAP with m:{} n:{} l:{} ({:.2?})", 
+                    m, 
+                    n, 
+                    l, 
+                    start.elapsed()
+                );
+                qap
+            },
+            Err(err) => {
+                println!("{}", err); std::process::exit(1);
+            }
+        }
+    };
 
-    let srs_start = Instant::now();
-    let trp = Trapdoor::from_units();
-    let mut srs = setup(&trp, &qap);
-    println!("[+] Initialized SRS ({:.2?})", srs_start.elapsed());
+    let (mut srs, trp) = {
+        let start = Instant::now();
+        let (srs, trp) = SRS::setup_with_unit_trapdoor(&qap);
+        println!("[+] Initialized SRS ({:.2?})", start.elapsed());
+        (srs, trp)
+    };
 
     let mut batch = BatchProof::initiate();
 
@@ -52,10 +65,13 @@ fn main() {
         }
     }
 
-    let ver_start = Instant::now();
-    let res = verify(&qap, &srs, &batch);
+    let res = {
+        let start = Instant::now();
+        let res = verify(&qap, &srs, &batch);
+        println!("[+] {:?} ({:.2?})", res, start.elapsed());
+        res
+    };
     assert!(res.as_bool());
-    println!("[+] {:?} ({:.2?})", res, ver_start.elapsed());
 
     let elapsed = start.elapsed();
     println!("--------------------------");
