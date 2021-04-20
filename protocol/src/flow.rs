@@ -213,6 +213,77 @@ impl BatchProof {
             },
         }
     }
+
+    pub fn verify(&self, srs: &SRS, phase: Phase) -> bool {
+        let zero = zeroG1!();
+        let G = genG1!();
+        let H = genG2!();
+        match phase {
+            Phase::ONE => {
+                let batch_u = &self.phase_1;
+                let srs_u = &srs.u;
+
+                // step 3
+                for i in 0..batch_u.len() {
+                    for j in 0..3 {
+                        let rho = &batch_u[i][j];
+                        let prf = if i != 0 { Some(&batch_u[i - 1][j]) } else { None };
+                        match rho.verify((&G, &H), prf)
+                        {
+                            true    => continue,
+                            _       => return false,
+                        }
+                    }
+                }
+
+                // step 4
+                let len = batch_u.len();
+                match len > 0 && !(
+                    srs_u.0[1].0 == batch_u[len - 1][2].0 &&
+                    srs_u.1[0].0 == batch_u[len - 1][0].0 &&
+                    srs_u.1[0].1 == batch_u[len - 1][1].0 &&
+                    batch_u[len - 1][2].0 != zero &&
+                    batch_u[len - 1][0].0 != zero &&
+                    batch_u[len - 1][1].0 != zero
+                )
+                {
+                    true    => false,
+                    _       => true,
+                }
+            },
+            Phase::TWO => {
+                let batch_s = &self.phase_2;
+                let srs_s = &srs.s;
+
+                // step 8
+                for i in 0..batch_s.len() {
+                    let rho = &batch_s[i];
+                    let prf = if i != 0 { Some(&batch_s[i - 1]) } else { None };
+                    match rho.verify((&G, &H), prf)
+                    {
+                        true    => continue,
+                        _       => return false,
+                    }
+                }
+
+                // step 9
+                match pair!(srs_s.0, H) != pair!(G, srs_s.1) {
+                    true    => return false,
+                    false   => {
+                        let len = batch_s.len();
+                        match len > 0 && !(
+                            srs_s.0 == batch_s[len - 1].0 &&
+                            batch_s[len - 1].0 != zero
+                        ) 
+                        {
+                            true    => false,
+                            _       => true,
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 use rand::RngCore;                  // Must be present for update
@@ -275,8 +346,7 @@ pub fn update(qap: &QAP, srs: &SRS, batch: &mut BatchProof, phase: Phase) -> SRS
             let rho_x = UpdateProof::for_value((&G, &H, srs_u.0[1].0), &x);
 
             // step 7
-            let proof = Proof::ONE(rho_a, rho_b, rho_x);
-            batch.append(proof);
+            batch.append(Proof::ONE(rho_a, rho_b, rho_x));
 
             // step 8 (compute u-component)
             let c1 = (0..2 * n - 1)
@@ -315,10 +385,8 @@ pub fn update(qap: &QAP, srs: &SRS, batch: &mut BatchProof, phase: Phase) -> SRS
             let d = rscalar!(rng);  // step 2 (fix witnesses)
 
             // step 3-4 (PoK for value used in update)
-            // TODO: Better semantics
             let rho = UpdateProof::for_value((&G, &H, srs_s.0), &d);
-            let proof = Proof::TWO(rho);
-            batch.append(proof);
+            batch.append(Proof::TWO(rho));
 
             // step 5
             let dinv = d.invert().unwrap();
@@ -346,11 +414,11 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     let G = genG1!();
     let H = genG2!();
 
-    // ~step 1
+    // step 1
     let srs_u = &srs.u;
     let srs_s = &srs.s;
-    let batch_u = &batch.phase_1;
-    let batch_s = &batch.phase_2;
+    // let batch_u = &batch.phase_1;
+    // let batch_s = &batch.phase_2;
 
     // step 2
     if !(srs_u.0.len() == 2 * n - 1 && srs_u.1.len() == n) {
@@ -377,33 +445,9 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
         }
     }
 
-    // step 3 (batch phase 1 verification)
-    for i in 0..batch_u.len() {
-        for j in 0..3 {
-            let rho = &batch_u[i][j];
-            match rho.verify((&G, &H), if i !=0 { Some(&batch_u[i - 1][j]) } else { None })
-            {
-                true    => continue,
-                false   => return Verification::FAILURE,
-            }
-        }
-    }
-
-    // step 4 (batch phase 1 verification)
-    let len = batch_u.len();
-    if len > 0 {
-        let zero = zeroG1!();
-        if !(
-            srs_u.0[1].0 == batch_u[len - 1][2].0 &&
-            srs_u.1[0].0 == batch_u[len - 1][0].0 &&
-            srs_u.1[0].1 == batch_u[len - 1][1].0 &&
-            batch_u[len - 1][2].0 != zero &&
-            batch_u[len - 1][0].0 != zero &&
-            batch_u[len - 1][1].0 != zero
-        )
-        {
-            return Verification::FAILURE
-        }
+    // step 3-4
+    if !batch.verify(&srs, Phase::ONE) {
+        return Verification::FAILURE
     }
 
     // step 5
@@ -456,29 +500,9 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
         }
     }
 
-    // step 8
-    for i in 0..batch_s.len() {
-        let rho = &batch_s[i];
-        match rho.verify((&G, &H), if i !=0 { Some(&batch_s[i - 1]) } else { None })
-        {
-            true    => continue,
-            false   => return Verification::FAILURE,
-        }
-    }
-
-    // step 9
-    if !(pair!(srs_s.0, H) == pair!(G, srs_s.1)) {
+    // step 8-9
+    if !batch.verify(&srs, Phase::TWO) {
         return Verification::FAILURE
-    }
-    let len = batch_s.len();
-    if len > 0 {
-        if !(
-            srs_s.0 == batch_s[len - 1].0 &&
-            batch_s[len - 1].0 != zeroG1!()
-        )
-        {
-            return Verification::FAILURE
-        }
     }
 
     // step 10
