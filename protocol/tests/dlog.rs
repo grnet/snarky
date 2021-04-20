@@ -1,5 +1,5 @@
 use backend::{scalar, genG1, genG2, smul1, smul2};
-use protocol::dlog::{prove_dlog, verify_dlog};
+use protocol::prover::{prove_dlog, verify_dlog};
 use util::map;
 
 #[test]

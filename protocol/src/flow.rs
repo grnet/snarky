@@ -149,43 +149,14 @@ pub enum Phase {
     TWO = 2,
 }
 
+use crate::prover::UpdateProof;
+
+// Collections of PoKs produced during SRS update,
+// corresponding to respective phases (ONE or TWO)
 #[derive(Clone, Debug, PartialEq)]
 pub enum Proof {
     ONE(UpdateProof, UpdateProof, UpdateProof),
     TWO(UpdateProof),
-}
-
-// PoK for the value used in SRS update
-#[derive(Clone, Debug, PartialEq)]
-pub struct UpdateProof(G1, G1, G2, G1);
-
-impl UpdateProof {
-    
-    pub fn for_value(ctx: (&G1, &G2, G1), val: &Scalar) -> Self {
-        let (G, H, base) = ctx;
-        let prf = prove_dlog((smul1!(val, G), smul2!(val, H)), *val);
-        Self(
-            smul1!(val, base),
-            smul1!(val, G),
-            smul2!(val, H),
-            prf
-        )
-    }
-
-    pub fn verify(&self, ctx: (&G1, &G2), prf: Option<&Self>) -> bool {
-        let (G, H) = ctx;
-        match verify_dlog(&G, &H, (self.1, self.2), self.3) {
-            true => {
-                match prf {
-                    Some(prf) => {
-                        pair!(self.0, H) == pair!(prf.0, self.2)
-                    },
-                    None => true,
-                }
-            }
-            _ => false
-        }
-    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -287,7 +258,6 @@ impl BatchProof {
 }
 
 use rand::RngCore;                  // Must be present for update
-use crate::dlog::prove_dlog;
 
 pub fn specialize(qap: &QAP, srs_u: &U) -> S {
     let (m, n, l) = qap.shape();
@@ -406,7 +376,6 @@ pub fn update(qap: &QAP, srs: &SRS, batch: &mut BatchProof, phase: Phase) -> SRS
     }
 }
 
-use crate::dlog::verify_dlog;
 
 pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     let (m, n, l) = qap.shape();

@@ -1,5 +1,5 @@
 use std::time::Instant;
-use protocol::dlog::{rndoracle, prove_dlog, verify_dlog};
+use protocol::prover::{rndoracle, prove_dlog, verify_dlog};
 use backend::{scalar, genG1, genG2, smul1, smul2};
 
 pub fn main() {
