@@ -165,6 +165,21 @@ impl UpdateProof {
             prf
         )
     }
+
+    pub fn verify(&self, ctx: (&G1, &G2), prf: Option<&Self>) -> bool {
+        let (G, H) = ctx;
+        match verify_dlog(&G, &H, (self.1, self.2), self.3) {
+            true => {
+                match prf {
+                    Some(prf) => {
+                        pair!(self.0, H) == pair!(prf.0, self.2)
+                    },
+                    None => true,
+                }
+            }
+            _ => false
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -353,23 +368,15 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     for i in 0..batch_u.len() {
         for j in 0..3 {
             let rho = &batch_u[i][j];
-            match verify_dlog(&G, &H, (rho.1, rho.2), rho.3) {
-                true    => {
-                    if i != 0 {
-                        match
-                            pair!(rho.0, H) == pair!(batch_u[i - 1][j].0, rho.2)
-                        {
-                            true    => continue,
-                            _       => return Verification::FAILURE
-                        }
-                    }
-                },
-                _       => return Verification::FAILURE
+            match rho.verify((&G, &H), if i !=0 { Some(&batch_u[i - 1][j]) } else { None })
+            {
+                true    => continue,
+                false   => return Verification::FAILURE,
             }
         }
     }
 
-    // step 4
+    // step 4 (batch phase 1 verification)
     let len = batch_u.len();
     if len > 0 {
         let zero = zeroG1!();
@@ -439,18 +446,10 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     // step 8
     for i in 0..batch_s.len() {
         let rho = &batch_s[i];
-        match verify_dlog(&G, &H, (rho.1, rho.2), rho.3) {
-            true    => {
-                if i != 0 {
-                    match
-                        pair!(rho.0, H) == pair!(batch_s[i - 1].0, rho.2)
-                    {
-                        true    => continue,
-                        _       => return Verification::FAILURE
-                    }
-                }
-            },
-            _       => return Verification::FAILURE
+        match rho.verify((&G, &H), if i !=0 { Some(&batch_s[i - 1]) } else { None })
+        {
+            true    => continue,
+            false   => return Verification::FAILURE,
         }
     }
 
