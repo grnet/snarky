@@ -14,44 +14,38 @@ use backend::{
 use polynomials::Univariate;
 use circuits::QAP;
 
-pub type U = (Vec<(G1, G2)>, Vec<(G1, G1, G2, G2)>);
-pub type S = (G1, G2, Vec<G1>, Vec<G1>);
 
-pub struct Trapdoor {
-    a: Scalar,
-    b: Scalar,
-    d: Scalar,
-    x: Scalar,
-}
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub struct Trapdoor(
+    pub Scalar,
+    pub Scalar,
+    pub Scalar,
+    pub Scalar,
+);
 
 impl Trapdoor {
 
-    pub fn create_from_units() -> Self {
-        Self {
-            a: one!(),
-            b: one!(),
-            d: one!(),
-            x: one!(),
-        }
+    pub fn from_units() -> Self {
+        Self(one!(), one!(), one!(), one!())
     }
 
-    fn create_from_random(rng: &mut ::rand::RngCore) -> Self {
-        Self {
-            a: rscalar!(rng),
-            b: rscalar!(rng),
-            d: rscalar!(rng),
-            x: rscalar!(rng),
-        }
+    fn from_random(rng: &mut ::rand::RngCore) -> Self {
+        Self(
+            rscalar!(rng),
+            rscalar!(rng),
+            rscalar!(rng),
+            rscalar!(rng),
+        )
     }
 
     fn extract(&self) -> (Scalar, Scalar, Scalar, Scalar) {
-        let a = self.a;
-        let b = self.b;
-        let d = self.d;
-        let x = self.x;
-        (a, b, d, x)
+        (self.0, self.1, self.2, self.3)
     }
 }
+
+
+pub type U = (Vec<(G1, G2)>, Vec<(G1, G1, G2, G2)>);
+pub type S = (G1, G2, Vec<G1>, Vec<G1>);
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct SRS {
