@@ -88,7 +88,7 @@ pub fn specialize(qap: &QAP, srs_u: &U) -> S {
     (c1, c2, c3, c4)
 }
 
-pub fn update(qap: &QAP, srs: &SRS, batch: &mut BatchProof, phase: Phase) -> SRS {
+pub fn update(qap: &QAP, srs: &mut SRS, batch: &mut BatchProof, phase: Phase) {
     let (G, H) = (genG1!(), genG2!());
     let (m, n, l) = qap.shape();
     let mut rng = rand::thread_rng();
@@ -135,11 +135,9 @@ pub fn update(qap: &QAP, srs: &SRS, batch: &mut BatchProof, phase: Phase) -> SRS
             // step 9
             let s_new = specialize(&qap, &u_new);
 
-            // step 10
-            SRS {
-                u: u_new,
-                s: s_new,
-            }
+            // // step 10
+            srs.u = u_new;
+            srs.s = s_new;
         },
         Phase::TWO => {
             let srs_s = &srs.s;     // step 1
@@ -159,10 +157,7 @@ pub fn update(qap: &QAP, srs: &SRS, batch: &mut BatchProof, phase: Phase) -> SRS
             let c4 = (0..n - 1)
                 .map(|i| smul1!(dinv, srs_s.3[i]))
                 .collect();
-            SRS {
-                u: srs.u.clone(),
-                s: (c1, c2, c3, c4),
-            }
+            srs.s = (c1, c2, c3, c4)
         }
     }
 }
@@ -177,8 +172,6 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     // step 1
     let srs_u = &srs.u;
     let srs_s = &srs.s;
-    // let batch_u = &batch.phase_1;
-    // let batch_s = &batch.phase_2;
 
     // step 2
     if !(srs_u.0.len() == 2 * n - 1 && srs_u.1.len() == n) {

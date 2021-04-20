@@ -32,7 +32,7 @@ fn main() {
     let mut count = 0;
     loop {
         let start = Instant::now();
-        srs = update(&qap, &srs, &mut batch, Phase::ONE);
+        update(&qap, &mut srs, &mut batch, Phase::ONE);
         println!("[+] Phase 1 SRS update ({:.2?})", start.elapsed());
         count += 1;
         if count == nr_1 {
@@ -44,7 +44,7 @@ fn main() {
     let mut count = 0;
     loop {
         let start = Instant::now();
-        srs = update(&qap, &srs, &mut batch, Phase::TWO);
+        update(&qap, &mut srs, &mut batch, Phase::TWO);
         println!("[+] Phase 2 SRS update ({:.2?})", start.elapsed());
         count += 1;
         if count == nr_2 {
