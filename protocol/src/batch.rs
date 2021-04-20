@@ -1,21 +1,24 @@
 use backend::{zeroG1, genG1, genG2, pair};
-use crate::prover::UpdateProof;
+use crate::prover::RhoProof;
 use crate::flow::Phase;
 use crate::flow::SRS;
 
 
 // Collections of PoKs produced during SRS update,
 // corresponding to respective phases (ONE or TWO)
+// Note: No verify functionality is possible at this
+// level since each update-proof is verified against
+// its previous one in the containing batch.
 #[derive(Clone, Debug, PartialEq)]
-pub enum Proof {
-    ONE(UpdateProof, UpdateProof, UpdateProof),
-    TWO(UpdateProof),
+pub enum UpdateProof {
+    ONE(RhoProof, RhoProof, RhoProof),
+    TWO(RhoProof),
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct BatchProof {
-    pub phase_1: Vec<[UpdateProof; 3]>,
-    pub phase_2: Vec<UpdateProof>,
+    pub phase_1: Vec<[RhoProof; 3]>,
+    pub phase_2: Vec<RhoProof>,
 }
 
 impl BatchProof {
@@ -27,12 +30,12 @@ impl BatchProof {
         }
     }
 
-    pub fn append(&mut self, proof: Proof) {
+    pub fn append(&mut self, proof: UpdateProof) {
         match proof {
-            Proof::ONE(r1, r2, r3) => {
+            UpdateProof::ONE(r1, r2, r3) => {
                 self.phase_1.push([r1, r2, r3]);
             },
-            Proof::TWO(r) => {
+            UpdateProof::TWO(r) => {
                 self.phase_2.push(r);
             },
         }

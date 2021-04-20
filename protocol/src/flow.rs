@@ -18,8 +18,8 @@ use circuits::QAP;
 use crate::srs::{U, S};
 pub use crate::srs::{Trapdoor, SRS};
 pub use crate::batch::BatchProof;
-use crate::prover::UpdateProof;
-use crate::batch::Proof;
+use crate::prover::RhoProof;
+use crate::batch::UpdateProof;
 use rand::RngCore;                  // Must be present for update
 
 
@@ -98,12 +98,12 @@ pub fn update(qap: &QAP, srs: &mut SRS, batch: &mut BatchProof, phase: Phase) {
             );                  // step 2 (fix witnesses)
 
             // step 3-6 (PoK for values used in update)
-            let rho_a = UpdateProof::for_value((&G, &H, srs_u.1[0].0), &a);
-            let rho_b = UpdateProof::for_value((&G, &H, srs_u.1[0].1), &b);
-            let rho_x = UpdateProof::for_value((&G, &H, srs_u.0[1].0), &x);
+            let rho_a = RhoProof::for_value((&G, &H, srs_u.1[0].0), &a);
+            let rho_b = RhoProof::for_value((&G, &H, srs_u.1[0].1), &b);
+            let rho_x = RhoProof::for_value((&G, &H, srs_u.0[1].0), &x);
 
             // step 7
-            batch.append(Proof::ONE(rho_a, rho_b, rho_x));
+            batch.append(UpdateProof::ONE(rho_a, rho_b, rho_x));
 
             // step 8 (compute u-component)
             let c1 = (0..2 * n - 1)
@@ -140,8 +140,8 @@ pub fn update(qap: &QAP, srs: &mut SRS, batch: &mut BatchProof, phase: Phase) {
             let d = rscalar!(rng);  // step 2 (fix witnesses)
 
             // step 3-4 (PoK for value used in update)
-            let rho = UpdateProof::for_value((&G, &H, srs_s.0), &d);
-            batch.append(Proof::TWO(rho));
+            let rho = RhoProof::for_value((&G, &H, srs_s.0), &d);
+            batch.append(UpdateProof::TWO(rho));
 
             // step 5
             let dinv = inv!(d);

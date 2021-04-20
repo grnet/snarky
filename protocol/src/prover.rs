@@ -33,14 +33,14 @@ pub fn verify_dlog(G: &G1, H: &G2, phi: (G1, G2), proof: G1) -> bool {
 
 // PoK for the value used in SRS update
 #[derive(Clone, Debug, PartialEq)]
-pub struct UpdateProof(
+pub struct RhoProof(
     pub G1, 
     pub G1, 
     pub G2, 
     pub G1
 );
 
-impl UpdateProof {
+impl RhoProof {
     
     pub fn for_value(ctx: (&G1, &G2, G1), val: &Scalar) -> Self {
         let (G, H, base) = ctx;
