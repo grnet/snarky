@@ -5,6 +5,7 @@ use backend::{
     scalar,
     rscalar,
     one,
+    inv,
     pow,
     genG1,
     genG2,
@@ -101,7 +102,7 @@ impl SRS {
         let G = genG1!();
         let H = genG2!();
 
-        let dinv = d.invert().unwrap();
+        let dinv = inv!(d);
 
         let c1 = smul1!(d, G);
         let c2 = smul2!(d, H);

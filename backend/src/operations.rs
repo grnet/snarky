@@ -1,4 +1,18 @@
 #[macro_export]
+macro_rules! inv {
+    ($elem:expr) => {
+       $elem.invert().unwrap() 
+    }
+}
+
+#[macro_export]
+macro_rules! pow {
+    ($base:expr, $exp:expr) => {
+        $base.pow(&[$exp as u64, 0, 0, 0])
+    }
+}
+
+#[macro_export]
 macro_rules! add1 {
     ($($elem:expr), *) => {
         {

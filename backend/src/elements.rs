@@ -31,13 +31,6 @@ macro_rules! rscalar {
 }
 
 #[macro_export]
-macro_rules! pow {
-    ($base:expr, $exp:expr) => {
-        $base.pow(&[$exp as u64, 0, 0, 0])
-    }
-}
-
-#[macro_export]
 macro_rules! genG1 {
     () => {
         ::bls12_381::G1Affine::generator()

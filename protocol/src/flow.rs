@@ -2,6 +2,7 @@ use backend::{
     G1Elem as G1,
     G2Elem as G2,
     rscalar,
+    inv,
     pow, 
     contained_in_group,
     genG1, 
@@ -148,7 +149,7 @@ pub fn update(qap: &QAP, srs: &mut SRS, batch: &mut BatchProof, phase: Phase) {
             batch.append(Proof::TWO(rho));
 
             // step 5
-            let dinv = d.invert().unwrap();
+            let dinv = inv!(d);
             let c1 = smul1!(d, srs_s.0);
             let c2 = smul2!(d, srs_s.1);
             let c3 = (0..m - l)
