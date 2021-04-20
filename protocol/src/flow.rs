@@ -1,12 +1,33 @@
 use backend::{
-    one, zero, rscalar, scalar, pow, contained_in_group,
-    genG1, genG2, zeroG1, zeroG2, add1, add2,
-    smul1, smul2, pair};
-use backend::{Scalar,
     G1Elem as G1,
     G2Elem as G2,
+    rscalar,
+    pow, 
+    contained_in_group,
+    genG1, 
+    genG2, 
+    zeroG1, 
+    add1, 
+    add2,
+    smul1, 
+    smul2, 
+    pair,
 };
 use circuits::QAP;
+use crate::srs::{U, S};
+pub use crate::srs::{Trapdoor, SRS};
+pub use crate::batch::BatchProof;
+use crate::prover::UpdateProof;
+use crate::batch::Proof;
+use rand::RngCore;                  // Must be present for update
+
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum Phase {
+    ONE = 1,
+    TWO = 2,
+}
+
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Verification {
@@ -23,137 +44,11 @@ impl Verification {
     }
 }
 
-pub struct Trapdoor {
-    a: Scalar,
-    b: Scalar,
-    d: Scalar,
-    x: Scalar,
-}
-
-impl Trapdoor {
-
-    pub fn create_from_units() -> Self {
-        Self {
-            a: one!(),
-            b: one!(),
-            d: one!(),
-            x: one!(),
-        }
-    }
-
-    fn create_from_random(rng: &mut ::rand::RngCore) -> Self {
-        Self {
-            a: rscalar!(rng),
-            b: rscalar!(rng),
-            d: rscalar!(rng),
-            x: rscalar!(rng),
-        }
-    }
-
-    fn extract(&self) -> (Scalar, Scalar, Scalar, Scalar) {
-        let a = self.a;
-        let b = self.b;
-        let d = self.d;
-        let x = self.x;
-        (a, b, d, x)
-    }
-}
-
-type U = (Vec<(G1, G2)>, Vec<(G1, G1, G2, G2)>);
-type S = (G1, G2, Vec<G1>, Vec<G1>);
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct SRS {
-    pub u: U,
-    pub s: S,
-}
-
-impl SRS {
-    fn create(trp: &Trapdoor, qap: &QAP) -> Self {
-        Self {
-            u: Self::create_u(&trp, &qap),
-            s: Self::create_s(&trp, &qap),
-        }
-    }
-
-    fn create_u(trp: &Trapdoor, qap: &QAP) -> U {
-        let (a, b, _, x) = trp.extract();
-        let (_, n, _) = qap.shape();
-
-        let G = genG1!();
-        let H = genG2!();
-
-        let c1 = (0..2 * n - 1)
-            .map(|i| {
-                let res = (
-                    smul1!(pow!(x, i), G),
-                    smul2!(pow!(x, i), H),
-                );
-                res
-            })
-            .collect();
-
-        let c2 = (0..n)
-            .map(|i| {
-                let res = (
-                    smul1!(a * pow!(x, i), G),
-                    smul1!(b * pow!(x, i), G),
-                    smul2!(a * pow!(x, i), H),
-                    smul2!(b * pow!(x, i), H),
-                );
-                res
-            })
-            .collect();
-
-        (c1, c2)
-    }
-
-    fn create_s(trp: &Trapdoor, qap: &QAP) -> S {
-        let (a, b, d, x) = trp.extract();
-        let (m, n, l) = qap.shape();
-        let (u, v, w, t) = qap.collections();
-
-        let G = genG1!();
-        let H = genG2!();
-
-        let dinv = d.invert().unwrap();
-
-        let c1 = smul1!(d, G);
-        let c2 = smul2!(d, H);
-
-        let c3 = (l + 1..m + 1)
-            .map(|i| {
-                let ux_i = u[i].evaluate(&x).unwrap();
-                let vx_i = v[i].evaluate(&x).unwrap();
-                let wx_i = w[i].evaluate(&x).unwrap();
-                smul1!((b * ux_i + a * vx_i + wx_i) * dinv, G)
-            })
-            .collect();
-
-        let tx = t.evaluate(&x).unwrap();
-        let c4 = (0..n - 1)
-            .map(|i| smul1!(pow!(x, i) * tx * dinv, G))
-            .collect();
-
-        (c1, c2, c3, c4)
-    }
-}
 
 pub fn setup(trp: &Trapdoor, qap: &QAP) -> SRS {
     SRS::create(&trp, &qap)
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub enum Phase {
-    ONE = 1,
-    TWO = 2,
-}
-
-use crate::prover::UpdateProof;
-use crate::batch::Proof;
-pub use crate::batch::BatchProof;
-
-use rand::RngCore;                  // Must be present for update
 
 pub fn specialize(qap: &QAP, srs_u: &U) -> S {
     let (m, n, l) = qap.shape();
@@ -404,9 +299,4 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     }
 
     Verification::SUCCESS
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
 }
