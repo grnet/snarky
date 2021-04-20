@@ -7,13 +7,16 @@ use backend::{
     one,
     inv,
     pow,
+    zeroG1, 
     genG1,
     genG2,
+    add1,
     smul1,
     smul2,
 };
 use polynomials::Univariate;
 use circuits::QAP;
+use crate::batch::Witness;
 
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -144,6 +147,98 @@ impl SRS {
         let tx = t.evaluate(&x).unwrap();
         let c4 = (0..n - 1)
             .map(|i| smul1!(pow!(x, i) * tx * dinv, G))
+            .collect();
+
+        (c1, c2, c3, c4)
+    }
+
+    pub fn update(&mut self, qap: &QAP, w: Witness) {
+        let (m, n, l) = qap.shape();
+        match w {
+            Witness::ONE(a, b, x) => {
+                let srs_u = &self.u;
+
+                // phase 1, step 8 (recompute u-component)
+                let c1 = (0..2 * n - 1)
+                    .map(|i| {
+                        let res = (
+                            smul1!(pow!(x, i), srs_u.0[i].0),
+                            smul2!(pow!(x, i), srs_u.0[i].1),
+                        );
+                        res
+                    })
+                    .collect();
+                let c2 = (0..n)
+                    .map(|i| {
+                        let res = (
+                            smul1!(a * pow!(x, i), srs_u.1[i].0),
+                            smul1!(b * pow!(x, i), srs_u.1[i].1),
+                            smul2!(a * pow!(x, i), srs_u.1[i].2),
+                            smul2!(b * pow!(x, i), srs_u.1[i].3),
+                        );
+                        res
+                    }) 
+                    .collect();
+                let u_new: U =  (c1, c2);
+
+                // phase 1, step 9 (recompute s-component)
+                let s_new = SRS::specialize(&qap, &u_new);
+
+                // phase 1, step 10
+                self.u = u_new;
+                self.s = s_new;
+            },
+            Witness::TWO(d) => {
+                let srs_s = &self.s;
+
+                // phase 2, step 5  (recompute s-component)
+                let dinv = inv!(d);
+                let c1 = smul1!(d, srs_s.0);
+                let c2 = smul2!(d, srs_s.1);
+                let c3 = (0..m - l)
+                    .map(|i| smul1!(dinv, srs_s.2[i]))
+                    .collect();
+                let c4 = (0..n - 1)
+                    .map(|i| smul1!(dinv, srs_s.3[i]))
+                    .collect();
+                self.s = (c1, c2, c3, c4)
+            },
+        }
+    }
+
+    fn specialize(qap: &QAP, srs_u: &U) -> S {
+        let (m, n, l) = qap.shape();
+        let (u, v, w, t) = qap.collections();
+
+        let c1 = genG1!();
+        let c2 = genG2!();
+        let c3 = (0..m - l)
+            .map(|i| {
+                let mut s_i = zeroG1!();
+                for j in 0..n {
+                    s_i = add1!(
+                        s_i,
+                        add1!(
+                            smul1!(u[i].coeff(j), srs_u.1[j].1),
+                            smul1!(v[i].coeff(j), srs_u.1[j].0),
+                            smul1!(w[i].coeff(j), srs_u.0[j].0)
+                        )
+                    );
+                }
+                s_i
+            })
+            .collect();
+        let c4 = (0..n - 1)
+            .map(|i| {
+                let mut s_i = zeroG1!();
+                for j in 0..n {
+                    s_i = add1!(
+                        s_i,
+                        smul1!(t.coeff(j), srs_u.0[i + j].0)
+                    );
+                }
+                s_i
+            })
             .collect();
 
         (c1, c2, c3, c4)

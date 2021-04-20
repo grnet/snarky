@@ -1,7 +1,14 @@
-use backend::{zeroG1, genG1, genG2, pair};
+use backend::{Scalar, zeroG1, genG1, genG2, pair};
 use crate::prover::RhoProof;
 use crate::flow::Phase;
 use crate::flow::SRS;
+
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum Witness {
+    ONE(Scalar, Scalar, Scalar),
+    TWO(Scalar),
+}
 
 
 // Collections of PoKs produced during SRS update,
@@ -13,6 +20,30 @@ use crate::flow::SRS;
 pub enum UpdateProof {
     ONE(RhoProof, RhoProof, RhoProof),
     TWO(RhoProof),
+}
+
+impl UpdateProof {
+    pub fn create(srs: &SRS, w: &Witness) -> Self{
+        let (G, H) = (genG1!(), genG2!());
+        match w {
+            Witness::ONE(a, b, x) => {
+                // phase 1, step 3-6
+                let srs_u = &srs.u;
+                UpdateProof::ONE(
+                    RhoProof::for_value((&G, &H, srs_u.1[0].0), &a),
+                    RhoProof::for_value((&G, &H, srs_u.1[0].1), &b),
+                    RhoProof::for_value((&G, &H, srs_u.0[1].0), &x),
+                )
+            },
+            Witness::TWO(d) => {
+                // phase 2, step 3-4
+                let srs_s = &srs.s;
+                UpdateProof::TWO(
+                    RhoProof::for_value((&G, &H, srs_s.0), &d)
+                )
+            },
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
