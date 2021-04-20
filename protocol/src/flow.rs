@@ -149,6 +149,12 @@ pub enum Phase {
     TWO = 2,
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub enum Proof {
+    ONE(UpdateProof, UpdateProof, UpdateProof),
+    TWO(UpdateProof),
+}
+
 // PoK for the value used in SRS update
 #[derive(Clone, Debug, PartialEq)]
 pub struct UpdateProof(G1, G1, G2, G1);
@@ -189,6 +195,7 @@ pub struct BatchProof {
 }
 
 impl BatchProof {
+
     pub fn initiate() -> Self {
         Self {
             phase_1: Vec::new(),
@@ -196,12 +203,15 @@ impl BatchProof {
         }
     }
 
-    pub fn phase_1_append(&mut self, proof: [UpdateProof; 3]) {
-        self.phase_1.push(proof);
-    }
-
-    pub fn phase_2_append(&mut self, proof: UpdateProof) {
-        self.phase_2.push(proof);
+    pub fn append(&mut self, proof: Proof) {
+        match proof {
+            Proof::ONE(r1, r2, r3) => {
+                self.phase_1.push([r1, r2, r3]);
+            },
+            Proof::TWO(r) => {
+                self.phase_2.push(r);
+            },
+        }
     }
 }
 
@@ -265,7 +275,8 @@ pub fn update(qap: &QAP, srs: &SRS, batch: &mut BatchProof, phase: Phase) -> SRS
             let rho_x = UpdateProof::for_value((&G, &H, srs_u.0[1].0), &x);
 
             // step 7
-            batch.phase_1_append([rho_a, rho_b, rho_x]);
+            let proof = Proof::ONE(rho_a, rho_b, rho_x);
+            batch.append(proof);
 
             // step 8 (compute u-component)
             let c1 = (0..2 * n - 1)
@@ -304,8 +315,10 @@ pub fn update(qap: &QAP, srs: &SRS, batch: &mut BatchProof, phase: Phase) -> SRS
             let d = rscalar!(rng);  // step 2 (fix witnesses)
 
             // step 3-4 (PoK for value used in update)
+            // TODO: Better semantics
             let rho = UpdateProof::for_value((&G, &H, srs_s.0), &d);
-            batch.phase_2_append(rho);
+            let proof = Proof::TWO(rho);
+            batch.append(proof);
 
             // step 5
             let dinv = d.invert().unwrap();
