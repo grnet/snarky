@@ -84,3 +84,27 @@ macro_rules! bytes2 {
         $elem.to_compressed()       // 96 bytes
     }
 }
+
+#[macro_export]
+// Constant-time equality check
+// Note: Applies to all types of elements for bls12_381. The
+// bls12_831 backend uses subtle for contant-time operations:
+// https://docs.rs/subtle/2.4.0/subtle/
+macro_rules! ct_eq {
+    ($elem1:expr, $elem2:expr) => {
+        // https://doc-internal.dalek.rs/subtle/trait.ConstantTimeEq.html
+        $elem1.ct_eq(&$elem2).unwrap_u8() == 1_u8
+    }
+}
+
+#[macro_export]
+// Constant-time inequality check
+// Note: Applies to all types of elements for bls12_381. The
+// bls12_831 backend uses subtle for contant-time operations:
+// https://docs.rs/subtle/2.4.0/subtle/
+macro_rules! ct_ne {
+    ($elem1:expr, $elem2:expr) => {
+        // https://doc-internal.dalek.rs/subtle/trait.ConstantTimeEq.html
+        $elem1.ct_eq(&$elem2).unwrap_u8() == 0_u8
+    }
+}

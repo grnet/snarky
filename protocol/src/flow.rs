@@ -5,7 +5,9 @@ pub use crate::srs::{Trapdoor, SRS};
 pub use crate::batch::BatchProof;
 use crate::prover::RhoProof;
 use crate::batch::{Witness, UpdateProof};
-use rand::RngCore;  // Must be present for update
+
+use rand::RngCore;          // Must be in scope for update
+use subtle::ConstantTimeEq; // Must be in scope for ct equality checks
 
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -82,8 +84,8 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     // step 5
     for i in 1..2 * n - 1 {
         match
-            pair!(srs_u.0[i].0, H) == pair!(G, srs_u.0[i].1) &&
-            pair!(srs_u.0[i].0, H) == pair!(srs_u.0[i - 1].0, srs_u.0[1].1)
+            ct_eq!(pair!(srs_u.0[i].0, H), pair!(G, srs_u.0[i].1)) &&
+            ct_eq!(pair!(srs_u.0[i].0, H), pair!(srs_u.0[i - 1].0, srs_u.0[1].1))
         {
             true    => continue,
             _       => return Verification::FAILURE
@@ -93,10 +95,10 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     // step 6
     for i in 0..n {
         match
-            pair!(srs_u.1[i].0, H) == pair!(G, srs_u.1[i].2) &&
-            pair!(srs_u.1[i].0, H) == pair!(srs_u.0[i].0, srs_u.1[0].2) &&
-            pair!(srs_u.1[i].1, H) == pair!(G, srs_u.1[i].3) &&
-            pair!(srs_u.1[i].1, H) == pair!(srs_u.0[i].0, srs_u.1[0].3)
+            ct_eq!(pair!(srs_u.1[i].0, H), pair!(G, srs_u.1[i].2)) &&
+            ct_eq!(pair!(srs_u.1[i].0, H), pair!(srs_u.0[i].0, srs_u.1[0].2)) &&
+            ct_eq!(pair!(srs_u.1[i].1, H), pair!(G, srs_u.1[i].3)) &&
+            ct_eq!(pair!(srs_u.1[i].1, H), pair!(srs_u.0[i].0, srs_u.1[0].3))
         {
             true    => continue,
             _       => return Verification::FAILURE
@@ -127,7 +129,7 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
             s_i = add1!(s_i, tmp);
         }
         match
-            pair!(srs_s.2[i], srs_s.1) == pair!(s_i, H)
+            ct_eq!(pair!(srs_s.2[i], srs_s.1), pair!(s_i, H))
         {
             true    => continue,
             _       => return Verification::FAILURE
@@ -143,7 +145,7 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     }
     for i in 0..n - 1 {
         match
-            pair!(srs_s.3[i], srs_s.1) == pair!(Gt, srs_u.0[i].1)
+            ct_eq!(pair!(srs_s.3[i], srs_s.1), pair!(Gt, srs_u.0[i].1))
         {
             true    => continue,
             _       => return Verification::FAILURE

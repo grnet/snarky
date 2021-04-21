@@ -1,5 +1,5 @@
 use backend::{
-    genG1, genG2, zeroG1, zeroG2, contained_in_group, bytes1, bytes2
+    genG1, genG2, zeroG1, zeroG2, contained_in_group, bytes1, bytes2, ct_eq, ct_ne,
 };
 use backend::{scalar, smul1, smul2};
 use bls12_381::{Scalar, G1Affine, G2Affine};
@@ -62,4 +62,19 @@ fn test_bytes2() {
     let mut expected: [u8; 96] = [0; 96];
     expected[0] = 192;
     assert!(bytes2!(zeroG2!()) == expected);
+}
+
+#[test]
+fn test_ct_equality_checks() {
+    let elm1 = scalar!(0); 
+    let elm2 = scalar!(0); 
+    let elm3 = scalar!(1); 
+
+    use subtle::ConstantTimeEq;
+
+    assert!(ct_eq!(elm1, elm2));
+    assert!(ct_ne!(elm1, elm3));
+
+    assert!(!ct_eq!(elm1, elm3));
+    assert!(!ct_ne!(elm1, elm2));
 }

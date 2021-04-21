@@ -1,4 +1,5 @@
-use backend::{Scalar, zeroG1, genG1, genG2, pair};
+use subtle::ConstantTimeEq; // Must be in scope for ct equality checks
+use backend::*;
 use crate::prover::RhoProof;
 use crate::flow::Phase;
 use crate::flow::SRS;
@@ -84,9 +85,10 @@ impl BatchProof {
                 // step 3
                 for i in 0..batch_u.len() {
                     for j in 0..3 {
-                        let rho = &batch_u[i][j];
-                        let prf = if i != 0 { Some(&batch_u[i - 1][j]) } else { None };
-                        match rho.verify((&G, &H), prf)
+                        match &batch_u[i][j].verify((&G, &H), match i {
+                            0 => None,
+                            _ => Some(&batch_u[i - 1][j])
+                        })
                         {
                             true    => continue,
                             _       => return false,
@@ -97,12 +99,12 @@ impl BatchProof {
                 // step 4
                 let len = batch_u.len();
                 match len > 0 && !(
-                    srs_u.0[1].0 == batch_u[len - 1][2].0 &&
-                    srs_u.1[0].0 == batch_u[len - 1][0].0 &&
-                    srs_u.1[0].1 == batch_u[len - 1][1].0 &&
-                    batch_u[len - 1][2].0 != zero &&
-                    batch_u[len - 1][0].0 != zero &&
-                    batch_u[len - 1][1].0 != zero
+                    ct_eq!(srs_u.0[1].0, batch_u[len - 1][2].0) &&
+                    ct_eq!(srs_u.1[0].0, batch_u[len - 1][0].0) &&
+                    ct_eq!(srs_u.1[0].1, batch_u[len - 1][1].0) &&
+                    ct_ne!(batch_u[len - 1][2].0, zero) &&
+                    ct_ne!(batch_u[len - 1][0].0, zero) &&
+                    ct_ne!(batch_u[len - 1][1].0, zero)
                 )
                 {
                     true    => false,
@@ -115,9 +117,10 @@ impl BatchProof {
 
                 // step 8
                 for i in 0..batch_s.len() {
-                    let rho = &batch_s[i];
-                    let prf = if i != 0 { Some(&batch_s[i - 1]) } else { None };
-                    match rho.verify((&G, &H), prf)
+                    match &batch_s[i].verify((&G, &H), match i {
+                        0 => None,
+                        _ => Some(&batch_s[i - 1])
+                    })
                     {
                         true    => continue,
                         _       => return false,
@@ -125,13 +128,16 @@ impl BatchProof {
                 }
 
                 // step 9
-                match pair!(srs_s.0, H) != pair!(G, srs_s.1) {
+                match 
+                    ct_ne!(pair!(srs_s.0, H), pair!(G, srs_s.1)) 
+                {
                     true    => return false,
                     false   => {
                         let len = batch_s.len();
-                        match len > 0 && !(
-                            srs_s.0 == batch_s[len - 1].0 &&
-                            batch_s[len - 1].0 != zero
+                        match len > 0 && 
+                        !(
+                            ct_eq!(srs_s.0, batch_s[len - 1].0) &&
+                            ct_ne!(batch_s[len - 1].0, zero)
                         ) 
                         {
                             true    => false,

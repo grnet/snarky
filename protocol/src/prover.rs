@@ -1,3 +1,4 @@
+use subtle::ConstantTimeEq; // Must be in scope for ct equality checks
 use backend::*;
 
 type G1 = G1Elem;
@@ -16,8 +17,8 @@ pub fn prove_dlog(phi: (G1, G2), witness: Scalar) -> G1 {
 }
 
 pub fn verify_dlog(G: &G1, H: &G2, phi: (G1, G2), proof: G1) -> bool {
-    pair!(phi.0, H) == pair!(G, phi.1) &&
-    pair!(proof, H) == pair!(rndoracle(phi), phi.1)
+    ct_eq!(pair!(phi.0, H), pair!(G, phi.1)) &&
+    ct_eq!(pair!(proof, H), pair!(rndoracle(phi), phi.1))
 }
 
 // PoK for the value used in SRS update
@@ -48,7 +49,7 @@ impl RhoProof {
             true => {
                 match prf {
                     Some(prf) => {
-                        pair!(self.0, H) == pair!(prf.0, self.2)
+                        ct_eq!(pair!(self.0, H), pair!(prf.0, self.2))
                     },
                     None => true,
                 }
