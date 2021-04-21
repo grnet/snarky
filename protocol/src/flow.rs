@@ -3,32 +3,16 @@ use subtle::ConstantTimeEq; // Must be in scope for ct equality checks
 
 use backend::*;
 use circuits::QAP;
-use crate::srs::{U, S};
-pub use crate::srs::{Trapdoor, SRS};
-use crate::prover::{RhoProof, Witness, UpdateProof, BatchProof};
+use crate::prover::{RhoProof, Witness, UpdateProof};
 
+pub use crate::srs::{Trapdoor, SRS};
+pub use crate::prover::BatchProof;
 
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Phase {
     ONE = 1,
     TWO = 2,
-}
-
-
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub enum Verification {
-    FAILURE = 0,
-    SUCCESS = 1,
-}
-
-impl Verification {
-    pub fn as_bool(&self) -> bool {
-        match self {
-            Verification::FAILURE => false,
-            Verification::SUCCESS => true,
-        }
-    }
 }
 
 pub fn update(qap: &QAP, srs: &mut SRS, batch: &mut BatchProof, phase: Phase) {
@@ -57,6 +41,21 @@ pub fn update(qap: &QAP, srs: &mut SRS, batch: &mut BatchProof, phase: Phase) {
     }
 }
 
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum Verification {
+    FAILURE = 0,
+    SUCCESS = 1,
+}
+
+impl Verification {
+    pub fn as_bool(&self) -> bool {
+        match self {
+            Verification::FAILURE => false,
+            Verification::SUCCESS => true,
+        }
+    }
+}
 
 pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     let (m, n, l) = qap.shape();

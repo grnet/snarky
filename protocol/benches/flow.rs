@@ -6,8 +6,8 @@ use criterion::{
     BenchmarkId,
 };
 use circuits::QAP;
-use protocol::prover::BatchProof;
-use protocol::flow::{SRS, Phase, update, verify};
+use protocol::{SRS, Trapdoor, BatchProof, Phase, Verification};
+use protocol;
 
 fn bench_setup(c: &mut Criterion) {
     let mut group = c.benchmark_group("setup");
@@ -37,7 +37,7 @@ fn bench_update_phase_1(c: &mut Criterion) {
         let mut batch = BatchProof::initiate();
         group.bench_function(
             format!("Phase 1 SRS update with m:{}, n:{}, l{}", m, n, l),
-            |b| b.iter(|| update(&qap, &mut srs, &mut batch, Phase::ONE)),
+            |b| b.iter(|| protocol::update(&qap, &mut srs, &mut batch, Phase::ONE)),
         );
     }
     group.finish();
@@ -55,7 +55,7 @@ fn bench_update_phase_2(c: &mut Criterion) {
         let mut batch = BatchProof::initiate();
         group.bench_function(
             format!("Phase 2 SRS update with m:{}, n:{}, l{}", m, n, l),
-            |b| b.iter(|| update(&qap, &mut srs, &mut batch, Phase::TWO)),
+            |b| b.iter(|| protocol::update(&qap, &mut srs, &mut batch, Phase::TWO)),
         );
     }
     group.finish();
@@ -72,11 +72,11 @@ fn bench_verify(c: &mut Criterion) {
         let qap = QAP::create_default(*m, *n, *l).unwrap();
         let (mut srs, trp) = SRS::setup_with_random_trapdoor(&qap);
         let mut batch = BatchProof::initiate();
-        update(&qap, &mut srs, &mut batch, Phase::ONE);
-        update(&qap, &mut srs, &mut batch, Phase::TWO);
+        protocol::update(&qap, &mut srs, &mut batch, Phase::ONE);
+        protocol::update(&qap, &mut srs, &mut batch, Phase::TWO);
         group.bench_function(
             format!("Verify SRS with m:{}, n:{}, l{}", m, n, l),
-            |b| b.iter(|| verify(&qap, &srs, &batch)),
+            |b| b.iter(|| protocol::verify(&qap, &srs, &batch)),
         );
     }
     group.finish();
@@ -96,9 +96,9 @@ fn bench_flow(c: &mut Criterion) {
             |b| b.iter(|| {
                 let qap = QAP::create_default(*m, *n, *l).unwrap();
                 let (mut srs, trp) = SRS::setup_with_random_trapdoor(&qap);
-                update(&qap, &mut srs, &mut batch, Phase::ONE);
-                update(&qap, &mut srs, &mut batch, Phase::TWO);
-                verify(&qap, &srs, &batch)
+                protocol::update(&qap, &mut srs, &mut batch, Phase::ONE);
+                protocol::update(&qap, &mut srs, &mut batch, Phase::TWO);
+                protocol::verify(&qap, &srs, &batch)
             }),
         );
     }

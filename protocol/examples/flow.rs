@@ -1,7 +1,7 @@
 use std::time::Instant;
 use circuits::QAP;
-use protocol::prover::BatchProof;
-use protocol::flow::{Trapdoor, SRS, Phase, update, verify};
+use protocol::{SRS, Trapdoor, BatchProof, Phase, Verification};
+use protocol;
 
 fn main() {
 
@@ -46,7 +46,7 @@ fn main() {
     let mut count = 0;
     loop {
         let start = Instant::now();
-        update(&qap, &mut srs, &mut batch, Phase::ONE);
+        protocol::update(&qap, &mut srs, &mut batch, Phase::ONE);
         println!("[+] Phase 1 SRS update ({:.2?})", start.elapsed());
         count += 1;
         if count == nr_1 {
@@ -58,7 +58,7 @@ fn main() {
     let mut count = 0;
     loop {
         let start = Instant::now();
-        update(&qap, &mut srs, &mut batch, Phase::TWO);
+        protocol::update(&qap, &mut srs, &mut batch, Phase::TWO);
         println!("[+] Phase 2 SRS update ({:.2?})", start.elapsed());
         count += 1;
         if count == nr_2 {
@@ -68,7 +68,7 @@ fn main() {
 
     let res = {
         let start = Instant::now();
-        let res = verify(&qap, &srs, &batch);
+        let res = protocol::verify(&qap, &srs, &batch);
         println!("[+] {:?} ({:.2?})", res, start.elapsed());
         res
     };

@@ -1,6 +1,7 @@
+use std::convert::TryInto;  // Must be in scope for hashG1
 use subtle::ConstantTimeEq; // Must be in scope for ct equality checks
 use sha2::Digest;           // Must be in scope for hashG1
-use std::convert::TryInto;  // Must be in scope for hashG1
+
 use backend::*;
 use crate::srs::SRS;
 use crate::flow::Phase;
