@@ -1,61 +1,78 @@
 use subtle::ConstantTimeEq; // Must be in scope for ct equality checks
+use sha2::Digest;           // Must be in scope for hashG1
+use std::convert::TryInto;  // Must be in scope for hashG1
 use backend::*;
 
 type G1 = G1Elem;
 type G2 = G2Elem;
 
-// Must both be in scope for hashG1
-use sha2::Digest;
-use std::convert::TryInto;
 
-pub fn rndoracle(phi: (G1, G2)) -> G1 {
-    hashG1!(&[bytes1!(phi.0), bytes2!(phi.1)].concat())
+// Indicates proof-verification failure
+#[derive(Debug, PartialEq)]
+pub enum ProofError {
+    DlogFailure,
+    RhoFailure,
+    BatchFailure,
 }
 
-pub fn prove_dlog(phi: (G1, G2), witness: Scalar) -> G1 {
-    smul1!(witness, rndoracle(phi))
-}
 
-pub fn verify_dlog(G: &G1, H: &G2, phi: (G1, G2), proof: G1) -> Result<bool, ProofError> {
-    match 
-        ct_eq!(pair!(phi.0, H), pair!(G, phi.1)) &&
-        ct_eq!(pair!(proof, H), pair!(rndoracle(phi), phi.1))
+pub struct Dlog;
+type Commitment = (G1, G2);
+
+impl Dlog {
+
+    pub fn rndoracle(c: &Commitment) -> G1 {
+        let bytes = [bytes1!(c.0), bytes2!(c.1)].concat();
+        hashG1!(&bytes)
+    }
+    
+    pub fn prove(c: &Commitment, witness: Scalar) -> G1 {
+        smul1!(witness, Self::rndoracle(&c))
+    }
+
+    pub fn verify(ctx: (&G1, &G2), c: &Commitment, prf: &G1) 
+        -> Result<bool, ProofError> 
     {
-        false   => Err(ProofError::DlogFailure),
-        _       => Ok(true)
+        let (G, H) = ctx;
+        match 
+            ct_eq!(pair!(c.0, H), pair!(G, c.1)) &&
+            ct_eq!(pair!(prf, H), pair!(Self::rndoracle(&c), c.1))
+        {
+            false   => Err(ProofError::DlogFailure),
+            _       => Ok(true)
+        }
     }
 }
 
-// PoK for the value used in SRS update
+
 #[derive(Clone, Debug, PartialEq)]
-pub struct RhoProof(
-    pub G1, 
-    pub G1, 
-    pub G2, 
-    pub G1
-);
+pub struct RhoProof {
+    pub aux: G1, 
+    pub com: Commitment,
+    pub prf: G1,
+}
 
 impl RhoProof {
     
-    pub fn for_value(ctx: (&G1, &G2, G1), val: &Scalar) -> Self {
-        let (G, H, base) = ctx;
-        let prf = prove_dlog((smul1!(val, G), smul2!(val, H)), *val);
-        Self(
-            smul1!(val, base),
-            smul1!(val, G),
-            smul2!(val, H),
-            prf
-        )
+    pub fn create(ctx: (&G1, &G2), base: &G1, w: &Scalar) -> Self {
+        let (G, H) = ctx;
+        let aux = smul1!(w, base);
+        let com = (smul1!(w, G), smul2!(w, H));
+        Self { 
+            aux, 
+            com, 
+            prf: Dlog::prove(&com, *w),
+        }
     }
 
-    pub fn verify(&self, ctx: (&G1, &G2), prf: Option<&Self>) -> Result<bool, ProofError> {
+    pub fn verify(&self, ctx: (&G1, &G2), rho: Option<&Self>) -> Result<bool, ProofError> {
         let (G, H) = ctx;
-        match verify_dlog(&G, &H, (self.1, self.2), self.3) {
+        match Dlog::verify(ctx, &self.com, &self.prf) {
             Ok(true) => {
-                match prf {
-                    Some(prf) => {
+                match rho {
+                    Some(rho) => {
                         match 
-                            ct_eq!(pair!(self.0, H), pair!(prf.0, self.2))
+                            ct_eq!(pair!(self.aux, H), pair!(rho.aux, self.com.1))
                         {
                             false   => Err(ProofError::RhoFailure),
                             _       => Ok(true)
@@ -67,11 +84,4 @@ impl RhoProof {
             _ => Err(ProofError::RhoFailure)
         }
     }
-}
-
-#[derive(Debug, PartialEq)]
-pub enum ProofError {
-    DlogFailure,
-    RhoFailure,
-    BatchFailure,
 }

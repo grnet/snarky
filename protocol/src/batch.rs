@@ -32,16 +32,16 @@ impl UpdateProof {
                 // phase 1, step 3-6
                 let srs_u = &srs.u;
                 UpdateProof::ONE(
-                    RhoProof::for_value((&G, &H, srs_u.1[0].0), &a),
-                    RhoProof::for_value((&G, &H, srs_u.1[0].1), &b),
-                    RhoProof::for_value((&G, &H, srs_u.0[1].0), &x),
+                    RhoProof::create((&G, &H), &srs_u.1[0].0, &a),
+                    RhoProof::create((&G, &H), &srs_u.1[0].1, &b),
+                    RhoProof::create((&G, &H), &srs_u.0[1].0, &x),
                 )
             },
             Witness::TWO(d) => {
                 // phase 2, step 3-4
                 let srs_s = &srs.s;
                 UpdateProof::TWO(
-                    RhoProof::for_value((&G, &H, srs_s.0), &d)
+                    RhoProof::create((&G, &H), &srs_s.0, &d)
                 )
             },
         }
@@ -75,9 +75,8 @@ impl BatchProof {
     }
 
     pub fn verify(&self, srs: &SRS, phase: Phase) -> Result<bool, ProofError> {
+        let (G, H) = (genG1!(), genG2!());
         let zero = zeroG1!();
-        let G = genG1!();
-        let H = genG2!();
         match phase {
             Phase::ONE => {
                 let batch_u = &self.batch_1;
@@ -100,12 +99,12 @@ impl BatchProof {
                 // step 4
                 let len = batch_u.len();
                 match len > 0 && !(
-                    ct_eq!(srs_u.0[1].0, batch_u[len - 1][2].0) &&
-                    ct_eq!(srs_u.1[0].0, batch_u[len - 1][0].0) &&
-                    ct_eq!(srs_u.1[0].1, batch_u[len - 1][1].0) &&
-                    ct_ne!(batch_u[len - 1][2].0, zero) &&
-                    ct_ne!(batch_u[len - 1][0].0, zero) &&
-                    ct_ne!(batch_u[len - 1][1].0, zero)
+                    ct_eq!(srs_u.0[1].0, batch_u[len - 1][2].aux) &&
+                    ct_eq!(srs_u.1[0].0, batch_u[len - 1][0].aux) &&
+                    ct_eq!(srs_u.1[0].1, batch_u[len - 1][1].aux) &&
+                    ct_ne!(batch_u[len - 1][2].aux, zero) &&
+                    ct_ne!(batch_u[len - 1][0].aux, zero) &&
+                    ct_ne!(batch_u[len - 1][1].aux, zero)
                 )
                 {
                     true    => return Err(ProofError::BatchFailure),
@@ -137,8 +136,8 @@ impl BatchProof {
                         let len = batch_s.len();
                         match len > 0 && 
                         !(
-                            ct_eq!(srs_s.0, batch_s[len - 1].0) &&
-                            ct_ne!(batch_s[len - 1].0, zero)
+                            ct_eq!(srs_s.0, batch_s[len - 1].aux) &&
+                            ct_ne!(batch_s[len - 1].aux, zero)
                         ) 
                         {
                             true    => Err(ProofError::BatchFailure),
