@@ -1,26 +1,11 @@
-use backend::{
-    G1Elem as G1,
-    G2Elem as G2,
-    rscalar,
-    inv,
-    pow, 
-    contained_in_group,
-    genG1, 
-    genG2, 
-    zeroG1, 
-    add1, 
-    add2,
-    smul1, 
-    smul2, 
-    pair,
-};
+use backend::*;
 use circuits::QAP;
 use crate::srs::{U, S};
 pub use crate::srs::{Trapdoor, SRS};
 pub use crate::batch::BatchProof;
 use crate::prover::RhoProof;
 use crate::batch::{Witness, UpdateProof};
-use rand::RngCore;                  // Must be present for update
+use rand::RngCore;  // Must be present for update
 
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -82,29 +67,11 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     let srs_u = &srs.u;
     let srs_s = &srs.s;
 
+    // ---------------------------------------------------------------
+
     // step 2
-    if !(srs_u.0.len() == 2 * n - 1 && srs_u.1.len() == n) {
+    if !srs.check_u(&qap) {
         return Verification::FAILURE
-    }
-    for i in 0..2 * n - 1 {
-        match
-            contained_in_group!(srs_u.0[i].0) &&
-            contained_in_group!(srs_u.0[i].1)
-        {
-            true    => continue,
-            _       => return Verification::FAILURE
-        }
-    }
-    for i in 0..n {
-        match
-            contained_in_group!(srs_u.1[i].0) &&
-            contained_in_group!(srs_u.1[i].1) &&
-            contained_in_group!(srs_u.1[i].2) &&
-            contained_in_group!(srs_u.1[i].3)
-        {
-            true    => continue,
-            _       => return Verification::FAILURE
-        }
     }
 
     // step 3-4
@@ -136,30 +103,11 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
         }
     }
 
+    // ---------------------------------------------------------------
+
     // step 7
-    if !(
-        contained_in_group!(srs_s.0) &&
-        contained_in_group!(srs_s.1) &&
-        srs_s.2.len() == m - l &&
-        srs_s.3.len() == n - 1
-    ) {
+    if !srs.check_s(&qap) {
         return Verification::FAILURE
-    }
-    for i in 0..m - l {
-        match
-            contained_in_group!(srs_s.2[i])
-        {
-            true    => continue,
-            _       => return Verification::FAILURE
-        }
-    }
-    for i in 0..n - 1 {
-        match
-            contained_in_group!(srs_s.3[i])
-        {
-            true    => continue,
-            _       => return Verification::FAILURE
-        }
     }
 
     // step 8-9
@@ -185,6 +133,8 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
             _       => return Verification::FAILURE
         }
     }
+
+    // ----------------------------------------------------------------
 
     // step 11
     let mut Gt = zeroG1!();

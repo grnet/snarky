@@ -1,19 +1,4 @@
-use backend::{
-    Scalar,
-    G1Elem as G1,
-    G2Elem as G2,
-    scalar,
-    rscalar,
-    one,
-    inv,
-    pow,
-    zeroG1, 
-    genG1,
-    genG2,
-    add1,
-    smul1,
-    smul2,
-};
+use backend::*;
 use polynomials::Univariate;
 use circuits::QAP;
 use crate::batch::Witness;
@@ -52,6 +37,8 @@ impl Trapdoor {
 }
 
 
+type G1 = G1Elem;
+type G2 = G2Elem;
 pub type U = (Vec<(G1, G2)>, Vec<(G1, G1, G2, G2)>);
 pub type S = (G1, G2, Vec<G1>, Vec<G1>);
 
@@ -209,12 +196,13 @@ impl SRS {
     fn specialize(qap: &QAP, srs_u: &U) -> S {
         let (m, n, l) = qap.shape();
         let (u, v, w, t) = qap.collections();
+        let zero = zeroG1!();
 
         let c1 = genG1!();
         let c2 = genG2!();
         let c3 = (0..m - l)
             .map(|i| {
-                let mut s_i = zeroG1!();
+                let mut s_i = zero;
                 for j in 0..n {
                     s_i = add1!(
                         s_i,
@@ -230,7 +218,7 @@ impl SRS {
             .collect();
         let c4 = (0..n - 1)
             .map(|i| {
-                let mut s_i = zeroG1!();
+                let mut s_i = zero;
                 for j in 0..n {
                     s_i = add1!(
                         s_i,
@@ -242,5 +230,71 @@ impl SRS {
             .collect();
 
         (c1, c2, c3, c4)
+    }
+
+    pub fn check_u(&self, qap: &QAP) -> bool {
+        let (_, n, _) = qap.shape();
+        let srs_u = &self.u;
+        // verification: step 2
+        if !(
+            srs_u.0.len() == 2 * n - 1 && 
+            srs_u.1.len() == n
+        ) 
+        {
+            return false
+        }
+        for i in 0..2 * n - 1 {
+            match
+                contained_in_group!(srs_u.0[i].0) &&
+                contained_in_group!(srs_u.0[i].1)
+            {
+                true    => continue,
+                _       => return false
+            }
+        }
+        for i in 0..n {
+            match
+                contained_in_group!(srs_u.1[i].0) &&
+                contained_in_group!(srs_u.1[i].1) &&
+                contained_in_group!(srs_u.1[i].2) &&
+                contained_in_group!(srs_u.1[i].3)
+            {
+                true    => continue,
+                _       => return false
+            }
+        }
+        true
+    }
+
+    pub fn check_s(&self, qap: &QAP) -> bool {
+        let (m, n, l) = qap.shape();
+        let srs_s = &self.s;
+        // verification: step 7
+        if !(
+            contained_in_group!(srs_s.0) &&
+            contained_in_group!(srs_s.1) &&
+            srs_s.2.len() == m - l &&
+            srs_s.3.len() == n - 1
+        ) 
+        {
+            return false
+        }
+        for i in 0..m - l {
+            match
+                contained_in_group!(srs_s.2[i])
+            {
+                true    => continue,
+                _       => return false
+            }
+        }
+        for i in 0..n - 1 {
+            match
+                contained_in_group!(srs_s.3[i])
+            {
+                true    => continue,
+                _       => return false
+            }
+        }
+        true
     }
 }

@@ -1,18 +1,7 @@
-use backend::{
-    Scalar,
-    G1Elem as G1,
-    G2Elem as G2,
-    scalar,
-    genG1,
-    genG2,
-    smul1,
-    smul2,
-    pair,
-    contained_in_group,
-    bytes1,
-    bytes2,
-    hashG1,
-};
+use backend::*;
+
+type G1 = G1Elem;
+type G2 = G2Elem;
 
 // Must both be in scope for hashG1
 use sha2::Digest;
