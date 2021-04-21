@@ -2,7 +2,8 @@
 //! Common test setup taken from the `common` module.
 
 use circuits::QAP;
-use protocol::flow::{Trapdoor, SRS, Phase, BatchProof, update, verify};
+use protocol::prover::BatchProof;
+use protocol::flow::{Trapdoor, SRS, Phase, update, verify};
 
 #[test]
 fn test_flow_with_given_trapdoor() {

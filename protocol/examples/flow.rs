@@ -1,6 +1,7 @@
 use std::time::Instant;
 use circuits::QAP;
-use protocol::flow::{Trapdoor, SRS, Phase, BatchProof, update, verify};
+use protocol::prover::BatchProof;
+use protocol::flow::{Trapdoor, SRS, Phase, update, verify};
 
 fn main() {
 

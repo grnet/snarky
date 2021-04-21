@@ -1,7 +1,7 @@
 use backend::*;
 use polynomials::Univariate;
 use circuits::QAP;
-use crate::batch::Witness;
+use crate::prover::Witness;
 
 
 #[derive(Copy, Clone, Debug, PartialEq)]

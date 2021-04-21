@@ -6,7 +6,8 @@ use criterion::{
     BenchmarkId,
 };
 use circuits::QAP;
-use protocol::flow::{Trapdoor, SRS, Phase, BatchProof, update, verify};
+use protocol::prover::BatchProof;
+use protocol::flow::{SRS, Phase, update, verify};
 
 fn bench_setup(c: &mut Criterion) {
     let mut group = c.benchmark_group("setup");
@@ -32,7 +33,6 @@ fn bench_update_phase_1(c: &mut Criterion) {
         (1000, 1000, 1000),
     ].iter() {
         let qap = QAP::create_default(*m, *n, *l).unwrap();
-        // let trp = Trapdoor::from_units();
         let (mut srs, trp) = SRS::setup_with_random_trapdoor(&qap);
         let mut batch = BatchProof::initiate();
         group.bench_function(

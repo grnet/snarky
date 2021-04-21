@@ -1,13 +1,12 @@
+use rand::RngCore;          // Must be in scope for update
+use subtle::ConstantTimeEq; // Must be in scope for ct equality checks
+
 use backend::*;
 use circuits::QAP;
 use crate::srs::{U, S};
 pub use crate::srs::{Trapdoor, SRS};
-pub use crate::batch::BatchProof;
-use crate::prover::RhoProof;
-use crate::batch::{Witness, UpdateProof};
+use crate::prover::{RhoProof, Witness, UpdateProof, BatchProof};
 
-use rand::RngCore;          // Must be in scope for update
-use subtle::ConstantTimeEq; // Must be in scope for ct equality checks
 
 
 #[derive(Copy, Clone, Debug, PartialEq)]

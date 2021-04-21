@@ -2,7 +2,6 @@
 //!
 //! The `protocol` crate implements ...
 
-pub mod prover;
-mod batch;
 mod srs;
+pub mod prover;
 pub mod flow;
