@@ -16,9 +16,14 @@ pub fn prove_dlog(phi: (G1, G2), witness: Scalar) -> G1 {
     smul1!(witness, rndoracle(phi))
 }
 
-pub fn verify_dlog(G: &G1, H: &G2, phi: (G1, G2), proof: G1) -> bool {
-    ct_eq!(pair!(phi.0, H), pair!(G, phi.1)) &&
-    ct_eq!(pair!(proof, H), pair!(rndoracle(phi), phi.1))
+pub fn verify_dlog(G: &G1, H: &G2, phi: (G1, G2), proof: G1) -> Result<bool, ProofError> {
+    match 
+        ct_eq!(pair!(phi.0, H), pair!(G, phi.1)) &&
+        ct_eq!(pair!(proof, H), pair!(rndoracle(phi), phi.1))
+    {
+        false   => Err(ProofError::DlogFailure),
+        _       => Ok(true)
+    }
 }
 
 // PoK for the value used in SRS update
@@ -43,18 +48,30 @@ impl RhoProof {
         )
     }
 
-    pub fn verify(&self, ctx: (&G1, &G2), prf: Option<&Self>) -> bool {
+    pub fn verify(&self, ctx: (&G1, &G2), prf: Option<&Self>) -> Result<bool, ProofError> {
         let (G, H) = ctx;
         match verify_dlog(&G, &H, (self.1, self.2), self.3) {
-            true => {
+            Ok(true) => {
                 match prf {
                     Some(prf) => {
-                        ct_eq!(pair!(self.0, H), pair!(prf.0, self.2))
+                        match 
+                            ct_eq!(pair!(self.0, H), pair!(prf.0, self.2))
+                        {
+                            false   => Err(ProofError::RhoFailure),
+                            _       => Ok(true)
+                        }
                     },
-                    None => true,
+                    None => Ok(true),
                 }
-            }
-            _ => false
+            },
+            _ => Err(ProofError::RhoFailure)
         }
     }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum ProofError {
+    DlogFailure,
+    RhoFailure,
+    BatchFailure,
 }

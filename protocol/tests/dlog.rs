@@ -1,5 +1,6 @@
 use backend::{scalar, genG1, genG2, smul1, smul2};
 use protocol::prover::{prove_dlog, verify_dlog};
+use protocol::prover::ProofError;
 use util::map;
 
 #[test]
@@ -18,7 +19,16 @@ fn test_dlog_proof() {
         let phi = (elem_1, elem_2);
         let witness = scalar!(w);
         let proof = prove_dlog(phi, witness);
-        let verified = verify_dlog(&G, &H, phi, proof);
-        assert_eq!(verified, expected);
+        match expected {
+            true => {
+                assert!(verify_dlog(&G, &H, phi, proof).unwrap());
+            },
+            false => {
+                assert_eq!(
+                    verify_dlog(&G, &H, phi, proof).unwrap_err(), 
+                    ProofError::DlogFailure
+                );
+            }
+        };
     }
 }

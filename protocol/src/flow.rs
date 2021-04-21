@@ -77,8 +77,9 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     }
 
     // step 3-4
-    if !batch.verify(&srs, Phase::ONE) {
-        return Verification::FAILURE
+    match batch.verify(&srs, Phase::ONE) {
+        Err(ProofError) => return Verification::FAILURE,
+        _ => {}
     }
 
     // step 5
@@ -113,8 +114,9 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     }
 
     // step 8-9
-    if !batch.verify(&srs, Phase::TWO) {
-        return Verification::FAILURE
+    match batch.verify(&srs, Phase::TWO) {
+        Err(ProofError) => return Verification::FAILURE,
+        _ => {}
     }
 
     // step 10

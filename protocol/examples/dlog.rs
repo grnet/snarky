@@ -23,7 +23,7 @@ pub fn main() {
     let G = genG1!();
     let H = genG2!();
     let start = Instant::now();
-    let verified = verify_dlog(&G, &H, phi, proof);
+    let verified = verify_dlog(&G, &H, phi, proof).unwrap();
     println!("[+] dlog verify ({:.2?})", start.elapsed());
     assert!(verified);
 }

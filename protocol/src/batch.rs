@@ -3,6 +3,7 @@ use backend::*;
 use crate::prover::RhoProof;
 use crate::flow::Phase;
 use crate::flow::SRS;
+use crate::prover::ProofError;
 
 
 #[derive(Clone, Debug, PartialEq)]
@@ -49,37 +50,37 @@ impl UpdateProof {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct BatchProof {
-    pub phase_1: Vec<[RhoProof; 3]>,
-    pub phase_2: Vec<RhoProof>,
+    pub batch_1: Vec<[RhoProof; 3]>,    // Contains phase 1 update-proofs
+    pub batch_2: Vec<RhoProof>,         // Contains phase 2 update-proofs
 }
 
 impl BatchProof {
 
     pub fn initiate() -> Self {
         Self {
-            phase_1: Vec::new(),
-            phase_2: Vec::new()
+            batch_1: Vec::new(),
+            batch_2: Vec::new()
         }
     }
 
     pub fn append(&mut self, proof: UpdateProof) {
         match proof {
             UpdateProof::ONE(r1, r2, r3) => {
-                self.phase_1.push([r1, r2, r3]);
+                self.batch_1.push([r1, r2, r3]);
             },
             UpdateProof::TWO(r) => {
-                self.phase_2.push(r);
+                self.batch_2.push(r);
             },
         }
     }
 
-    pub fn verify(&self, srs: &SRS, phase: Phase) -> bool {
+    pub fn verify(&self, srs: &SRS, phase: Phase) -> Result<bool, ProofError> {
         let zero = zeroG1!();
         let G = genG1!();
         let H = genG2!();
         match phase {
             Phase::ONE => {
-                let batch_u = &self.phase_1;
+                let batch_u = &self.batch_1;
                 let srs_u = &srs.u;
 
                 // step 3
@@ -90,8 +91,8 @@ impl BatchProof {
                             _ => Some(&batch_u[i - 1][j])
                         })
                         {
-                            true    => continue,
-                            _       => return false,
+                            Ok(true)    => continue,
+                            _           => return Err(ProofError::BatchFailure)
                         }
                     }
                 }
@@ -107,12 +108,12 @@ impl BatchProof {
                     ct_ne!(batch_u[len - 1][1].0, zero)
                 )
                 {
-                    true    => false,
-                    _       => true,
+                    true    => return Err(ProofError::BatchFailure),
+                    _       => Ok(true),
                 }
             },
             Phase::TWO => {
-                let batch_s = &self.phase_2;
+                let batch_s = &self.batch_2;
                 let srs_s = &srs.s;
 
                 // step 8
@@ -122,8 +123,8 @@ impl BatchProof {
                         _ => Some(&batch_s[i - 1])
                     })
                     {
-                        true    => continue,
-                        _       => return false,
+                        Ok(true) => continue,
+                        _ => return Err(ProofError::BatchFailure)
                     }
                 }
 
@@ -131,7 +132,7 @@ impl BatchProof {
                 match 
                     ct_ne!(pair!(srs_s.0, H), pair!(G, srs_s.1)) 
                 {
-                    true    => return false,
+                    true    => return Err(ProofError::BatchFailure),
                     false   => {
                         let len = batch_s.len();
                         match len > 0 && 
@@ -140,8 +141,8 @@ impl BatchProof {
                             ct_ne!(batch_s[len - 1].0, zero)
                         ) 
                         {
-                            true    => false,
-                            _       => true,
+                            true    => Err(ProofError::BatchFailure),
+                            _       => Ok(true),
                         }
                     }
                 }
