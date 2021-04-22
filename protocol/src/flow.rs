@@ -70,8 +70,9 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     // ---------------------------------------------------------------
 
     // step 2
-    if !srs.check_u(&qap) {
-        return Verification::FAILURE
+    match srs.check_u(&qap) {
+        Err(SRSError)   => return Verification::FAILURE,
+        _               => {}
     }
 
     // step 3-4
@@ -107,8 +108,9 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     // ---------------------------------------------------------------
 
     // step 7
-    if !srs.check_s(&qap) {
-        return Verification::FAILURE
+    match srs.check_s(&qap) {
+        Err(SRSError) => return Verification::FAILURE,
+        _ => {}
     }
 
     // step 8-9

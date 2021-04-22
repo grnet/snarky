@@ -233,7 +233,7 @@ impl SRS {
     }
 
     // verification: step 2
-    pub fn check_u(&self, qap: &QAP) -> bool {
+    pub fn check_u(&self, qap: &QAP) -> Result<bool, SRSError> {
         let (_, n, _) = qap.shape();
         let srs_u = &self.u;
         
@@ -256,11 +256,14 @@ impl SRS {
                     contained_in_group!(srs_u.0[i].1)
             });
 
-        out1 && out2 && out3
+        match out1 && out2 && out3 {
+            false   => Err(SRSError),
+            _       => Ok(true)
+        }
     }
 
     // verification: step 7
-    pub fn check_s(&self, qap: &QAP) -> bool {
+    pub fn check_s(&self, qap: &QAP) -> Result<bool, SRSError> {
         let (m, n, l) = qap.shape();
         let srs_s = &self.s;
         
@@ -281,6 +284,15 @@ impl SRS {
                 acc || contained_in_group!(srs_s.3[i])
             });
 
-        out1 && out2 && out3
+        match out1 && out2 && out3 {
+            false   => Err(SRSError),
+            _       => Ok(true)
+        }
     }
 }
+
+
+// Indicates SRS checking failure
+#[derive(Debug, PartialEq)]
+pub struct SRSError;
+
