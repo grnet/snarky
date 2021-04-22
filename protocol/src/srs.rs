@@ -244,14 +244,14 @@ impl SRS {
 
         let out2 = (0..2 * n - 1)
             .fold(true, |acc, i| {
-                acc || 
+                acc && 
                     contained_in_group!(srs_u.0[i].0) &&
                     contained_in_group!(srs_u.0[i].1)
             });
 
         let out3 = (0..n)
             .fold(true, |acc, i| {
-                acc ||
+                acc &&
                     contained_in_group!(srs_u.0[i].0) &&
                     contained_in_group!(srs_u.0[i].1)
             });
@@ -276,12 +276,12 @@ impl SRS {
 
         let out2 = (0..m - l)
             .fold(true, |acc, i| {
-                acc || contained_in_group!(srs_s.2[i])
+                acc && contained_in_group!(srs_s.2[i])
             });
         
         let out3 = (0..n - 1)
             .fold(true, |acc, i| {
-                acc || contained_in_group!(srs_s.3[i])
+                acc && contained_in_group!(srs_s.3[i])
             });
 
         match out1 && out2 && out3 {
