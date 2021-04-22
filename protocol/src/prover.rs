@@ -71,21 +71,18 @@ impl RhoProof {
 
     pub fn verify(&self, ctx: (&G1, &G2), rho: Option<&Self>) -> Result<bool, ProofError> {
         let (G, H) = ctx;
-        match Dlog::verify(ctx, &self.com, &self.prf) {
-            Ok(true) => {
-                match rho {
-                    Some(rho) => {
-                        match 
-                            ct_eq!(pair!(self.aux, H), pair!(rho.aux, self.com.1))
-                        {
-                            false   => Err(ProofError::RhoFailure),
-                            _       => Ok(true)
-                        }
-                    },
-                    None => Ok(true),
-                }
+
+        let out1 = Dlog::verify(ctx, &self.com, &self.prf).unwrap_or(false);
+        let out2 = match rho {
+            Some(rho) => {
+                ct_eq!(pair!(self.aux, H), pair!(rho.aux, self.com.1))
             },
-            _ => Err(ProofError::RhoFailure)
+            None => true,
+        };
+
+        match out1 && out2 {
+            false   => Err(ProofError::RhoFailure),
+            _       => Ok(true)
         }
     }
 }
