@@ -2,7 +2,7 @@ use std::time::Instant;
 use backend::{
     scalar, zero, one, rscalar, pow, genG1, genG2, zeroG1, zeroG2,
     contained_in_group, add1, add2, smul1, smul2, pair,
-    bytes1, bytes2, hashG1,
+    bytes1, bytes2, hashG1, ct_eq, ct_ne,
 };
 
 fn main() {
@@ -83,9 +83,22 @@ fn main() {
     use sha2::Digest;
     use std::convert::TryInto;
 
-    use std::iter::FromIterator;
     let bytes: Vec<u8> = (0..5).collect();
     let start = Instant::now();
     hashG1!(&bytes);
     println!("[+] Computed G1-hash ({:.2?})", start.elapsed());
+
+    // Constant-time equality check
+    use subtle::ConstantTimeEq;
+
+    let elm1 = scalar!(0); 
+    let elm2 = scalar!(0); 
+    let elm3 = scalar!(1); 
+
+    assert!(ct_eq!(elm1, elm2));
+    assert!(ct_ne!(elm1, elm3));
+
+    assert!(!ct_eq!(elm1, elm3));
+    assert!(!ct_ne!(elm1, elm2));
+
 }

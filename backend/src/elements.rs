@@ -31,13 +31,6 @@ macro_rules! rscalar {
 }
 
 #[macro_export]
-macro_rules! pow {
-    ($base:expr, $exp:expr) => {
-        $base.pow(&[$exp as u64, 0, 0, 0])
-    }
-}
-
-#[macro_export]
 macro_rules! genG1 {
     () => {
         ::bls12_381::G1Affine::generator()
@@ -89,5 +82,29 @@ macro_rules! bytes1 {
 macro_rules! bytes2 {
     ($elem:expr) => {
         $elem.to_compressed()       // 96 bytes
+    }
+}
+
+#[macro_export]
+// Constant-time equality check
+// Note: Applies to all types of elements for bls12_381. The
+// bls12_831 backend uses subtle for contant-time operations:
+// https://docs.rs/subtle/2.4.0/subtle/
+macro_rules! ct_eq {
+    ($elem1:expr, $elem2:expr) => {
+        // https://docs.rs/subtle/2.4.0/src/subtle/lib.rs.html#67
+        bool::from($elem1.ct_eq(&$elem2))
+    }
+}
+
+#[macro_export]
+// Constant-time inequality check
+// Note: Applies to all types of elements for bls12_381. The
+// bls12_831 backend uses subtle for contant-time operations:
+// https://docs.rs/subtle/2.4.0/subtle/
+macro_rules! ct_ne {
+    ($elem1:expr, $elem2:expr) => {
+        // https://docs.rs/subtle/2.4.0/src/subtle/lib.rs.html#67
+        !bool::from($elem1.ct_eq(&$elem2))
     }
 }

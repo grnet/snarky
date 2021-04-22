@@ -1,5 +1,3 @@
-// Note: Criterion only supports benchmarking of package level public functions
-
 use criterion::{
     black_box,
     criterion_group,
@@ -7,41 +5,40 @@ use criterion::{
     Criterion,
     BenchmarkId,
 };
-use protocol::dlog::{rndoracle, prove_dlog, verify_dlog};
 use backend::{scalar, genG1, genG2, smul1, smul2};
+use protocol::prover::Dlog;
 
 fn bench_rndoracle(c: &mut Criterion) {
-    let elem_1 = genG1!();
-    let elem_2 = genG2!();
-    let phi = (elem_1, elem_2);
+    let elm1 = genG1!();
+    let elm2 = genG2!();
+    let commit = (elm1, elm2);
     c.bench_function(
         "scalar!",
-        |b| b.iter(|| rndoracle(phi))
+        |b| b.iter(|| Dlog::rndoracle(&commit))
     );
 }
 
 fn bench_prove_dlog(c: &mut Criterion) {
-    let elem_1 = smul1!(scalar!(100), genG1!());
-    let elem_2 = smul2!(scalar!(100), genG2!());
-    let phi = (elem_1, elem_2);
+    let elm1 = smul1!(scalar!(100), genG1!());
+    let elm2 = smul2!(scalar!(100), genG2!());
+    let commit = (elm1, elm2);
     let witness = scalar!(100);
     c.bench_function(
         "scalar!",
-        |b| b.iter(|| prove_dlog(phi, witness))
+        |b| b.iter(|| Dlog::prove(&commit, witness))
     );
 }
 
 fn bench_verify_dlog(c: &mut Criterion) {
-    let G = genG1!();
-    let H = genG2!();
-    let elem_1 = smul1!(scalar!(100), genG1!());
-    let elem_2 = smul2!(scalar!(100), genG2!());
-    let phi = (elem_1, elem_2);
+    let ctx = (&genG1!(), &genG2!());
+    let elm1 = smul1!(scalar!(100), genG1!());
+    let elm2 = smul2!(scalar!(100), genG2!());
+    let commit = (elm1, elm2);
     let witness = scalar!(100);
-    let proof = prove_dlog(phi, witness);
+    let proof = Dlog::prove(&commit, witness);
     c.bench_function(
         "scalar!",
-        |b| b.iter(|| verify_dlog(&G, &H, phi, proof))
+        |b| b.iter(|| Dlog::verify(ctx, &commit, &proof))
     );
 }
 

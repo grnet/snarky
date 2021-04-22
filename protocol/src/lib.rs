@@ -2,5 +2,16 @@
 //!
 //! The `protocol` crate implements ...
 
+pub mod prover;
+pub mod srs;
 pub mod flow;
-pub mod dlog;
+
+pub use flow::{
+    SRS,
+    Trapdoor,
+    BatchProof,
+    Phase,
+    Verification,
+    update,
+    verify,
+};
