@@ -1,5 +1,5 @@
 use rand::RngCore;          // Must be in scope for update
-use subtle::ConstantTimeEq; // Must be in scope for ct equality checks
+use subtle::ConstantTimeEq; // Must be in scope for ct comparisons
 
 use backend::*;
 use circuits::QAP;

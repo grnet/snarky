@@ -232,69 +232,55 @@ impl SRS {
         (c1, c2, c3, c4)
     }
 
+    // verification: step 2
     pub fn check_u(&self, qap: &QAP) -> bool {
         let (_, n, _) = qap.shape();
         let srs_u = &self.u;
-        // verification: step 2
-        if !(
+        
+        let out1 = {
             srs_u.0.len() == 2 * n - 1 && 
             srs_u.1.len() == n
-        ) 
-        {
-            return false
-        }
-        for i in 0..2 * n - 1 {
-            match
-                contained_in_group!(srs_u.0[i].0) &&
-                contained_in_group!(srs_u.0[i].1)
-            {
-                true    => continue,
-                _       => return false
-            }
-        }
-        for i in 0..n {
-            match
-                contained_in_group!(srs_u.1[i].0) &&
-                contained_in_group!(srs_u.1[i].1) &&
-                contained_in_group!(srs_u.1[i].2) &&
-                contained_in_group!(srs_u.1[i].3)
-            {
-                true    => continue,
-                _       => return false
-            }
-        }
-        true
+        };
+
+        let out2 = (0..2 * n - 1)
+            .fold(true, |acc, i| {
+                acc || 
+                    contained_in_group!(srs_u.0[i].0) &&
+                    contained_in_group!(srs_u.0[i].1)
+            });
+
+        let out3 = (0..n)
+            .fold(true, |acc, i| {
+                acc ||
+                    contained_in_group!(srs_u.0[i].0) &&
+                    contained_in_group!(srs_u.0[i].1)
+            });
+
+        out1 && out2 && out3
     }
 
+    // verification: step 7
     pub fn check_s(&self, qap: &QAP) -> bool {
         let (m, n, l) = qap.shape();
         let srs_s = &self.s;
-        // verification: step 7
-        if !(
+        
+        let out1 = {
             contained_in_group!(srs_s.0) &&
             contained_in_group!(srs_s.1) &&
             srs_s.2.len() == m - l &&
             srs_s.3.len() == n - 1
-        ) 
-        {
-            return false
-        }
-        for i in 0..m - l {
-            match
-                contained_in_group!(srs_s.2[i])
-            {
-                true    => continue,
-                _       => return false
-            }
-        }
-        for i in 0..n - 1 {
-            match
-                contained_in_group!(srs_s.3[i])
-            {
-                true    => continue,
-                _       => return false
-            }
-        }
-        true
+        };
+
+        let out2 = (0..m - l)
+            .fold(true, |acc, i| {
+                acc || contained_in_group!(srs_s.2[i])
+            });
+        
+        let out3 = (0..n - 1)
+            .fold(true, |acc, i| {
+                acc || contained_in_group!(srs_s.3[i])
+            });
+
+        out1 && out2 && out3
     }
 }

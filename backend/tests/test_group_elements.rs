@@ -65,7 +65,7 @@ fn test_bytes2() {
 }
 
 #[test]
-fn test_ct_equality_checks() {
+fn test_ct_comparisons() {
     let elm1 = scalar!(0); 
     let elm2 = scalar!(0); 
     let elm3 = scalar!(1); 

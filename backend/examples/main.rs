@@ -88,7 +88,7 @@ fn main() {
     hashG1!(&bytes);
     println!("[+] Computed G1-hash ({:.2?})", start.elapsed());
 
-    // Constant-time equality check
+    // Constant-time comparisons
     use subtle::ConstantTimeEq;
 
     let elm1 = scalar!(0); 
