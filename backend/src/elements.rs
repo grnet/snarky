@@ -92,8 +92,8 @@ macro_rules! bytes2 {
 // https://docs.rs/subtle/2.4.0/subtle/
 macro_rules! ct_eq {
     ($elem1:expr, $elem2:expr) => {
-        // https://doc-internal.dalek.rs/subtle/trait.ConstantTimeEq.html
-        $elem1.ct_eq(&$elem2).unwrap_u8() == 1_u8
+        // https://docs.rs/subtle/2.4.0/src/subtle/lib.rs.html#67
+        bool::from($elem1.ct_eq(&$elem2))
     }
 }
 
@@ -104,7 +104,7 @@ macro_rules! ct_eq {
 // https://docs.rs/subtle/2.4.0/subtle/
 macro_rules! ct_ne {
     ($elem1:expr, $elem2:expr) => {
-        // https://doc-internal.dalek.rs/subtle/trait.ConstantTimeEq.html
-        $elem1.ct_eq(&$elem2).unwrap_u8() == 0_u8
+        // https://docs.rs/subtle/2.4.0/src/subtle/lib.rs.html#67
+        !bool::from($elem1.ct_eq(&$elem2))
     }
 }
