@@ -1,10 +1,14 @@
-//! Contains integration tests involving `snarky` public functions.
-//! Common test setup taken from the `common` module.
-
 use backend::*;
 use circuits::QAP;
 use protocol::{SRS, Trapdoor, BatchProof, Phase, Verification};
 use protocol;
+
+// TODO: Write more detailed tests about failure cases (check
+// more extensively that tamplered batch-proofs are detected
+// if there exists at least one honest)
+//
+// TODO: Implement and use case-parametrizsable macros to
+// avoid code duplication
 
 #[test]
 fn test_flow_with_given_trapdoor() {
