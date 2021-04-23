@@ -87,18 +87,18 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     // step 5
     let out_c = (1..2 * n - 1)
         .fold(true, |acc, i| {
-            acc &&
-                ct_eq!(pair!(srs_u.0[i].0, H), pair!(G, srs_u.0[i].1)) &&
+            acc &
+                ct_eq!(pair!(srs_u.0[i].0, H), pair!(G, srs_u.0[i].1)) &
                 ct_eq!(pair!(srs_u.0[i].0, H), pair!(srs_u.0[i - 1].0, srs_u.0[1].1))
         });
     
     // step 6
     let out_d = (0..n) 
         .fold(true, |acc, i| {
-            acc &&
-                ct_eq!(pair!(srs_u.1[i].0, H), pair!(G, srs_u.1[i].2)) &&
-                ct_eq!(pair!(srs_u.1[i].0, H), pair!(srs_u.0[i].0, srs_u.1[0].2)) &&
-                ct_eq!(pair!(srs_u.1[i].1, H), pair!(G, srs_u.1[i].3)) &&
+            acc &
+                ct_eq!(pair!(srs_u.1[i].0, H), pair!(G, srs_u.1[i].2)) &
+                ct_eq!(pair!(srs_u.1[i].0, H), pair!(srs_u.0[i].0, srs_u.1[0].2)) &
+                ct_eq!(pair!(srs_u.1[i].1, H), pair!(G, srs_u.1[i].3)) &
                 ct_eq!(pair!(srs_u.1[i].1, H), pair!(srs_u.0[i].0, srs_u.1[0].3))
         });
     
@@ -120,7 +120,7 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
                         smul1!(w[i].coeff(j), srs_u.0[j].0)
                     ))
                 });
-            acc && ct_eq!(pair!(srs_s.2[i], srs_s.1), pair!(s_i, H))
+            acc & ct_eq!(pair!(srs_s.2[i], srs_s.1), pair!(s_i, H))
         });
 
     // step 11
@@ -131,19 +131,19 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
             });
         (0..n - 1)
             .fold(true, |acc, i| {
-                acc && ct_eq!(pair!(srs_s.3[i], srs_s.1), pair!(Gt, srs_u.0[i].1))
+                acc & ct_eq!(pair!(srs_s.3[i], srs_s.1), pair!(Gt, srs_u.0[i].1))
             })
     };
 
 
     Verification::from({
-        out_a && 
-        out_b && 
-        out_c && 
-        out_d && 
-        out_e && 
-        out_f && 
-        out_g && 
+        out_a & 
+        out_b & 
+        out_c & 
+        out_d & 
+        out_e & 
+        out_f & 
+        out_g & 
         out_h
     })
 }
