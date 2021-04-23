@@ -17,7 +17,7 @@ fn test_flow_with_given_trapdoor() {
     protocol::update(&qap, &mut srs, &mut batch, Phase::ONE);
     protocol::update(&qap, &mut srs, &mut batch, Phase::TWO);
     let res = protocol::verify(&qap, &srs, &batch);
-    assert!(res.as_bool());
+    assert!(bool::from(res));
 }
 
 #[test]
@@ -30,7 +30,7 @@ fn test_flow_with_random_trapdoor() {
     protocol::update(&qap, &mut srs, &mut batch, Phase::ONE);
     protocol::update(&qap, &mut srs, &mut batch, Phase::TWO);
     let res = protocol::verify(&qap, &srs, &batch);
-    assert!(res.as_bool());
+    assert!(bool::from(res));
 }
 
 #[test]
@@ -43,7 +43,7 @@ fn test_flow_with_unit_trapdoor() {
     protocol::update(&qap, &mut srs, &mut batch, Phase::ONE);
     protocol::update(&qap, &mut srs, &mut batch, Phase::TWO);
     let res = protocol::verify(&qap, &srs, &batch);
-    assert!(res.as_bool());
+    assert!(bool::from(res));
 }
 
 #[test]
@@ -59,7 +59,7 @@ fn test_flow_with_tampered_phase_1_proof() {
     let val = &batch.batch_1[0][0].com.0;
     batch.batch_1[0][0].com.0 = add1!(val, genG1!());
     let res = protocol::verify(&qap, &srs, &batch);
-    assert!(!res.as_bool());
+    assert!(!bool::from(res));
 }
 
 #[test]
@@ -75,5 +75,5 @@ fn test_flow_with_tampered_phase_2_proof() {
     let val = &batch.batch_2[0].com.0;
     batch.batch_2[0].com.0 = add1!(val, genG1!());
     let res = protocol::verify(&qap, &srs, &batch);
-    assert!(!res.as_bool());
+    assert!(!bool::from(res));
 }

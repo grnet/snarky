@@ -72,7 +72,7 @@ fn main() {
         println!("[+] {:?} ({:.2?})", res, start.elapsed());
         res
     };
-    assert!(res.as_bool());
+    assert!(bool::from(res));
 
     let elapsed = start.elapsed();
     println!("--------------------------");

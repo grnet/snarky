@@ -1,5 +1,5 @@
 use std::convert::TryInto;  // Must be in scope for hashG1
-use subtle::ConstantTimeEq; // Must be in scope for ct equality checks
+use subtle::ConstantTimeEq; // Must be in scope for ct comparisons
 use sha2::Digest;           // Must be in scope for hashG1
 
 use backend::*;
@@ -38,7 +38,7 @@ impl Dlog {
     {
         let (G, H) = ctx;
         match 
-            ct_eq!(pair!(c.0, H), pair!(G, c.1)) &&
+            ct_eq!(pair!(c.0, H), pair!(G, c.1)) &
             ct_eq!(pair!(prf, H), pair!(Self::rndoracle(&c), c.1))
         {
             false   => Err(ProofError::DlogFailure),
@@ -71,21 +71,18 @@ impl RhoProof {
 
     pub fn verify(&self, ctx: (&G1, &G2), rho: Option<&Self>) -> Result<bool, ProofError> {
         let (G, H) = ctx;
-        match Dlog::verify(ctx, &self.com, &self.prf) {
-            Ok(true) => {
-                match rho {
-                    Some(rho) => {
-                        match 
-                            ct_eq!(pair!(self.aux, H), pair!(rho.aux, self.com.1))
-                        {
-                            false   => Err(ProofError::RhoFailure),
-                            _       => Ok(true)
-                        }
-                    },
-                    None => Ok(true),
-                }
+
+        let out1 = Dlog::verify(ctx, &self.com, &self.prf).unwrap_or(false);
+        let out2 = match rho {
+            Some(rho) => {
+                ct_eq!(pair!(self.aux, H), pair!(rho.aux, self.com.1))
             },
-            _ => Err(ProofError::RhoFailure)
+            None => true,
+        };
+
+        match out1 & out2 {
+            false   => Err(ProofError::RhoFailure),
+            _       => Ok(true)
         }
     }
 }
@@ -169,32 +166,39 @@ impl BatchProof {
                 let srs_u = &srs.u;
 
                 // step 3
-                for i in 0..batch_u.len() {
-                    for j in 0..3 {
-                        match &batch_u[i][j].verify((&G, &H), match i {
-                            0 => None,
-                            _ => Some(&batch_u[i - 1][j])
-                        })
-                        {
-                            Ok(true)    => continue,
-                            _           => return Err(ProofError::BatchFailure)
+                let out1 = (0..batch_u.len())
+                    .fold(true, |acc, i| { 
+                        let mut inner = true;
+                        for j in 0..3 {
+                            inner = inner & match &batch_u[i][j].verify((&G, &H), match i {
+                                0 => None,
+                                _ => Some(&batch_u[i - 1][j])
+                            })
+                            {
+                                Err(ProofError::RhoFailure) => false,
+                                _ => true
+                            };
                         }
-                    }
-                }
+                        acc && inner
+                    });
 
                 // step 4
                 let len = batch_u.len();
-                match len > 0 && !(
-                    ct_eq!(srs_u.0[1].0, batch_u[len - 1][2].aux) &&
-                    ct_eq!(srs_u.1[0].0, batch_u[len - 1][0].aux) &&
-                    ct_eq!(srs_u.1[0].1, batch_u[len - 1][1].aux) &&
-                    ct_ne!(batch_u[len - 1][2].aux, zero) &&
-                    ct_ne!(batch_u[len - 1][0].aux, zero) &&
-                    ct_ne!(batch_u[len - 1][1].aux, zero)
-                )
-                {
-                    true    => return Err(ProofError::BatchFailure),
-                    _       => Ok(true),
+                let out2 = match len > 0 {
+                    false   => true,
+                    true    => {
+                        ct_eq!(srs_u.0[1].0, batch_u[len - 1][2].aux) &
+                        ct_eq!(srs_u.1[0].0, batch_u[len - 1][0].aux) &
+                        ct_eq!(srs_u.1[0].1, batch_u[len - 1][1].aux) &
+                        ct_ne!(batch_u[len - 1][2].aux, zero) &
+                        ct_ne!(batch_u[len - 1][0].aux, zero) &
+                        ct_ne!(batch_u[len - 1][1].aux, zero)
+                    }
+                }; 
+                
+                match out1 & out2 {
+                    false   => Err(ProofError::BatchFailure),
+                    _       => Ok(true)
                 }
             },
             Phase::TWO => {
@@ -202,34 +206,36 @@ impl BatchProof {
                 let srs_s = &srs.s;
 
                 // step 8
-                for i in 0..batch_s.len() {
-                    match &batch_s[i].verify((&G, &H), match i {
-                        0 => None,
-                        _ => Some(&batch_s[i - 1])
-                    })
-                    {
-                        Ok(true) => continue,
-                        _ => return Err(ProofError::BatchFailure)
-                    }
-                }
-
-                // step 9
-                match 
-                    ct_ne!(pair!(srs_s.0, H), pair!(G, srs_s.1)) 
-                {
-                    true    => return Err(ProofError::BatchFailure),
-                    false   => {
-                        let len = batch_s.len();
-                        match len > 0 && 
-                        !(
-                            ct_eq!(srs_s.0, batch_s[len - 1].aux) &&
-                            ct_ne!(batch_s[len - 1].aux, zero)
-                        ) 
+                let out1 = (0..batch_s.len()) 
+                    .fold(true, |acc, i| {
+                        acc & match &batch_s[i].verify((&G, &H), match i {
+                            0 => None,
+                            _ => Some(&batch_s[i - 1])
+                        })
                         {
-                            true    => Err(ProofError::BatchFailure),
-                            _       => Ok(true),
+                            Err(ProofError::RhoFailure) => false,
+                            _ => true
+                        }
+                    });
+                
+                // step 9
+                let out2 = {
+                    ct_eq!(pair!(srs_s.0, H), pair!(G, srs_s.1)) &
+                    {
+                        let len = batch_s.len();
+                        match len > 0 {
+                            false   => true,
+                            true    => {
+                                ct_eq!(srs_s.0, batch_s[len - 1].aux) &
+                                ct_ne!(batch_s[len - 1].aux, zero)
+                            }
                         }
                     }
+                };
+
+                match out1 & out2 {
+                    false   => return Err(ProofError::BatchFailure),
+                    _       => Ok(true)
                 }
             }
         }

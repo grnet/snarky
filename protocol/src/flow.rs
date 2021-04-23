@@ -1,5 +1,5 @@
 use rand::RngCore;          // Must be in scope for update
-use subtle::ConstantTimeEq; // Must be in scope for ct equality checks
+use subtle::ConstantTimeEq; // Must be in scope for ct comparisons
 
 use backend::*;
 use circuits::QAP;
@@ -48,11 +48,22 @@ pub enum Verification {
     SUCCESS = 1,
 }
 
-impl Verification {
-    pub fn as_bool(&self) -> bool {
-        match self {
+impl From<Verification> for bool {
+    #[inline]
+    fn from(source: Verification) -> bool {
+        match source {
             Verification::FAILURE => false,
             Verification::SUCCESS => true,
+        }
+    }
+}
+
+impl From<bool> for Verification {
+    #[inline]
+    fn from(source: bool) -> Verification {
+        match source {
+            false   => Verification::FAILURE,
+            true    => Verification::SUCCESS,
         }
     }
 }
@@ -67,90 +78,72 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     let srs_u = &srs.u;
     let srs_s = &srs.s;
 
-    // ---------------------------------------------------------------
-
     // step 2
-    if !srs.check_u(&qap) {
-        return Verification::FAILURE
-    }
+    let out_a = srs.check_u(&qap).unwrap_or(false);
 
     // step 3-4
-    match batch.verify(&srs, Phase::ONE) {
-        Err(ProofError) => return Verification::FAILURE,
-        _ => {}
-    }
+    let out_b = batch.verify(&srs, Phase::ONE).unwrap_or(false);
 
     // step 5
-    for i in 1..2 * n - 1 {
-        match
-            ct_eq!(pair!(srs_u.0[i].0, H), pair!(G, srs_u.0[i].1)) &&
-            ct_eq!(pair!(srs_u.0[i].0, H), pair!(srs_u.0[i - 1].0, srs_u.0[1].1))
-        {
-            true    => continue,
-            _       => return Verification::FAILURE
-        }
-    }
-
+    let out_c = (1..2 * n - 1)
+        .fold(true, |acc, i| {
+            acc &
+                ct_eq!(pair!(srs_u.0[i].0, H), pair!(G, srs_u.0[i].1)) &
+                ct_eq!(pair!(srs_u.0[i].0, H), pair!(srs_u.0[i - 1].0, srs_u.0[1].1))
+        });
+    
     // step 6
-    for i in 0..n {
-        match
-            ct_eq!(pair!(srs_u.1[i].0, H), pair!(G, srs_u.1[i].2)) &&
-            ct_eq!(pair!(srs_u.1[i].0, H), pair!(srs_u.0[i].0, srs_u.1[0].2)) &&
-            ct_eq!(pair!(srs_u.1[i].1, H), pair!(G, srs_u.1[i].3)) &&
-            ct_eq!(pair!(srs_u.1[i].1, H), pair!(srs_u.0[i].0, srs_u.1[0].3))
-        {
-            true    => continue,
-            _       => return Verification::FAILURE
-        }
-    }
-
-    // ---------------------------------------------------------------
+    let out_d = (0..n) 
+        .fold(true, |acc, i| {
+            acc &
+                ct_eq!(pair!(srs_u.1[i].0, H), pair!(G, srs_u.1[i].2)) &
+                ct_eq!(pair!(srs_u.1[i].0, H), pair!(srs_u.0[i].0, srs_u.1[0].2)) &
+                ct_eq!(pair!(srs_u.1[i].1, H), pair!(G, srs_u.1[i].3)) &
+                ct_eq!(pair!(srs_u.1[i].1, H), pair!(srs_u.0[i].0, srs_u.1[0].3))
+        });
+    
 
     // step 7
-    if !srs.check_s(&qap) {
-        return Verification::FAILURE
-    }
+    let out_e = srs.check_s(&qap).unwrap_or(false);
 
     // step 8-9
-    match batch.verify(&srs, Phase::TWO) {
-        Err(ProofError) => return Verification::FAILURE,
-        _ => {}
-    }
+    let out_f = batch.verify(&srs, Phase::TWO).unwrap_or(false);
 
     // step 10
-    for i in 0..m - l {
-        let mut s_i = zeroG1!();
-        for j in 0..n {
-            let tmp = add1!(
-                smul1!(u[i].coeff(j), srs_u.1[j].1),
-                smul1!(v[i].coeff(j), srs_u.1[j].0),
-                smul1!(w[i].coeff(j), srs_u.0[j].0)
-            );
-            s_i = add1!(s_i, tmp);
-        }
-        match
-            ct_eq!(pair!(srs_s.2[i], srs_s.1), pair!(s_i, H))
-        {
-            true    => continue,
-            _       => return Verification::FAILURE
-        }
-    }
-
-    // ----------------------------------------------------------------
+    let out_g = (0..m - l)
+        .fold(true, |acc, i| {
+            let s_i = (0..n)
+                .fold(zeroG1!(), |acc, j| {
+                    add1!(acc, add1!(
+                        smul1!(u[i].coeff(j), srs_u.1[j].1),
+                        smul1!(v[i].coeff(j), srs_u.1[j].0),
+                        smul1!(w[i].coeff(j), srs_u.0[j].0)
+                    ))
+                });
+            acc & ct_eq!(pair!(srs_s.2[i], srs_s.1), pair!(s_i, H))
+        });
 
     // step 11
-    let mut Gt = zeroG1!();
-    for j in 0..n - 1 {
-        Gt = add1!(Gt, smul1!(t.coeff(j), srs_u.0[j].0));
-    }
-    for i in 0..n - 1 {
-        match
-            ct_eq!(pair!(srs_s.3[i], srs_s.1), pair!(Gt, srs_u.0[i].1))
-        {
-            true    => continue,
-            _       => return Verification::FAILURE
-        }
-    }
+    let out_h = {
+        let Gt = (0..n - 1)
+            .fold(zeroG1!(), |acc, j| {
+                add1!(acc, smul1!(t.coeff(j), srs_u.0[j].0))
+            });
+        (0..n - 1)
+            .fold(true, |acc, i| {
+                acc & ct_eq!(pair!(srs_s.3[i], srs_s.1), pair!(Gt, srs_u.0[i].1))
+            })
+    };
 
-    Verification::SUCCESS
+
+    Verification::from({
+        out_a & 
+        out_b & 
+        out_c & 
+        out_d & 
+        out_e & 
+        out_f & 
+        out_g & 
+        out_h
+    })
 }
