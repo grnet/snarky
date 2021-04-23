@@ -15,6 +15,6 @@ protocol::update(&qap, &mut srs, &mut batch, Phase::ONE);
 protocol::update(&qap, &mut srs, &mut batch, Phase::TWO);
 
 let result = protocol::verify(&qap, &srs, &batch);
-assert!(result.as_bool());
+assert!(bool::from(result));
 println!("{:?}", result);
 ```

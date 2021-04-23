@@ -201,32 +201,25 @@ impl SRS {
         let c1 = genG1!();
         let c2 = genG2!();
         let c3 = (0..m - l)
-            .map(|i| {
-                let mut s_i = zero;
-                for j in 0..n {
-                    s_i = add1!(
-                        s_i,
-                        add1!(
-                            smul1!(u[i].coeff(j), srs_u.1[j].1),
-                            smul1!(v[i].coeff(j), srs_u.1[j].0),
-                            smul1!(w[i].coeff(j), srs_u.0[j].0)
-                        )
-                    );
-                }
-                s_i
-            })
+            .map(|i| (0..n)
+                .fold(zero, |acc, j| {
+                    add1!(acc, add1!(
+                        smul1!(u[i].coeff(j), srs_u.1[j].1),
+                        smul1!(v[i].coeff(j), srs_u.1[j].0),
+                        smul1!(w[i].coeff(j), srs_u.0[j].0)
+                    ))
+                })
+            )
             .collect();
         let c4 = (0..n - 1)
-            .map(|i| {
-                let mut s_i = zero;
-                for j in 0..n {
-                    s_i = add1!(
-                        s_i,
+            .map(|i| (0..n)
+                .fold(zero, |acc, j| {
+                    add1!(
+                        acc,
                         smul1!(t.coeff(j), srs_u.0[i + j].0)
-                    );
-                }
-                s_i
-            })
+                    )
+                })
+            )
             .collect();
 
         (c1, c2, c3, c4)
