@@ -1,3 +1,7 @@
+# protocol
+
+This is the core crate, exposing also the user interface.
+
 ## Usage
 
 ```rust
@@ -17,4 +21,10 @@ protocol::update(&qap, &mut srs, &mut batch, Phase::TWO);
 let result = protocol::verify(&qap, &srs, &batch);
 assert!(bool::from(result));
 println!("{:?}", result);
+```
+
+## Development
+
+```commandline
+cargo test [--release]
 ```

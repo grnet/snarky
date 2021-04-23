@@ -1,9 +1,5 @@
 use std::time::Instant;
-use backend::{
-    scalar, zero, one, rscalar, pow, genG1, genG2, zeroG1, zeroG2,
-    contained_in_group, add1, add2, smul1, smul2, pair,
-    bytes1, bytes2, hashG1, ct_eq, ct_ne,
-};
+use backend::*;
 
 fn main() {
 
@@ -13,7 +9,7 @@ fn main() {
     let seven = scalar!(7);
     let nine = scalar!(9);
 
-    // Random scalar definition
+    // Random scalar generation
     use rand::RngCore;                  // Must be present for rscalar
     let start = Instant::now();
     let mut rng = rand::thread_rng();

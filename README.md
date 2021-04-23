@@ -5,14 +5,13 @@ Rust implementation of [Snarky Ceremonies](https://eprint.iacr.org/2021/219.pdf)
 ## Setup
 
 ```commandline
-git clone https://gitlab.grnet.gr/priviledge/snarky.git --recurse-submodules
+git clone https://gitlab.grnet.gr/priviledge/snarky.git
 ```
 
-You need to have installed Rust (`cargo>=1.51.0`). Alternatively, assuming you
-have Docker, you can work in the dev container:
+You need to have installed Rust. Alternatively, run the dev container:
 
 ```commandline
-./run-container.sh
+./run-container.sh [--help]
 ```
 
 ## Demo
@@ -30,22 +29,23 @@ closer to those of a release version), do
 ./demo.sh --release
 ```
 
+This creates a QAP with shape `(m, n, l) = (50, 40, 30)`. You can control these
+parameters by directly passing them to the command, that is,
+
+```commandline
+./demo.sh [--release] 500 400 300
+```
+
 ## Usage
 
+See [`protocol`](./protocol)
+
 ## Development
-
-```commandline
-git submodule update --remote
-```
-
-```commandline
-./run-container.sh [--help]
-```
 
 ### Tests
 
 ```commandline
-cargo test
+cargo test [--release]
 ```
 
 ### Benchmarks
