@@ -23,8 +23,8 @@ Run the demo with:
 ./demo.sh
 ```
 
-To run the demo with compiler optimizations (and view measurements closer to
-those of a release version), do
+To run the demo with compiler optimizations (and view measurements 
+closer to those of a release version), do
 
 ```commandline
 ./demo.sh --release
