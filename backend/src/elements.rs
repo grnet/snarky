@@ -47,20 +47,14 @@ macro_rules! genG2 {
 #[macro_export]
 macro_rules! zeroG1 {
     () => {
-        ::bls12_381::G1Affine::from(
-            ::bls12_381::G1Affine::generator() *
-            ::bls12_381::Scalar::zero()
-        )
+        ::bls12_381::G1Affine::default();
     }
 }
 
 #[macro_export]
 macro_rules! zeroG2 {
     () => {
-        ::bls12_381::G2Affine::from(
-            ::bls12_381::G2Affine::generator() *
-            ::bls12_381::Scalar::zero()
-        )
+        ::bls12_381::G2Affine::default();
     }
 }
 
