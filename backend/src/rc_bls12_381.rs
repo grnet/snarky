@@ -2,6 +2,7 @@ use sha2::Digest;
 use std::convert::TryInto;
 use crate::Backend;
 
+#[derive(Debug, PartialEq)]
 pub struct RcBls12_381;
 
 impl Backend for RcBls12_381 {

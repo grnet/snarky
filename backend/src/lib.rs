@@ -73,3 +73,28 @@ mod rc_bls12_381;
 mod ark_bls12_381;
 pub use rc_bls12_381::RcBls12_381;
 
+
+trait Check<T: Backend> {
+
+    fn sample_usage(&self);// -> T::Scalar;
+    fn other_usage(&self) -> T::Scalar;
+}
+
+pub struct RcCheck;
+
+impl Check<RcBls12_381> for RcCheck {
+    // type T = RcBls12_381;
+    // type A = u8;
+
+    // fn sample_usage(&self) -> <RcBls12_381 as Trait>::Scalar {
+    fn sample_usage(&self) {
+        let zero = RcBls12_381::zero();
+        println!("{:?}", zero);
+    }
+
+    fn other_usage(&self) -> bls12_381::Scalar {
+        let zero = RcBls12_381::zero();
+        println!("{:?}", zero);
+        zero
+    }
+}
