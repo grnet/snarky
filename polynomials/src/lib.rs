@@ -43,7 +43,7 @@ impl<F: From<u64>> Univariate<F> {
     }
 }
 
-impl<F: Default + Copy + AddAssign + MulAssign> Univariate<F> {
+impl<F: Default + Copy + AddAssign + MulAssign + ::std::fmt::Debug> Univariate<F> {
 
     // Horner's method NOTE: Sparse polynomial evaluation can be
     // more efficient with exponentiation optimized with 

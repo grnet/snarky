@@ -7,7 +7,7 @@ edition = "2018"
 util = { path = "../util" }
 
 [dev-dependencies]
-bls12_381 = "0.4.0"
+ark-bls12-381 = "0.2.0"
 backend = { path="../backend" }
 util = { path = "../util" }
 criterion = "0.3.4"

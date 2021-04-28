@@ -4,7 +4,16 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
+
+# rand_chacha = "0.3.0"
+# num-traits = "0.2"
+# ark-std = "0.2.0"
+# ark-ff = "0.2.0"
+# ark-ec = "0.2.0"
+# ark-bls12-381 = "0.2.0"
+
 bls12_381 = "0.4.0"
+
 rand = "0.8.3"
 subtle = "2.4.0"
 sha2 = "0.9.3"
