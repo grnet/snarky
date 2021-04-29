@@ -257,18 +257,21 @@ impl SRS {
         };
 
         let out2 = (0..2 * n - 1)
-            .fold(true, |acc, i| {
-                acc & 
-                    contained_in_group!(srs_u.0[i].0) &
-                    contained_in_group!(srs_u.0[i].1)
-            });
+            .into_par_iter()
+            .map(|i| {
+                contained_in_group!(srs_u.0[i].0) &
+                contained_in_group!(srs_u.0[i].1)
+            })
+            .reduce(|| true, |acc, b| acc & b);
 
         let out3 = (0..n)
-            .fold(true, |acc, i| {
-                acc &
-                    contained_in_group!(srs_u.0[i].0) &
-                    contained_in_group!(srs_u.0[i].1)
-            });
+            .into_par_iter()
+            .map(|i| {
+                contained_in_group!(srs_u.0[i].0) &
+                contained_in_group!(srs_u.0[i].1)
+            })
+            .reduce(|| true, |acc, b| acc & b);
+
 
         match out1 & out2 & out3 {
             false   => Err(SRSError),
@@ -289,14 +292,14 @@ impl SRS {
         };
 
         let out2 = (0..m - l)
-            .fold(true, |acc, i| {
-                acc & contained_in_group!(srs_s.2[i])
-            });
+            .into_par_iter()
+            .map(|i| contained_in_group!(srs_s.2[i]))
+            .reduce(|| true, |acc, b| acc & b);
         
         let out3 = (0..n - 1)
-            .fold(true, |acc, i| {
-                acc & contained_in_group!(srs_s.3[i])
-            });
+            .into_par_iter()
+            .map(|i| contained_in_group!(srs_s.3[i]))
+            .reduce(|| true, |acc, b| acc & b);
 
         match out1 & out2 & out3 {
             false   => Err(SRSError),
