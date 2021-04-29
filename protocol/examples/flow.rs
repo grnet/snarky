@@ -76,5 +76,5 @@ fn main() {
 
     let elapsed = start.elapsed();
     println!("--------------------------");
-    println!("Time elaped: {:.2?}", elapsed);
+    println!("Time elapsed: {:.2?}", elapsed);
 }

@@ -28,30 +28,31 @@ pub enum Phase {
 }
 
 pub fn update(qap: &QAP, srs: &mut SRS, batch: &mut BatchProof, phase: Phase) {
-    match phase {
+
+    // phase 1/2: step 2
+    let witness = match phase {
         Phase::ONE => {
-            let witness = Witness::ONE(
+            Witness::ONE(
                 rscalar!(::util::snarky_rng()),
                 rscalar!(::util::snarky_rng()),
                 rscalar!(::util::snarky_rng()),
-            );                                          // phase 1: step 2
-            batch.append(UpdateProof::create(
-                &srs, 
-                &witness
-            ));                                         // phase 1: steps 3-6, 7
-            srs.update(&qap, witness);                  // phase 1: steps 8-10
+            )
         },
         Phase::TWO => {
-            let witness = Witness::TWO(rscalar!(
+            Witness::TWO(rscalar!(
                 ::util::snarky_rng()
-            ));                                         // phase 2: step 2
-            batch.append(UpdateProof::create(
-                &srs,
-                &witness,
-            ));                                         // phase 2: steps 3-4
-            srs.update(&qap, witness);                  // phase 2: step 5
+            ))
         }
-    }
+    };
+
+    // phase 1: steps 3-7; phase 2: steps 3-4
+    batch.append(UpdateProof::create(
+        &srs, 
+        &witness
+    ));
+
+    // phase 1: steps 8-10; phase 2: step 5
+    srs.update(&qap, witness);
 }
 
 
