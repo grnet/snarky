@@ -21,6 +21,8 @@ pub use crate::prover::BatchProof;
 use ark_std::rand::RngCore as ArkRngCore;
 use ark_std::rand::SeedableRng;
 
+use rayon::prelude::*;
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Phase {
     ONE = 1,
