@@ -138,14 +138,14 @@ impl SRS {
 
         let c3 = (l + 1..m + 1)
             .map(|i| {
-                let ux_i = u[i].evaluate(&x).unwrap();
-                let vx_i = v[i].evaluate(&x).unwrap();
-                let wx_i = w[i].evaluate(&x).unwrap();
+                let ux_i = u[i].evaluate(&x);
+                let vx_i = v[i].evaluate(&x);
+                let wx_i = w[i].evaluate(&x);
                 smul1!((b * ux_i + a * vx_i + wx_i) * dinv, G)
             })
             .collect();
 
-        let tx = t.evaluate(&x).unwrap();
+        let tx = t.evaluate(&x);
         let c4 = (0..n - 1)
             .map(|i| smul1!(pow!(x, i) * tx * dinv, G))
             .collect();
