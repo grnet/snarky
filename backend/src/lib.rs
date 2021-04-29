@@ -189,14 +189,31 @@ macro_rules! hashG1 {
             // Alternative Sha256 version (not working well with bls12_381 scalars)
             //
             // let mut hasher = ::sha2::Sha256::default();
-            // hasher.update(bytes);
+            // hasher.update($bytes);
             // let buffer: [u8; 32] = hasher.finalize().try_into().unwrap();
             
             let mut hasher = ::sha2::Sha512::default();
             hasher.update($bytes);
             let buffer: [u8; 64] = hasher.finalize().as_slice().try_into().unwrap();
-            let factor = ::ark_bls12_381::Fr::read(Cursor::new(buffer)).unwrap();
-            ::ark_bls12_381::G1Affine::prime_subgroup_generator().mul(factor);
+
+            use ark_ff::BigInteger;
+            use ark_ff::FpParameters;
+            use ark_ff::PrimeField;
+            let MODULUS = ark_bls12_381::FrParameters::MODULUS;
+            let mut b = ::ark_ff
+                ::biginteger
+                ::BigInteger256
+                ::read(Cursor::new(buffer))
+                .unwrap();
+            while (b >= MODULUS) {
+                b.sub_noborrow(&MODULUS);
+            }
+
+            // Panics if b is not normalized as above!
+            let factor = ::ark_bls12_381::Fr::from_repr(b).unwrap();
+            ::ark_bls12_381::G1Affine::from(
+                ::ark_bls12_381::G1Affine::prime_subgroup_generator().mul(factor)
+            )
         }
     }
 }

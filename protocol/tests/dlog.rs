@@ -2,13 +2,23 @@ use backend::{scalar, genG1, genG2, smul1, smul2};
 use protocol::prover::{Dlog, ProofError};
 use util::map;
 
+use ark_ec::AffineCurve;            // Needed for group inclusion check
+use ark_ec::PairingEngine;          // Needed for pairing
+use num_traits::identities::Zero;   // Needed for zero constructions
+use num_traits::identities::One;    // Needed for one constructions
+use ark_ff::fields::Field;          // Needed for pow
+use ark_ff::ToBytes;
+use ark_std::rand::Rng as ArkRng;   // Must be in scope for rscalar
+use ark_std::rand::RngCore;
+use ark_bls12_381;
+
 #[test]
 fn test_dlog_proof() {
     let parametrization = map! {
-        (100, 100, 100) => true,
-        (666, 100, 100) => false,
-        (100, 666, 100) => false,
-        (100, 100, 666) => false
+        (100_u64, 100_u64, 100_u64) => true,
+        (666_u64, 100_u64, 100_u64) => false,
+        (100_u64, 666_u64, 100_u64) => false,
+        (100_u64, 100_u64, 666_u64) => false
     };
     for ((f1, f2, w), expected) in parametrization {
         let ctx = (&genG1!(), &genG2!());

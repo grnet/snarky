@@ -1,10 +1,22 @@
-use std::convert::TryInto;  // Must be in scope for hashG1
 use subtle::ConstantTimeEq; // Must be in scope for ct comparisons
-use sha2::Digest;           // Must be in scope for hashG1
+
+use sha2::Digest;
+use std::convert::TryInto;
+use ark_ff::FromBytes;
+use std::io::Cursor;
 
 use backend::*;
 use crate::srs::SRS;
 use crate::flow::Phase;
+
+use ark_ec::AffineCurve;            // Needed for group inclusion check
+use ark_ec::PairingEngine;          // Needed for pairing
+use num_traits::identities::Zero;   // Needed for zero constructions
+use num_traits::identities::One;    // Needed for one constructions
+use ark_ff::fields::Field;          // Needed for pow
+use ark_ff::ToBytes;
+use ark_std::rand::Rng as ArkRng;   // Must be in scope for rscalar
+use ark_bls12_381;
 
 type G1 = G1Elem;
 type G2 = G2Elem;
@@ -35,11 +47,12 @@ impl Dlog {
 
     pub fn verify(ctx: (&G1, &G2), c: &Commitment, prf: &G1) 
         -> Result<bool, ProofError> 
+    // TODO: ARK: Simplify signature
     {
         let (G, H) = ctx;
         match 
-            ct_eq!(pair!(c.0, H), pair!(G, c.1)) &
-            ct_eq!(pair!(prf, H), pair!(Self::rndoracle(&c), c.1))
+            ct_eq!(pair!(c.0, *H), pair!(*G, c.1)) &
+            ct_eq!(pair!(*prf, *H), pair!(Self::rndoracle(&c), c.1))
         {
             false   => Err(ProofError::DlogFailure),
             _       => Ok(true)
@@ -59,9 +72,10 @@ pub struct RhoProof {
 impl RhoProof {
     
     pub fn create(ctx: (&G1, &G2), base: &G1, w: &Scalar) -> Self {
+        // TODO: ARK: Simplify signatures
         let (G, H) = ctx;
-        let aux = smul1!(w, base);
-        let com = (smul1!(w, G), smul2!(w, H));
+        let aux = smul1!(*w, *base);
+        let com = (smul1!(*w, *G), smul2!(*w, *H));
         Self { 
             aux, 
             com, 
@@ -70,12 +84,13 @@ impl RhoProof {
     }
 
     pub fn verify(&self, ctx: (&G1, &G2), rho: Option<&Self>) -> Result<bool, ProofError> {
+        // TODO: ARK: Simplify signatures
         let (G, H) = ctx;
 
         let out1 = Dlog::verify(ctx, &self.com, &self.prf).unwrap_or(false);
         let out2 = match rho {
             Some(rho) => {
-                ct_eq!(pair!(self.aux, H), pair!(rho.aux, self.com.1))
+                ct_eq!(pair!(self.aux, *H), pair!(rho.aux, self.com.1))
             },
             None => true,
         };

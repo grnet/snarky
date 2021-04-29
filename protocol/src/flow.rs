@@ -5,9 +5,21 @@ use backend::*;
 use circuits::QAP;
 use crate::prover::{RhoProof, Witness, UpdateProof};
 
+use backend::*;
+use ark_ec::AffineCurve;            // Needed for group inclusion check
+use ark_ec::PairingEngine;          // Needed for pairing
+use num_traits::identities::Zero;   // Needed for zero constructions
+use num_traits::identities::One;    // Needed for one constructions
+use ark_ff::fields::Field;          // Needed for pow
+use ark_ff::ToBytes;
+use ark_std::rand::Rng as ArkRng;   // Must be in scope for rscalar
+use ark_bls12_381;
+
 pub use crate::srs::{Trapdoor, SRS};
 pub use crate::prover::BatchProof;
 
+use ark_std::rand::RngCore as ArkRngCore;
+use ark_std::rand::SeedableRng;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Phase {
@@ -16,13 +28,24 @@ pub enum Phase {
 }
 
 pub fn update(qap: &QAP, srs: &mut SRS, batch: &mut BatchProof, phase: Phase) {
-    let mut rng = rand::thread_rng();
     match phase {
         Phase::ONE => {
             let witness = Witness::ONE(
-                rscalar!(rng), 
-                rscalar!(rng), 
-                rscalar!(rng),
+                rscalar!({
+                    let seed: [u8; 32] = ::rand::random();  // TODO: Increase length
+                    let mut rng = ::ark_std::rand::rngs::StdRng::from_seed(seed);
+                    rng
+                }),
+                rscalar!({
+                    let seed: [u8; 32] = ::rand::random();  // TODO: Increase length
+                    let mut rng = ::ark_std::rand::rngs::StdRng::from_seed(seed);
+                    rng
+                }),
+                rscalar!({
+                    let seed: [u8; 32] = ::rand::random();  // TODO: Increase length
+                    let mut rng = ::ark_std::rand::rngs::StdRng::from_seed(seed);
+                    rng
+                }),
             );                                          // phase 1: step 2
             batch.append(UpdateProof::create(
                 &srs, 
@@ -31,7 +54,11 @@ pub fn update(qap: &QAP, srs: &mut SRS, batch: &mut BatchProof, phase: Phase) {
             srs.update(&qap, witness);                  // phase 1: steps 8-10
         },
         Phase::TWO => {
-            let witness = Witness::TWO(rscalar!(rng));  // phase 2: step 2
+            let witness = Witness::TWO(rscalar!({
+                let seed: [u8; 32] = ::rand::random();  // TODO: Increase length
+                let mut rng = ::ark_std::rand::rngs::StdRng::from_seed(seed);
+                rng
+            }));  // phase 2: step 2
             batch.append(UpdateProof::create(
                 &srs,
                 &witness,

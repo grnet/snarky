@@ -2,7 +2,19 @@ use backend::*;
 use polynomials::Univariate;
 use circuits::QAP;
 use crate::prover::Witness;
+use rand::Rng;
 
+// use rand::Rng;
+
+use ark_ec::AffineCurve;            // Needed for group inclusion check
+use ark_ec::PairingEngine;          // Needed for pairing
+use num_traits::identities::Zero;   // Needed for zero constructions
+use num_traits::identities::One;    // Needed for one constructions
+use ark_ff::fields::Field;          // Needed for pow
+use ark_ff::ToBytes;
+use ark_std::rand::Rng as ArkRng;   // Must be in scope for rscalar
+use ark_std::rand::RngCore;
+use ark_bls12_381;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Trapdoor(
@@ -23,6 +35,8 @@ impl Trapdoor {
     }
 
     pub fn from_random(rng: &mut ::rand::RngCore) -> Self {
+    // pub fn from_random(rng: &mut ::rand::rngs::StdRng) -> Self {
+    let mut rng = ::ark_std::test_rng();
         Self(
             rscalar!(rng),
             rscalar!(rng),
