@@ -34,14 +34,12 @@ impl Trapdoor {
         Self(one!(), one!(), one!(), one!())
     }
 
-    pub fn from_random(rng: &mut ::rand::RngCore) -> Self {
-    // pub fn from_random(rng: &mut ::rand::rngs::StdRng) -> Self {
-    let mut rng = ::ark_std::test_rng();
+    pub fn random() -> Self {
         Self(
-            rscalar!(rng),
-            rscalar!(rng),
-            rscalar!(rng),
-            rscalar!(rng),
+            rscalar!(::util::snarky_rng()),
+            rscalar!(::util::snarky_rng()),
+            rscalar!(::util::snarky_rng()),
+            rscalar!(::util::snarky_rng()),
         )
     }
 
@@ -75,10 +73,7 @@ impl SRS {
     pub fn setup(qap: &QAP, trapdoor: Option::<Trapdoor>) -> (Self, Trapdoor) {
         let trp = match trapdoor {
             Some(trp) => trp,
-            None => {
-                let mut rng = rand::thread_rng();
-                Trapdoor::from_random(&mut rng)
-            }
+            None => Trapdoor::random()
         };
         let srs = SRS::create(&trp, &qap);
         (srs, trp)

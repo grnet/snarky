@@ -31,21 +31,9 @@ pub fn update(qap: &QAP, srs: &mut SRS, batch: &mut BatchProof, phase: Phase) {
     match phase {
         Phase::ONE => {
             let witness = Witness::ONE(
-                rscalar!({
-                    let seed: [u8; 32] = ::rand::random();  // TODO: Increase length
-                    let mut rng = ::ark_std::rand::rngs::StdRng::from_seed(seed);
-                    rng
-                }),
-                rscalar!({
-                    let seed: [u8; 32] = ::rand::random();  // TODO: Increase length
-                    let mut rng = ::ark_std::rand::rngs::StdRng::from_seed(seed);
-                    rng
-                }),
-                rscalar!({
-                    let seed: [u8; 32] = ::rand::random();  // TODO: Increase length
-                    let mut rng = ::ark_std::rand::rngs::StdRng::from_seed(seed);
-                    rng
-                }),
+                rscalar!(::util::snarky_rng()),
+                rscalar!(::util::snarky_rng()),
+                rscalar!(::util::snarky_rng()),
             );                                          // phase 1: step 2
             batch.append(UpdateProof::create(
                 &srs, 
@@ -54,11 +42,9 @@ pub fn update(qap: &QAP, srs: &mut SRS, batch: &mut BatchProof, phase: Phase) {
             srs.update(&qap, witness);                  // phase 1: steps 8-10
         },
         Phase::TWO => {
-            let witness = Witness::TWO(rscalar!({
-                let seed: [u8; 32] = ::rand::random();  // TODO: Increase length
-                let mut rng = ::ark_std::rand::rngs::StdRng::from_seed(seed);
-                rng
-            }));  // phase 2: step 2
+            let witness = Witness::TWO(rscalar!(
+                ::util::snarky_rng()
+            ));                                         // phase 2: step 2
             batch.append(UpdateProof::create(
                 &srs,
                 &witness,

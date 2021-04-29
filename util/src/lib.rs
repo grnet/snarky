@@ -30,6 +30,21 @@ pub fn parse_arg(pos: usize, default: &str, message: &str) -> usize {
 }
 
 
+
+// use ark_std::rand::RngCore as ArkRngCore;
+// use ark_std::rand::Rng as ArkRng;
+// use rand::RngCore;
+use ark_std::rand::SeedableRng;
+
+pub fn snarky_rng() -> ::ark_std::rand::prelude::StdRng {
+    // TODO: Increase length by using some cryptographically 
+    // secure generator other than StdRng
+    let seed: [u8; 32] = ::rand::random();  
+    let mut rng = ::ark_std::rand::rngs::StdRng::from_seed(seed);
+    rng
+}
+
+
 use std;
 use std::fmt;
 

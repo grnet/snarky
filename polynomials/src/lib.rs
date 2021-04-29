@@ -34,7 +34,7 @@ impl<F: ark_ff::Field> Univariate<F> {
 
     pub fn coeff(&self, i: usize) -> F {
         // TODO: Explain (arkworks truncates leading zeros)
-        // TODO: Gaurd against i >= degree?
+        // TODO: Guard against i >= degree?
         
         match self._poly.coeffs.len() {
             0 => F::zero(),

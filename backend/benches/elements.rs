@@ -41,11 +41,12 @@ fn bench_one(c: &mut Criterion) {
 }
 
 fn bench_rscalar(c: &mut Criterion) {
-    use rand::RngCore;
-    let mut rng = ::ark_std::test_rng();    // TODO
+    use ark_std::rand::Rng;
+    use ark_std::rand::RngCore as ArkRngCore;
+    use ark_std::rand::SeedableRng;
     c.bench_function(
         "rscalar!",
-        |b| b.iter(|| rscalar!(rng))
+        |b| b.iter(|| rscalar!(::util::snarky_rng()))
     );
 }
 
