@@ -18,8 +18,6 @@ use ark_ff::ToBytes;
 use ark_std::rand::Rng as ArkRng;   // Must be in scope for rscalar
 use ark_bls12_381;
 
-use rayon::prelude::*;
-
 type G1 = G1Elem;
 type G2 = G2Elem;
 

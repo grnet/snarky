@@ -21,6 +21,8 @@ pub use crate::prover::BatchProof;
 use ark_std::rand::RngCore as ArkRngCore;
 use ark_std::rand::SeedableRng;
 
+use rayon::prelude::*;
+
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Phase {
@@ -101,21 +103,23 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
 
     // step 5
     let out_c = (1..2 * n - 1)
-        .fold(true, |acc, i| {
-            acc &
-                ct_eq!(pair!(srs_u.0[i].0, H), pair!(G, srs_u.0[i].1)) &
-                ct_eq!(pair!(srs_u.0[i].0, H), pair!(srs_u.0[i - 1].0, srs_u.0[1].1))
-        });
+        .into_par_iter()
+        .map(|i| {
+            ct_eq!(pair!(srs_u.0[i].0, H), pair!(G, srs_u.0[i].1)) &
+            ct_eq!(pair!(srs_u.0[i].0, H), pair!(srs_u.0[i - 1].0, srs_u.0[1].1))
+        })
+        .reduce(|| true, |acc, b| acc & b);
     
     // step 6
     let out_d = (0..n) 
-        .fold(true, |acc, i| {
-            acc &
-                ct_eq!(pair!(srs_u.1[i].0, H), pair!(G, srs_u.1[i].2)) &
-                ct_eq!(pair!(srs_u.1[i].0, H), pair!(srs_u.0[i].0, srs_u.1[0].2)) &
-                ct_eq!(pair!(srs_u.1[i].1, H), pair!(G, srs_u.1[i].3)) &
-                ct_eq!(pair!(srs_u.1[i].1, H), pair!(srs_u.0[i].0, srs_u.1[0].3))
-        });
+        .into_par_iter()
+        .map(|i| {
+            ct_eq!(pair!(srs_u.1[i].0, H), pair!(G, srs_u.1[i].2)) &
+            ct_eq!(pair!(srs_u.1[i].0, H), pair!(srs_u.0[i].0, srs_u.1[0].2)) &
+            ct_eq!(pair!(srs_u.1[i].1, H), pair!(G, srs_u.1[i].3)) &
+            ct_eq!(pair!(srs_u.1[i].1, H), pair!(srs_u.0[i].0, srs_u.1[0].3))
+        })
+        .reduce(|| true, |acc, b| acc & b);
     
 
     // step 7
@@ -126,28 +130,32 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
 
     // step 10
     let out_g = (0..m - l)
-        .fold(true, |acc, i| {
+        .into_par_iter()
+        .map(|i| {
             let s_i = (0..n)
-                .fold(zeroG1!(), |acc, j| {
-                    add1!(acc, add1!(
-                        smul1!(u[i].coeff(j), srs_u.1[j].1),
-                        smul1!(v[i].coeff(j), srs_u.1[j].0),
-                        smul1!(w[i].coeff(j), srs_u.0[j].0)
-                    ))
-                });
-            acc & ct_eq!(pair!(srs_s.2[i], srs_s.1), pair!(s_i, H))
-        });
+                .into_par_iter()
+                .map(|j| add1!(
+                    smul1!(u[i].coeff(j), srs_u.1[j].1),
+                    smul1!(v[i].coeff(j), srs_u.1[j].0),
+                    smul1!(w[i].coeff(j), srs_u.0[j].0)
+                ))
+                .reduce(|| zeroG1!(), |acc, inc| add1!(acc, inc));
+            ct_eq!(pair!(srs_s.2[i], srs_s.1), pair!(s_i, H))
+        })
+        .reduce(|| true, |acc, b| acc & b);
 
     // step 11
     let out_h = {
         let Gt = (0..n - 1)
-            .fold(zeroG1!(), |acc, j| {
-                add1!(acc, smul1!(t.coeff(j), srs_u.0[j].0))
-            });
+            .into_par_iter()
+            .map(|j| smul1!(t.coeff(j), srs_u.0[j].0))
+            .reduce(|| zeroG1!(), |acc, inc| add1!(acc, inc));
         (0..n - 1)
-            .fold(true, |acc, i| {
-                acc & ct_eq!(pair!(srs_s.3[i], srs_s.1), pair!(Gt, srs_u.0[i].1))
+            .into_par_iter()
+            .map(|i| {
+                ct_eq!(pair!(srs_s.3[i], srs_s.1), pair!(Gt, srs_u.0[i].1))
             })
+            .reduce(|| true, |acc, b| acc & b)
     };
 
 

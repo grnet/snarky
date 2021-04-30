@@ -221,26 +221,25 @@ impl SRS {
         let c2 = genG2!();
         let c3 = (0..m - l)
             .into_par_iter()
-            .map(|i| (0..n)
-                .fold(zero, |acc, j| {
-                    add1!(acc, add1!(
+            .map(|i| {
+                (0..n)
+                    .into_par_iter()
+                    .map(|j| add1!(
                         smul1!(u[i].coeff(j), srs_u.1[j].1),
                         smul1!(v[i].coeff(j), srs_u.1[j].0),
                         smul1!(w[i].coeff(j), srs_u.0[j].0)
                     ))
-                })
-            )
+                    .reduce(|| zero, |acc, inc| add1!(acc, inc))
+            })
             .collect();
         let c4 = (0..n - 1)
             .into_par_iter()
-            .map(|i| (0..n)
-                .fold(zero, |acc, j| {
-                    add1!(
-                        acc,
-                        smul1!(t.coeff(j), srs_u.0[i + j].0)
-                    )
-                })
-            )
+            .map(|i| {
+                (0..n)
+                    .into_par_iter()
+                    .map(|j| smul1!(t.coeff(j), srs_u.0[i + j].0))
+                    .reduce(|| zero, |acc, inc| add1!(acc, inc))
+            })
             .collect();
 
         (c1, c2, c3, c4)
