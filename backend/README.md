@@ -1,12 +1,12 @@
 # backend
 
-Wrapper of the bilinear-pairing library.
-Currently around [`bls12_381`](https://docs.rs/bls12_381/0.4.0/bls12_381/).
+Wrapper of the bilinear-pairing library. Currently around
+[arkworks-rs/curves/bls12_381](https://github.com/arkworks-rs/curves/tree/master/bls12_381).
 
 ## Overview
 
 Purpose of this crate is to expose the following elliptic-curve agnostic macros, 
-so that the backend can easily be unplugged in the future.
+so that multiple backends can easily be pluggable.
 
 - `scalar`: field element from primitive numerical value
 - `zero`: zero field element
@@ -31,7 +31,7 @@ so that the backend can easily be unplugged in the future.
 
 ## Usage
 
-See [`examples/main.rs`](./examples/main.rs)
+See [`examples/main.rs`](./examples/main.rs).
 
 ## Development
 

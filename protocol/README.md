@@ -23,6 +23,8 @@ assert!(bool::from(result));
 println!("{:?}", result);
 ```
 
+See also [`examples/flow.rs`](./examples/flow.rs).
+
 ## Development
 
 ```commandline
