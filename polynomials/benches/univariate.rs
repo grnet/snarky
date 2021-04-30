@@ -11,7 +11,7 @@ use backend::scalar;
 
 fn bench_evaluate(c: &mut Criterion) {
     let mut group = c.benchmark_group("evaluate");
-    let x = scalar!(666);
+    let x = scalar!(666_u64);
     for exp in [0, 1, 2, 3, 4, 5, 6].iter() {
        let deg = 10_u64.pow(*exp);
        let poly = Univariate::create_from_u64(&(0..deg + 1).collect());

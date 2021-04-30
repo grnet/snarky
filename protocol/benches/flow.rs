@@ -1,3 +1,13 @@
+use ark_ec::AffineCurve;            // Needed for group inclusion check
+use ark_ec::PairingEngine;          // Needed for pairing
+use num_traits::identities::Zero;   // Needed for zero constructions
+use num_traits::identities::One;    // Needed for one constructions
+use ark_ff::fields::Field;          // Needed for pow
+use ark_ff::ToBytes;
+use ark_std::rand::Rng as ArkRng;   // Must be in scope for rscalar
+use ark_std::rand::RngCore;
+use ark_bls12_381;
+
 use criterion::{
     black_box, 
     criterion_group, 
@@ -12,9 +22,9 @@ use protocol;
 fn bench_setup(c: &mut Criterion) {
     let mut group = c.benchmark_group("setup");
     for (m, n, l) in [
-        (10, 10, 10),
-        (100, 100, 100),
-        (1000, 1000, 1000),
+        (30, 20, 10),
+        (300, 200, 100),
+        (3000, 2000, 1000),
     ].iter() {
         let qap = QAP::create_default(*m, *n, *l).unwrap();
         group.bench_function(
@@ -28,9 +38,9 @@ fn bench_setup(c: &mut Criterion) {
 fn bench_update_phase_1(c: &mut Criterion) {
     let mut group = c.benchmark_group("update");
     for (m, n, l) in [
-        (10, 10, 10),
-        (100, 100, 100),
-        (1000, 1000, 1000),
+        (30, 20, 10),
+        (300, 200, 100),
+        (3000, 2000, 1000),
     ].iter() {
         let qap = QAP::create_default(*m, *n, *l).unwrap();
         let (mut srs, trp) = SRS::setup_with_random_trapdoor(&qap);
@@ -46,9 +56,9 @@ fn bench_update_phase_1(c: &mut Criterion) {
 fn bench_update_phase_2(c: &mut Criterion) {
     let mut group = c.benchmark_group("update");
     for (m, n, l) in [
-        (10, 10, 10),
-        (100, 100, 100),
-        (1000, 1000, 1000),
+        (30, 20, 10),
+        (300, 200, 100),
+        (3000, 2000, 1000),
     ].iter() {
         let qap = QAP::create_default(*m, *n, *l).unwrap();
         let (mut srs, trp) = SRS::setup_with_random_trapdoor(&qap);
@@ -65,9 +75,9 @@ fn bench_verify(c: &mut Criterion) {
     let mut group = c.benchmark_group("verify");
     // TODO: Parametrize phases
     for (m, n, l) in [
-        (10, 10, 10),
-        (100, 100, 100),
-        (1000, 1000, 1000),
+        (30, 20, 10),
+        (300, 200, 100),
+        (3000, 2000, 1000),
     ].iter() {
         let qap = QAP::create_default(*m, *n, *l).unwrap();
         let (mut srs, trp) = SRS::setup_with_random_trapdoor(&qap);
@@ -86,9 +96,9 @@ fn bench_flow(c: &mut Criterion) {
     let mut group = c.benchmark_group("flow");
     // TODO: Parametrize phases
     for (m, n, l) in [
-        (10, 10, 10),
-        (100, 100, 100),
-        (1000, 1000, 1000),
+        (30, 20, 10),
+        (300, 200, 100),
+        (3000, 2000, 1000),
     ].iter() {
         let mut batch = BatchProof::initiate();
         group.bench_function(

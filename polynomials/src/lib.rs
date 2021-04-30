@@ -6,33 +6,61 @@ use core::default::Default;
 use core::convert::From;
 use util::SnarkyError;
 
+use ark_ff;
+use ark_poly;
+use ark_poly::Polynomial;
+use ark_poly::UVPolynomial;
+use ark_poly::univariate::DensePolynomial;
+
+
 #[derive(Clone, PartialEq, Debug)]
-pub struct Univariate<F> {
-    pub coeffs: Vec<F>,
-    pub degree: isize,
+pub struct Univariate<F: ark_ff::Field> {
+    pub _poly: DensePolynomial::<F>,
+    pub degree: isize,  // TODO: Explain why degree should not be deg(_poly)
 }
 
-impl<F> Univariate<F> {
+impl<F: ark_ff::Field> Univariate<F> {
 
     pub fn create(coeffs: Vec<F>) -> Self {
         Self {
             degree: coeffs.len() as isize - 1,
-            coeffs: coeffs,
+            _poly: DensePolynomial::from_coefficients_vec(coeffs),
         }
     }
 
     pub fn degree(&self) -> isize {
-        self.degree
+        self.degree     // TODO: Return usize?
     }
-}
 
-impl<F: Copy> Univariate<F> {
     pub fn coeff(&self, i: usize) -> F {
-        self.coeffs[i]
+        // TODO: Explain (arkworks truncates leading zeros)
+        // TODO: Guard against i >= degree?
+        
+        match self._poly.coeffs.len() {
+            0 => F::zero(),
+            1 => {
+                if i == 0 {
+                    self._poly.coeffs[i]
+                } else {
+                    F::zero()
+                }
+            },
+            _ => {
+                if i <= self._poly.degree() {
+                    self._poly.coeffs[i]
+                } else {
+                    F::zero()
+                }
+            },
+        }
+    }
+
+    pub fn evaluate(&self, elm: &F) -> F {
+        self._poly.evaluate(&elm)
     }
 }
 
-impl<F: From<u64>> Univariate<F> {
+impl<F: ark_ff::Field + From<u64>> Univariate<F> {
 
     pub fn create_from_u64(coeffs: &Vec<u64>) -> Self {
         let coeffs = coeffs
@@ -42,33 +70,3 @@ impl<F: From<u64>> Univariate<F> {
         Self::create(coeffs)
     }
 }
-
-impl<F: Default + Copy + AddAssign + MulAssign> Univariate<F> {
-
-    // Horner's method NOTE: Sparse polynomial evaluation can be
-    // more efficient with exponentiation optimized with 
-    // square-and-add method which is log(N).
-    pub fn evaluate(&self, elm: &F) -> Result<F, SnarkyError> {
-        match self.degree {
-            -1 => Err(
-                SnarkyError::create("Cannot evaluate polynomial", "degree -1",
-                    file!(), 
-                    line!() - 4, 
-                    201
-                )),
-            _  => {
-                let mut result = F::default();  // Should be zero
-                if self.coeffs.len() > 0 {
-                    let n = self.coeffs.len() - 1;
-                    result = self.coeffs[n];
-                    for i in 0..n {
-                        result *= *elm;
-                        result += self.coeffs[n - i - 1];
-                    }
-                }
-                Ok(result)
-            }
-        }
-    }
-}
-

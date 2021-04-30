@@ -4,7 +4,6 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
-bls12_381 = "0.4.0"
 backend = { path="../backend" }
 polynomials = { path="../polynomials" }
 util = { path = "../util" }

@@ -1,25 +1,34 @@
-use backend::{scalar, zero, one, pow};
-use bls12_381::Scalar;
+use backend::*;
 use util::map;
+
+use backend::*;
+use ark_ec::AffineCurve;            // Needed for group inclusion check
+use ark_ec::PairingEngine;          // Needed for pairing
+use num_traits::identities::Zero;   // Needed for zero constructions
+use num_traits::identities::One;    // Needed for one constructions
+use ark_ff::fields::Field;          // Needed for pow
+use ark_ff::ToBytes;
+use ark_std::rand::Rng as ArkRng;   // Must be in scope for rscalar
+use ark_bls12_381;
 
 #[test]
 fn test_scalar() {
-    let parametrization = vec![0, 1, 666];
-    for value in parametrization {
-        assert_eq!(Scalar::from(value), scalar!(value));
+    let parametrization = [0u64, 1, 2, 10, 666];
+    for &num in &parametrization {
+        assert_eq!(::ark_bls12_381::Fr::from(num), scalar!(num));
     }
 }
 
 #[test]
 fn test_zero() {
-    assert_eq!(Scalar::from(0), zero!());
-    assert_ne!(Scalar::from(1), zero!());
+    assert_eq!(::ark_bls12_381::Fr::from(0u64), zero!());
+    assert_ne!(::ark_bls12_381::Fr::from(1u64), zero!());
 }
 
 #[test]
 fn test_one() {
-    assert_eq!(Scalar::from(1), one!());
-    assert_ne!(Scalar::from(0), one!());
+    assert_eq!(::ark_bls12_381::Fr::from(1u64), one!());
+    assert_ne!(::ark_bls12_381::Fr::from(0u64), one!());
 }
 
 #[test]
@@ -29,7 +38,7 @@ fn test_pow() {
         (0, 1) => 0, (1, 1) => 1, (2, 1) => 2, (3, 1) =>  3, (7, 1) =>   7,
         (0, 2) => 0, (1, 2) => 1, (2, 2) => 4, (3, 2) =>  9, (7, 2) =>  49,
         (0, 3) => 0, (1, 3) => 1, (2, 3) => 8, (3, 3) => 27, (7, 3) => 343,
-        (0, 4) => 0
+        (0u64, 4u64) => 0u64
     };
     for ((base, exp), result) in parametrization {
         assert_eq!(pow!(scalar!(base), exp), scalar!(result));

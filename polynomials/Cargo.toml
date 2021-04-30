@@ -5,9 +5,12 @@ edition = "2018"
 
 [dependencies]
 util = { path = "../util" }
+ark-ff = "0.2.0"
+ark-poly = "0.2.0"
+backend = { path="../backend" }
 
 [dev-dependencies]
-bls12_381 = "0.4.0"
+ark-bls12-381 = "0.2.0"
 backend = { path="../backend" }
 util = { path = "../util" }
 criterion = "0.3.4"

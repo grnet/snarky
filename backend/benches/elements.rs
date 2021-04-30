@@ -1,3 +1,11 @@
+use ark_ec::AffineCurve;            // Needed for group inclusion check
+use ark_ec::PairingEngine;          // Needed for pairing
+use num_traits::identities::Zero;   // Needed for zero constructions
+use num_traits::identities::One;    // Needed for one constructions
+use ark_ff::fields::Field;          // Needed for pow
+use ark_ff::ToBytes;
+use ark_std::rand::Rng as ArkRng;   // Must be in scope for rscalar
+use ark_bls12_381;
 
 use criterion::{
     black_box, 
@@ -14,7 +22,7 @@ use backend::{
 fn bench_scalar(c: &mut Criterion) {
     c.bench_function(
         "scalar!",
-        |b| b.iter(|| scalar!(1000))
+        |b| b.iter(|| scalar!(1000u64))
     );
 }
 
@@ -33,11 +41,12 @@ fn bench_one(c: &mut Criterion) {
 }
 
 fn bench_rscalar(c: &mut Criterion) {
-    use rand::RngCore;
-    let mut rng = rand::thread_rng();
+    use ark_std::rand::Rng;
+    use ark_std::rand::RngCore as ArkRngCore;
+    use ark_std::rand::SeedableRng;
     c.bench_function(
         "rscalar!",
-        |b| b.iter(|| rscalar!(rng))
+        |b| b.iter(|| rscalar!(::util::snarky_rng()))
     );
 }
 

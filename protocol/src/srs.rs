@@ -2,7 +2,19 @@ use backend::*;
 use polynomials::Univariate;
 use circuits::QAP;
 use crate::prover::Witness;
+use rand::Rng;
 
+// use rand::Rng;
+
+use ark_ec::AffineCurve;            // Needed for group inclusion check
+use ark_ec::PairingEngine;          // Needed for pairing
+use num_traits::identities::Zero;   // Needed for zero constructions
+use num_traits::identities::One;    // Needed for one constructions
+use ark_ff::fields::Field;          // Needed for pow
+use ark_ff::ToBytes;
+use ark_std::rand::Rng as ArkRng;   // Must be in scope for rscalar
+use ark_std::rand::RngCore;
+use ark_bls12_381;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Trapdoor(
@@ -22,12 +34,12 @@ impl Trapdoor {
         Self(one!(), one!(), one!(), one!())
     }
 
-    pub fn from_random(rng: &mut ::rand::RngCore) -> Self {
+    pub fn random() -> Self {
         Self(
-            rscalar!(rng),
-            rscalar!(rng),
-            rscalar!(rng),
-            rscalar!(rng),
+            rscalar!(::util::snarky_rng()),
+            rscalar!(::util::snarky_rng()),
+            rscalar!(::util::snarky_rng()),
+            rscalar!(::util::snarky_rng()),
         )
     }
 
@@ -61,10 +73,7 @@ impl SRS {
     pub fn setup(qap: &QAP, trapdoor: Option::<Trapdoor>) -> (Self, Trapdoor) {
         let trp = match trapdoor {
             Some(trp) => trp,
-            None => {
-                let mut rng = rand::thread_rng();
-                Trapdoor::from_random(&mut rng)
-            }
+            None => Trapdoor::random()
         };
         let srs = SRS::create(&trp, &qap);
         (srs, trp)
@@ -124,14 +133,14 @@ impl SRS {
 
         let c3 = (l + 1..m + 1)
             .map(|i| {
-                let ux_i = u[i].evaluate(&x).unwrap();
-                let vx_i = v[i].evaluate(&x).unwrap();
-                let wx_i = w[i].evaluate(&x).unwrap();
+                let ux_i = u[i].evaluate(&x);
+                let vx_i = v[i].evaluate(&x);
+                let wx_i = w[i].evaluate(&x);
                 smul1!((b * ux_i + a * vx_i + wx_i) * dinv, G)
             })
             .collect();
 
-        let tx = t.evaluate(&x).unwrap();
+        let tx = t.evaluate(&x);
         let c4 = (0..n - 1)
             .map(|i| smul1!(pow!(x, i) * tx * dinv, G))
             .collect();
