@@ -16,6 +16,8 @@ use ark_std::rand::Rng as ArkRng;   // Must be in scope for rscalar
 use ark_std::rand::RngCore;
 use ark_bls12_381;
 
+use rayon::prelude::*;
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Trapdoor(
     pub Scalar,
@@ -94,6 +96,7 @@ impl SRS {
         let H = genG2!();
 
         let c1 = (0..2 * n - 1)
+            .into_par_iter()
             .map(|i| {
                 let res = (
                     smul1!(pow!(x, i), G),
@@ -104,6 +107,7 @@ impl SRS {
             .collect();
 
         let c2 = (0..n)
+            .into_par_iter()
             .map(|i| {
                 let res = (
                     smul1!(a * pow!(x, i), G),
@@ -132,6 +136,7 @@ impl SRS {
         let c2 = smul2!(d, H);
 
         let c3 = (l + 1..m + 1)
+            .into_par_iter()
             .map(|i| {
                 let ux_i = u[i].evaluate(&x);
                 let vx_i = v[i].evaluate(&x);
@@ -142,6 +147,7 @@ impl SRS {
 
         let tx = t.evaluate(&x);
         let c4 = (0..n - 1)
+            .into_par_iter()
             .map(|i| smul1!(pow!(x, i) * tx * dinv, G))
             .collect();
 
@@ -156,6 +162,7 @@ impl SRS {
 
                 // phase 1, step 8 (recompute u-component)
                 let c1 = (0..2 * n - 1)
+                    .into_par_iter()
                     .map(|i| {
                         let res = (
                             smul1!(pow!(x, i), srs_u.0[i].0),
@@ -165,6 +172,7 @@ impl SRS {
                     })
                     .collect();
                 let c2 = (0..n)
+                    .into_par_iter()
                     .map(|i| {
                         let res = (
                             smul1!(a * pow!(x, i), srs_u.1[i].0),
@@ -192,9 +200,11 @@ impl SRS {
                 let c1 = smul1!(d, srs_s.0);
                 let c2 = smul2!(d, srs_s.1);
                 let c3 = (0..m - l)
+                    .into_par_iter()
                     .map(|i| smul1!(dinv, srs_s.2[i]))
                     .collect();
                 let c4 = (0..n - 1)
+                    .into_par_iter()
                     .map(|i| smul1!(dinv, srs_s.3[i]))
                     .collect();
                 self.s = (c1, c2, c3, c4)
@@ -210,25 +220,26 @@ impl SRS {
         let c1 = genG1!();
         let c2 = genG2!();
         let c3 = (0..m - l)
-            .map(|i| (0..n)
-                .fold(zero, |acc, j| {
-                    add1!(acc, add1!(
+            .into_par_iter()
+            .map(|i| {
+                (0..n)
+                    .into_par_iter()
+                    .map(|j| add1!(
                         smul1!(u[i].coeff(j), srs_u.1[j].1),
                         smul1!(v[i].coeff(j), srs_u.1[j].0),
                         smul1!(w[i].coeff(j), srs_u.0[j].0)
                     ))
-                })
-            )
+                    .reduce(|| zero, |acc, inc| add1!(acc, inc))
+            })
             .collect();
         let c4 = (0..n - 1)
-            .map(|i| (0..n)
-                .fold(zero, |acc, j| {
-                    add1!(
-                        acc,
-                        smul1!(t.coeff(j), srs_u.0[i + j].0)
-                    )
-                })
-            )
+            .into_par_iter()
+            .map(|i| {
+                (0..n)
+                    .into_par_iter()
+                    .map(|j| smul1!(t.coeff(j), srs_u.0[i + j].0))
+                    .reduce(|| zero, |acc, inc| add1!(acc, inc))
+            })
             .collect();
 
         (c1, c2, c3, c4)
@@ -245,18 +256,21 @@ impl SRS {
         };
 
         let out2 = (0..2 * n - 1)
-            .fold(true, |acc, i| {
-                acc & 
-                    contained_in_group!(srs_u.0[i].0) &
-                    contained_in_group!(srs_u.0[i].1)
-            });
+            .into_par_iter()
+            .map(|i| {
+                contained_in_group!(srs_u.0[i].0) &
+                contained_in_group!(srs_u.0[i].1)
+            })
+            .reduce(|| true, |acc, b| acc & b);
 
         let out3 = (0..n)
-            .fold(true, |acc, i| {
-                acc &
-                    contained_in_group!(srs_u.0[i].0) &
-                    contained_in_group!(srs_u.0[i].1)
-            });
+            .into_par_iter()
+            .map(|i| {
+                contained_in_group!(srs_u.0[i].0) &
+                contained_in_group!(srs_u.0[i].1)
+            })
+            .reduce(|| true, |acc, b| acc & b);
+
 
         match out1 & out2 & out3 {
             false   => Err(SRSError),
@@ -277,14 +291,14 @@ impl SRS {
         };
 
         let out2 = (0..m - l)
-            .fold(true, |acc, i| {
-                acc & contained_in_group!(srs_s.2[i])
-            });
+            .into_par_iter()
+            .map(|i| contained_in_group!(srs_s.2[i]))
+            .reduce(|| true, |acc, b| acc & b);
         
         let out3 = (0..n - 1)
-            .fold(true, |acc, i| {
-                acc & contained_in_group!(srs_s.3[i])
-            });
+            .into_par_iter()
+            .map(|i| contained_in_group!(srs_s.3[i]))
+            .reduce(|| true, |acc, b| acc & b);
 
         match out1 & out2 & out3 {
             false   => Err(SRSError),
