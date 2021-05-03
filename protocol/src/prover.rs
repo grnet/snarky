@@ -7,7 +7,7 @@ use std::io::Cursor;
 
 use backend::*;
 use crate::srs::SRS;
-use crate::flow::Phase;
+use crate::updater::Phase;
 
 use ark_ec::AffineCurve;            // Needed for group inclusion check
 use ark_ec::PairingEngine;          // Needed for pairing
