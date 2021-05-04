@@ -62,7 +62,7 @@ impl Dlog {
 
 
 // PoKs for scalars used in SRS update
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct RhoProof {
     pub aux: G1, 
     pub com: Commitment,
@@ -108,13 +108,13 @@ impl RhoProof {
 // Note: No verify functionality is possible at this
 // level since each update-proof is verified against
 // its previous one in the containing batch.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum UpdateProof {
     ONE(RhoProof, RhoProof, RhoProof),
     TWO(RhoProof),
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum Witness {
     ONE(Scalar, Scalar, Scalar),
     TWO(Scalar),
@@ -146,7 +146,7 @@ impl UpdateProof {
 
 
 // Batch of update-proofs
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct BatchProof {
     pub batch_1: Vec<[RhoProof; 3]>,    // Contains phase 1 update-proofs
     pub batch_2: Vec<RhoProof>,         // Contains phase 2 update-proofs

@@ -56,7 +56,7 @@ type G2 = G2Elem;
 pub type U = (Vec<(G1, G2)>, Vec<(G1, G1, G2, G2)>);
 pub type S = (G1, G2, Vec<G1>, Vec<G1>);
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct SRS {
     pub u: U,
     pub s: S,
