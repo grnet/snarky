@@ -73,10 +73,9 @@ macro_rules! contained_in_group {
 macro_rules! bytes1 {
     ($elem:expr) => {
         {
-            let mut buffer = Vec::<u8>::new();
+            let mut buffer = Vec::<u8>::with_capacity(97);
             $elem.write(&mut buffer);
-            buffer
-            // buf.as_slice()  // 97 bytes
+            buffer  // 97 bytes
         }
     }
 }
@@ -85,10 +84,9 @@ macro_rules! bytes1 {
 macro_rules! bytes2 {
     ($elem:expr) => {
         {
-            let mut buffer = Vec::<u8>::new();
+            let mut buffer = Vec::<u8>::with_capacity(97);
             $elem.write(&mut buffer);
-            buffer
-            // buf.as_slice()  // 193 bytes
+            buffer  // 97 bytes
         }
     }
 }
