@@ -18,6 +18,8 @@ use ark_ff::ToBytes;
 use ark_std::rand::Rng as ArkRng;   // Must be in scope for rscalar
 use ark_bls12_381;
 
+use rayon::prelude::*;
+
 type G1 = G1Elem;
 type G2 = G2Elem;
 
@@ -182,7 +184,8 @@ impl BatchProof {
 
                 // step 3
                 let out1 = (0..batch_u.len())
-                    .fold(true, |acc, i| { 
+                    .into_par_iter()
+                    .map(|i| {
                         let mut inner = true;
                         for j in 0..3 {
                             inner = inner & match &batch_u[i][j].verify((&G, &H), match i {
@@ -194,8 +197,23 @@ impl BatchProof {
                                 _ => true
                             };
                         }
-                        acc && inner
-                    });
+                        inner
+                    })
+                    .reduce(|| true, |acc, b| acc & b);
+                    // .fold(true, |acc, i| { 
+                    //     let mut inner = true;
+                    //     for j in 0..3 {
+                    //         inner = inner & match &batch_u[i][j].verify((&G, &H), match i {
+                    //             0 => None,
+                    //             _ => Some(&batch_u[i - 1][j])
+                    //         })
+                    //         {
+                    //             Err(ProofError::RhoFailure) => false,
+                    //             _ => true
+                    //         };
+                    //     }
+                    //     acc && inner
+                    // });
 
                 // step 4
                 let len = batch_u.len();
@@ -222,8 +240,9 @@ impl BatchProof {
 
                 // step 8
                 let out1 = (0..batch_s.len()) 
-                    .fold(true, |acc, i| {
-                        acc & match &batch_s[i].verify((&G, &H), match i {
+                    .into_par_iter()
+                    .map(|i| {
+                        match &batch_s[i].verify((&G, &H), match i {
                             0 => None,
                             _ => Some(&batch_s[i - 1])
                         })
@@ -231,7 +250,18 @@ impl BatchProof {
                             Err(ProofError::RhoFailure) => false,
                             _ => true
                         }
-                    });
+                    })
+                    .reduce(|| true, |acc, b| acc & b);
+                    // .fold(true, |acc, i| {
+                    //     acc & match &batch_s[i].verify((&G, &H), match i {
+                    //         0 => None,
+                    //         _ => Some(&batch_s[i - 1])
+                    //     })
+                    //     {
+                    //         Err(ProofError::RhoFailure) => false,
+                    //         _ => true
+                    //     }
+                    // });
                 
                 // step 9
                 let out2 = {
