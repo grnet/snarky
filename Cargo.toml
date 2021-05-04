@@ -13,7 +13,7 @@ members = [
     "protocol",
 ]
 
-# [profile.release]
-# lto = true
-# panic = 'abort'
+[profile.release]
 # codegen-units = 1
+lto = true
+# opt-level = 3

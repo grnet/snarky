@@ -32,6 +32,12 @@ closer to those of a release version), do
 This creates a QAP with shape `(m, n, l) = (50, 40, 30)`. You can control these
 parameters by directly passing them to the command, that is,
 
+To further take advantage of your CPU's architecture, run 
+
+```commandline
+RUSTFLAGS="-C target-cpu=native" ./demo.sh --release ...
+```
+
 ```commandline
 ./demo.sh [--release] 500 400 300
 ```
