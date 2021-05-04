@@ -62,9 +62,15 @@ impl QAP {
 
         let mut coeffs1 = vec![1];
         coeffs1.append(&mut vec![0; n - 1]); // [1] + (n - 1) * [0]
-        let u = vec![Univariate::create_from_u64(&coeffs1); m + 1];
-        let v = vec![Univariate::create_from_u64(&coeffs1); m + 1];
-        let w = vec![Univariate::create_from_u64(&coeffs1); m + 1];
+
+        let mut u = Vec::<Univariate<F>>::with_capacity(m + 1);
+        let mut v = Vec::<Univariate<F>>::with_capacity(m + 1);
+        let mut w = Vec::<Univariate<F>>::with_capacity(m + 1);
+        for i in 0..m + 1 {
+            u.push(Univariate::create_from_u64(&coeffs1));
+            v.push(Univariate::create_from_u64(&coeffs1));
+            w.push(Univariate::create_from_u64(&coeffs1));
+        }
 
         let mut coeffs2 = vec![1];
         coeffs2.append(&mut vec![0; n]);        // [1] + n * [0]

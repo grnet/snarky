@@ -18,7 +18,7 @@ use ark_bls12_381;
 
 use rayon::prelude::*;
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct Trapdoor(
     pub Scalar,
     pub Scalar,

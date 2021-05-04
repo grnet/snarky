@@ -13,7 +13,7 @@ use ark_poly::UVPolynomial;
 use ark_poly::univariate::DensePolynomial;
 
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(PartialEq, Debug)]
 pub struct Univariate<F: ark_ff::Field> {
     pub _poly: DensePolynomial::<F>,
     pub degree: isize,  // TODO: Explain why degree should not be deg(_poly)
