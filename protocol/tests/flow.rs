@@ -2,7 +2,6 @@ use backend::*;
 use circuits::QAP;
 use protocol::{SRS, Trapdoor, BatchProof, Phase, Verification};
 use protocol;
-
 use num_traits::identities::Zero;
 use ark_ec::AffineCurve;
 
@@ -59,18 +58,14 @@ macro_rules! run_protocol {
             run_updates!(qap, srs, batch, Phase::ONE, $nr_1);
             run_updates!(qap, srs, batch, Phase::TWO, $nr_2);
 
-            // Make corruptions, if any
-            for (j, cor) in [$cor_1, $cor_2].iter().enumerate() {
+            for (j, corrupt) in [$cor_1, $cor_2].iter().enumerate() {
                 let comp = j + 1;
                 let length = if comp == 1 { $nr_1 } else { $nr_2 };
-                match cor {
-                    &"all" => {
-                        for index in 0..length {
-                            corrupt!(batch, comp, index);
-                        }
-                    },
-                    &"one" => corrupt!(batch, comp, 0),
-                    _ => {}
+                match corrupt {
+                    &"all"        => for index in 0..length { corrupt!(batch, comp, index); },
+                    &"almost all" => for index in 1..length { corrupt!(batch, comp, index); },
+                    &"one"        => corrupt!(batch, comp, 0),
+                    _             => { /* Leave untouched*/ }
                 }
             }
 
@@ -80,49 +75,94 @@ macro_rules! run_protocol {
 }
 
 #[test]
-fn test_flow_with_given_trapdoor() {
-    let res = run_protocol!(5, 4, 3, "given", 1 => "ok", 1 => "ok");
+fn test_success_with_given_trapdoor() {
+    let res = run_protocol!(5, 4, 3, "given", 
+        1 => "ok", 
+        1 => "ok"
+    );
     assert_eq!(bool::from(res), true);
 }
 
 #[test]
-fn test_flow_with_random_trapdoor() {
-    let res = run_protocol!(5, 4, 3, "random", 1 => "ok", 1 => "ok");
+fn test_success_with_random_trapdoor() {
+    let res = run_protocol!(5, 4, 3, "random", 
+        1 => "ok", 
+        1 => "ok"
+    );
     assert_eq!(bool::from(res), true);
 }
 
 #[test]
-fn test_flow_with_unit_trapdoor() {
-    let res = run_protocol!(5, 4, 3, "unit", 1 => "ok", 1 => "ok");
+fn test_success_with_unit_trapdoor() {
+    let res = run_protocol!(5, 4, 3, "unit", 
+        1 => "ok", 
+        1 => "ok"
+    );
     assert_eq!(bool::from(res), true);
 }
 
 #[test]
-fn test_flow_with_one_phase_1_proof_tampered() {
-    let res = run_protocol!(5, 4, 3, "unit", 2 => "one", 1 => "ok");
+fn test_failure_with_one_phase_1_proof_tampered() {
+    let res = run_protocol!(5, 4, 3, "unit", 
+        2 => "one", 
+        1 => "ok"
+    );
     assert_eq!(bool::from(res), false);
 }
 
 #[test]
-fn test_flow_with_all_phase_1_proofs_tampered() {
-    let res = run_protocol!(5, 4, 3, "unit", 2 => "all", 1 => "ok");
+fn test_failure_with_all_phase_1_proofs_tampered() {
+    let res = run_protocol!(5, 4, 3, "unit", 
+        2 => "all", 
+        1 => "ok"
+    );
     assert_eq!(bool::from(res), false);
 }
 
 #[test]
-fn test_flow_with_one_phase_2_proof_tampered() {
-    let res = run_protocol!(5, 4, 3, "unit", 1 => "ok", 2 => "one");
+fn test_failure_with_one_phase_2_proof_tampered() {
+    let res = run_protocol!(5, 4, 3, "unit", 
+        1 => "ok", 
+        2 => "one"
+    );
     assert_eq!(bool::from(res), false);
 }
 
 #[test]
-fn test_flow_with_all_phase_2_proofs_tampered() {
-    let res = run_protocol!(5, 4, 3, "unit", 1 => "ok", 2 => "all");
+fn test_failure_with_all_phase_2_proofs_tampered() {
+    let res = run_protocol!(5, 4, 3, "unit", 
+        1 => "ok", 
+        2 => "all"
+    );
     assert_eq!(bool::from(res), false);
 }
 
 #[test]
-fn test_flow_with_all_proofs_tampered() {
-    let res = run_protocol!(5, 4, 3, "unit", 2 => "all", 2 => "all");
+fn test_failure_with_all_but_one_phase_1_proof_tampered() {
+    let res = run_protocol!(5, 4, 3, "unit", 
+        5 => "almost all", 
+        5 => "all"
+    );
     assert_eq!(bool::from(res), false);
 }
+
+#[test]
+fn test_failure_with_all_but_one_phase_2_proof_tampered() {
+    let res = run_protocol!(5, 4, 3, "unit", i
+        5 => "all", 
+        5 => "almost all"
+    );
+    assert_eq!(bool::from(res), false);
+}
+
+// Note: this test need not necessarily succeed, since it is below 
+// minimum honesty assumptions
+//
+// #[test]
+// fn test_failure_with_all_proofs_tampered() {
+//     let res = run_protocol!(5, 4, 3, "unit", 
+//         5 => "all", 
+//         5 => "all"
+//     );
+//     assert_eq!(bool::from(res), false);
+// }
