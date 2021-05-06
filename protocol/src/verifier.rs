@@ -158,10 +158,8 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
         .map(|_| rscalar!(::util::snarky_rng()))
         .collect::<Vec::<backend::Scalar>>();
 
-    // step 4
-
-    // step 3-4
-    let out_b = batch.verify(&srs, Phase::ONE).unwrap_or(false);
+    // step 4-6
+    let out_b = batch.verify(&srs, &s, Phase::ONE).unwrap_or(false);
 
     // step 5
     let out_c = (1..2 * n - 1)
@@ -188,7 +186,7 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     let out_e = srs.check_s(&qap).unwrap_or(false);
 
     // step 8-9
-    let out_f = batch.verify(&srs, Phase::TWO).unwrap_or(false);
+    let out_f = batch.verify(&srs, &s, Phase::TWO).unwrap_or(false);
 
     // step 10
     let out_g = (0..m - l)

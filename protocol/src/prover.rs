@@ -256,7 +256,7 @@ impl BatchProof {
         }
     }
 
-    pub fn verify(&self, srs: &SRS, phase: Phase) -> Result<bool, ProofError> {
+    pub fn verify(&self, srs: &SRS, s: &[backend::Scalar], phase: Phase) -> Result<bool, ProofError> {
         let (G, H) = (genG1!(), genG2!());
         let zero = zeroG1!();
         match phase {
@@ -264,24 +264,58 @@ impl BatchProof {
                 let batch_u = &self.batch_1;
                 let srs_u = &srs.u;
 
-                // step 3
-                let out1 = (0..batch_u.len())
-                    .fold(true, |acc, i| { 
-                        let mut inner = true;
-                        for j in 0..3 {
-                            inner = inner & match &batch_u[i][j].verify((&G, &H), match i {
-                                0 => None,
-                                _ => Some(&batch_u[i - 1][j])
-                            })
-                            {
-                                Err(ProofError::RhoFailure) => false,
-                                _ => true
-                            };
-                        }
-                        acc && inner
-                    });
+                // step 4-5
+                let mut out1 = true;
+                for j in 0..3 {
+                    let A = (2..batch_u.len())
+                        .map(|i| {
+                            let rho = &batch_u[i][j];                       // 4.(b)
+                            smul1!(s[i], rho.aux)
+                        })
+                        .fold(zeroG1!(), |acc, inc| add1!(acc, inc));
+                    let B = (2..batch_u.len())
+                        .map(|i| {
+                            let rho      = &batch_u[i][j];                  // 4.(b)
+                            let rho_prev = &batch_u[i - 1][j];
+                            pair!(smul1!(s[i], rho_prev.aux), rho.com.1)
+                        })
+                        .reduce(|acc, inc| acc + inc)
+                        .unwrap();
+                    out1 = out1 & ct_eq!(pair!(A, H), B);                   // 5.(a)
 
-                // step 4
+                    let C = (1..batch_u.len())
+                        .map(|i| {
+                            let rho = &batch_u[i][j];                       // 4.(b)
+                            smul1!(s[i], rho.com.0)
+                        })
+                    .fold(zeroG1!(), |acc, inc| add1!(acc, inc));
+                    let D = (1..batch_u.len())
+                        .map(|i| {
+                            let rho = &batch_u[i][j];                       // 4.(b)
+                            smul2!(s[i], rho.com.1)
+                        })
+                    .fold(zeroG2!(), |acc, inc| add2!(acc, inc));
+                    out1 = out1 & ct_eq!(pair!(C, H), pair!(G, D));         // 5.(b)
+
+                    let E = (2..batch_u.len())
+                        .map(|i| {
+                            let rho = &batch_u[i][j];                       // 4.(b)
+                            smul1!(s[i], rho.prf)
+                        })
+                        .fold(zeroG1!(), |acc, inc| add1!(acc, inc));
+                    let F = (2..batch_u.len())
+                        .map(|i| {
+                            let rho      = &batch_u[i][j];                  // 4.(b)
+                            let R = Dlog::rndoracle(&rho.com);
+                            let rho_prev = &batch_u[i - 1][j];
+                            pair!(smul1!(s[i], R), rho.com.1)
+                        })
+                        .reduce(|acc, inc| acc + inc)
+                        .unwrap();
+                    out1 = out1 & ct_eq!(pair!(E, H), F);                   // 5.(c)
+                }
+
+                // step 6
                 let len = batch_u.len();
                 let out2 = match len > 0 {
                     false   => true,
