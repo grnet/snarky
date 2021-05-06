@@ -50,7 +50,7 @@ impl From<bool> for Verification {
     }
 }
 
-pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
+pub fn verify_naive(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     let (m, n, l) = qap.shape();
     let (u, v, w, t) = qap.collections();
     let G = genG1!();

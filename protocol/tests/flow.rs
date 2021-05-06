@@ -69,7 +69,7 @@ macro_rules! run_protocol {
                 }
             }
 
-            protocol::verify(&qap, &srs, &batch)
+            protocol::verify_naive(&qap, &srs, &batch)
         }
     }
 }
