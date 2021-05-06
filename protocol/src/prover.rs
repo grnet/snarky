@@ -172,6 +172,90 @@ impl BatchProof {
         }
     }
 
+    pub fn verify_naive(&self, srs: &SRS, phase: Phase) -> Result<bool, ProofError> {
+        let (G, H) = (genG1!(), genG2!());
+        let zero = zeroG1!();
+        match phase {
+            Phase::ONE => {
+                let batch_u = &self.batch_1;
+                let srs_u = &srs.u;
+
+                // step 3
+                let out1 = (0..batch_u.len())
+                    .fold(true, |acc, i| { 
+                        let mut inner = true;
+                        for j in 0..3 {
+                            inner = inner & match &batch_u[i][j].verify((&G, &H), match i {
+                                0 => None,
+                                _ => Some(&batch_u[i - 1][j])
+                            })
+                            {
+                                Err(ProofError::RhoFailure) => false,
+                                _ => true
+                            };
+                        }
+                        acc && inner
+                    });
+
+                // step 4
+                let len = batch_u.len();
+                let out2 = match len > 0 {
+                    false   => true,
+                    true    => {
+                        ct_eq!(srs_u.0[1].0, batch_u[len - 1][2].aux) &
+                        ct_eq!(srs_u.1[0].0, batch_u[len - 1][0].aux) &
+                        ct_eq!(srs_u.1[0].1, batch_u[len - 1][1].aux) &
+                        ct_ne!(batch_u[len - 1][2].aux, zero) &
+                        ct_ne!(batch_u[len - 1][0].aux, zero) &
+                        ct_ne!(batch_u[len - 1][1].aux, zero)
+                    }
+                }; 
+                
+                match out1 & out2 {
+                    false   => Err(ProofError::BatchFailure),
+                    _       => Ok(true)
+                }
+            },
+            Phase::TWO => {
+                let batch_s = &self.batch_2;
+                let srs_s = &srs.s;
+
+                // step 8
+                let out1 = (0..batch_s.len()) 
+                    .fold(true, |acc, i| {
+                        acc & match &batch_s[i].verify((&G, &H), match i {
+                            0 => None,
+                            _ => Some(&batch_s[i - 1])
+                        })
+                        {
+                            Err(ProofError::RhoFailure) => false,
+                            _ => true
+                        }
+                    });
+                
+                // step 9
+                let out2 = {
+                    ct_eq!(pair!(srs_s.0, H), pair!(G, srs_s.1)) &
+                    {
+                        let len = batch_s.len();
+                        match len > 0 {
+                            false   => true,
+                            true    => {
+                                ct_eq!(srs_s.0, batch_s[len - 1].aux) &
+                                ct_ne!(batch_s[len - 1].aux, zero)
+                            }
+                        }
+                    }
+                };
+
+                match out1 & out2 {
+                    false   => return Err(ProofError::BatchFailure),
+                    _       => Ok(true)
+                }
+            }
+        }
+    }
+
     pub fn verify(&self, srs: &SRS, phase: Phase) -> Result<bool, ProofError> {
         let (G, H) = (genG1!(), genG2!());
         let zero = zeroG1!();
