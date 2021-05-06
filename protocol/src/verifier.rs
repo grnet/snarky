@@ -150,6 +150,14 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     // step 2
     let out_a = srs.check_u(&qap).unwrap_or(false);
 
+    // step 3
+    let aux = [2 * n - 2, m, batch.batch_1.len(), batch.batch_2.len()];
+    let max = *aux.iter().max().unwrap();
+    let s = (0..max + 1)
+        .into_par_iter()
+        .map(|_| rscalar!(::util::snarky_rng()))
+        .collect::<Vec::<backend::Scalar>>();
+
     // step 3-4
     let out_b = batch.verify(&srs, Phase::ONE).unwrap_or(false);
 

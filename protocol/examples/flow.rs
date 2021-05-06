@@ -68,7 +68,8 @@ fn main() {
 
     let res = {
         let start = Instant::now();
-        let res = protocol::verify_naive(&qap, &srs, &batch);
+        // let res = protocol::verify_naive(&qap, &srs, &batch);
+        let res = protocol::verify(&qap, &srs, &batch);
         println!("[+] {:?} ({:.2?})", res, start.elapsed());
         res
     };
