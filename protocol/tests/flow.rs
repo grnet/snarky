@@ -148,7 +148,7 @@ fn test_failure_with_all_but_one_phase_1_proof_tampered() {
 
 #[test]
 fn test_failure_with_all_but_one_phase_2_proof_tampered() {
-    let res = run_protocol!(5, 4, 3, "unit", i
+    let res = run_protocol!(5, 4, 3, "unit",
         5 => "all", 
         5 => "almost all"
     );
