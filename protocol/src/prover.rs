@@ -392,7 +392,6 @@ impl BatchProof {
                     .reduce(|acc, inc| acc * inc)
                     .unwrap();
                 out1 = out1 & ct_eq!(pair!(E, H), F);                   // 11.(c)
-                println!("{:?}", out1);
                 
                 // step 12
                 let out2 = {

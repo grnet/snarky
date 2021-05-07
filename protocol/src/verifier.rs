@@ -209,21 +209,26 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     // step 10-12
     let out_f = batch.verify(&srs, &s, Phase::TWO).unwrap_or(false);
 
-    // step 10
-    let out_g = (0..m - l)
-        .into_par_iter()
+    // step 13
+    let A = (0..m - l)
+        .map(|i| smul1!(s[i], srs_s.2[i]))
+        .reduce(|acc, inc| acc + inc)
+        .unwrap();
+    let B = (0..m - l)
         .map(|i| {
-            let s_i = (0..n)
-                .into_par_iter()
+            let sum = (0..n)
                 .map(|j| add1!(
                     smul1!(u[i].coeff(j), srs_u.1[j].1),
                     smul1!(v[i].coeff(j), srs_u.1[j].0),
                     smul1!(w[i].coeff(j), srs_u.0[j].0)
                 ))
-                .reduce(|| zeroG1!(), |acc, inc| add1!(acc, inc));
-            ct_eq!(pair!(srs_s.2[i], srs_s.1), pair!(s_i, H))
+                .reduce(|acc, inc| add1!(acc, inc))
+                .unwrap();
+            smul1!(s[i], sum)
         })
-        .reduce(|| true, |acc, b| acc & b);
+        .reduce(|acc, inc| acc + inc)
+        .unwrap();
+    let out_g = ct_eq!(pair!(A, srs_s.1), pair!(B, H));
 
     // step 11
     let out_h = {
