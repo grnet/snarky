@@ -279,7 +279,7 @@ impl BatchProof {
                             let rho_prev = &batch_u[i - 1][j];
                             pair!(smul1!(s[i], rho_prev.aux), rho.com.1)
                         })
-                        .reduce(|acc, inc| acc + inc)
+                        .reduce(|acc, inc| acc * inc)
                         .unwrap();
                     out1 = out1 & ct_eq!(pair!(A, H), B);                   // 5.(a)
 
@@ -310,7 +310,7 @@ impl BatchProof {
                             let rho_prev = &batch_u[i - 1][j];
                             pair!(smul1!(s[i], R), rho.com.1)
                         })
-                        .reduce(|acc, inc| acc + inc)
+                        .reduce(|acc, inc| acc * inc)
                         .unwrap();
                     out1 = out1 & ct_eq!(pair!(E, H), F);                   // 5.(c)
                 }
