@@ -161,26 +161,47 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     // step 4-6
     let out_b = batch.verify(&srs, &s, Phase::ONE).unwrap_or(false);
 
-    // step 5
-    let out_c = (1..2 * n - 1)
-        .into_par_iter()
-        .map(|i| {
-            ct_eq!(pair!(srs_u.0[i].0, H), pair!(G, srs_u.0[i].1)) &
-            ct_eq!(pair!(srs_u.0[i].0, H), pair!(srs_u.0[i - 1].0, srs_u.0[1].1))
-        })
-        .reduce(|| true, |acc, b| acc & b);
+    // step 7
+    let A = (1..2 * n - 1)
+        .map(|i| smul1!(s[i], srs_u.0[i].0))
+        .reduce(|acc, inc| acc + inc)
+        .unwrap();
+    let B = (1..2 * n - 1)
+        .map(|i| smul2!(s[i], srs_u.0[i].1))
+        .reduce(|acc, inc| acc + inc)
+        .unwrap();
+    let C = (1..2 * n - 1)
+        .map(|i| smul1!(s[i], srs_u.0[i - 1].0))
+        .reduce(|acc, inc| acc + inc)
+        .unwrap();
+    let out_c = ct_eq!(pair!(A, H), pair!(G, B)) & 
+                ct_eq!(pair!(A, H), pair!(C, srs_u.0[1].1));
     
-    // step 6
-    let out_d = (0..n) 
-        .into_par_iter()
-        .map(|i| {
-            ct_eq!(pair!(srs_u.1[i].0, H), pair!(G, srs_u.1[i].2)) &
-            ct_eq!(pair!(srs_u.1[i].0, H), pair!(srs_u.0[i].0, srs_u.1[0].2)) &
-            ct_eq!(pair!(srs_u.1[i].1, H), pair!(G, srs_u.1[i].3)) &
-            ct_eq!(pair!(srs_u.1[i].1, H), pair!(srs_u.0[i].0, srs_u.1[0].3))
-        })
-        .reduce(|| true, |acc, b| acc & b);
-    
+    // step 8
+    let A = (0..n)
+        .map(|i| smul1!(s[i], srs_u.0[i].0))
+        .reduce(|acc, inc| acc + inc)
+        .unwrap();
+    let B = (0..n)
+        .map(|i| smul1!(s[i], srs_u.1[i].0))
+        .reduce(|acc, inc| acc + inc)
+        .unwrap();
+    let C = (0..n)
+        .map(|i| smul1!(s[i], srs_u.1[i].1))
+        .reduce(|acc, inc| acc + inc)
+        .unwrap();
+    let D = (0..n)
+        .map(|i| smul2!(s[i], srs_u.1[i].2))
+        .reduce(|acc, inc| acc + inc)
+        .unwrap();
+    let E = (0..n)
+        .map(|i| smul2!(s[i], srs_u.1[i].3))
+        .reduce(|acc, inc| acc + inc)
+        .unwrap();
+    let out_d = ct_eq!(pair!(B, H), pair!(G, D)) &
+                ct_eq!(pair!(B, H), pair!(A, srs_u.1[0].2)) &
+                ct_eq!(pair!(C, H), pair!(G, E)) &
+                ct_eq!(pair!(C, H), pair!(A, srs_u.1[0].3));
 
     // step 7
     let out_e = srs.check_s(&qap).unwrap_or(false);
