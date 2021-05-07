@@ -9,8 +9,8 @@ fn main() {
     let n = util::parse_arg(2, "40", "n should be a positive integer");
     let l = util::parse_arg(3, "30", "l should be a positive integer");
 
-    let nr_1 = util::parse_arg(4, "3", "phase 1 repeats should be a non-negative integer");
-    let nr_2 = util::parse_arg(5, "2", "phase 2 repeats should be a non-negative integer");
+    let nr_1 = util::parse_arg(4, "5", "phase 1 repeats should be a non-negative integer");
+    let nr_2 = util::parse_arg(5, "5", "phase 2 repeats should be a non-negative integer");
 
     println!("--------------------------");
     let start = Instant::now();

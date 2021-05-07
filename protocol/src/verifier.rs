@@ -203,10 +203,10 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
                 ct_eq!(pair!(C, H), pair!(G, E)) &
                 ct_eq!(pair!(C, H), pair!(A, srs_u.1[0].3));
 
-    // step 7
+    // step 9
     let out_e = srs.check_s(&qap).unwrap_or(false);
 
-    // step 8-9
+    // step 10-12
     let out_f = batch.verify(&srs, &s, Phase::TWO).unwrap_or(false);
 
     // step 10
