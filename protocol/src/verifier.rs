@@ -230,20 +230,21 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
         .unwrap();
     let out_g = ct_eq!(pair!(A, srs_s.1), pair!(B, H));
 
-    // step 11
-    let out_h = {
-        let Gt = (0..n - 1)
-            .into_par_iter()
-            .map(|j| smul1!(t.coeff(j), srs_u.0[j].0))
-            .reduce(|| zeroG1!(), |acc, inc| add1!(acc, inc));
-        (0..n - 1)
-            .into_par_iter()
-            .map(|i| {
-                ct_eq!(pair!(srs_s.3[i], srs_s.1), pair!(Gt, srs_u.0[i].1))
-            })
-            .reduce(|| true, |acc, b| acc & b)
-    };
-
+    // step 14
+    let Gt = (0..n - 1)
+        .into_par_iter()
+        .map(|j| smul1!(t.coeff(j), srs_u.0[j].0))
+        .reduce(|| zeroG1!(), |acc, inc| add1!(acc, inc));
+    let A = (0..n - 1)
+        .map(|i| smul1!(s[i], srs_s.3[i]))
+        .reduce(|acc, inc| acc + inc)
+        .unwrap();
+    let B = (0..n - 1)
+        .map(|i| smul2!(s[i], srs_u.0[i].1))
+        .reduce(|acc, inc| acc + inc)
+        .unwrap();
+    let out_h = ct_eq!(pair!(A, srs_s.1), pair!(Gt, B));
+    
 
     Verification::from({
         out_a & 
