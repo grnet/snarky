@@ -162,42 +162,50 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     let out_b = batch.verify(&srs, &s, Phase::ONE).unwrap_or(false);
 
     // step 7
-    let A = (1..2 * n - 1)
-        .map(|i| smul1!(s[i], srs_u.0[i].0))
-        .reduce(|acc, inc| acc + inc)
-        .unwrap();
-    let B = (1..2 * n - 1)
-        .map(|i| smul2!(s[i], srs_u.0[i].1))
-        .reduce(|acc, inc| acc + inc)
-        .unwrap();
-    let C = (1..2 * n - 1)
-        .map(|i| smul1!(s[i], srs_u.0[i - 1].0))
-        .reduce(|acc, inc| acc + inc)
-        .unwrap();
+    let (A, B, C) = (1..2 * n - 1)
+        .into_par_iter()
+        .map(|i| (
+            smul1!(s[i], srs_u.0[i].0),
+            smul2!(s[i], srs_u.0[i].1),
+            smul1!(s[i], srs_u.0[i -  1].0)
+        ))
+        .reduce(|| (zeroG1!(), zeroG2!(), zeroG1!()),
+            |
+                (a1, b1, c1), 
+                (a2, b2, c2)
+            | 
+            (
+                a1 + a2, 
+                b1 + b2, 
+                c1 + c2,
+            )
+        );
     let out_c = ct_eq!(pair!(A, H), pair!(G, B)) & 
                 ct_eq!(pair!(A, H), pair!(C, srs_u.0[1].1));
     
     // step 8
-    let A = (0..n)
-        .map(|i| smul1!(s[i], srs_u.0[i].0))
-        .reduce(|acc, inc| acc + inc)
-        .unwrap();
-    let B = (0..n)
-        .map(|i| smul1!(s[i], srs_u.1[i].0))
-        .reduce(|acc, inc| acc + inc)
-        .unwrap();
-    let C = (0..n)
-        .map(|i| smul1!(s[i], srs_u.1[i].1))
-        .reduce(|acc, inc| acc + inc)
-        .unwrap();
-    let D = (0..n)
-        .map(|i| smul2!(s[i], srs_u.1[i].2))
-        .reduce(|acc, inc| acc + inc)
-        .unwrap();
-    let E = (0..n)
-        .map(|i| smul2!(s[i], srs_u.1[i].3))
-        .reduce(|acc, inc| acc + inc)
-        .unwrap();
+    let (A, B, C, D, E) = (0..n)
+        .into_par_iter()
+        .map(|i| (
+            smul1!(s[i], srs_u.0[i].0),
+            smul1!(s[i], srs_u.1[i].0),
+            smul1!(s[i], srs_u.1[i].1),
+            smul2!(s[i], srs_u.1[i].2),
+            smul2!(s[i], srs_u.1[i].3),
+        ))
+        .reduce(|| (zeroG1!(), zeroG1!(), zeroG1!(), zeroG2!(), zeroG2!()),
+            |
+                (a1, b1, c1, d1, e1), 
+                (a2, b2, c2, d2, e2)
+            | 
+            (
+                a1 + a2, 
+                b1 + b2, 
+                c1 + c2, 
+                d1 + d2, 
+                e1 + e2,
+            )
+        );
     let out_d = ct_eq!(pair!(B, H), pair!(G, D)) &
                 ct_eq!(pair!(B, H), pair!(A, srs_u.1[0].2)) &
                 ct_eq!(pair!(C, H), pair!(G, E)) &
@@ -210,39 +218,50 @@ pub fn verify(qap: &QAP, srs: &SRS, batch: &BatchProof) -> Verification {
     let out_f = batch.verify(&srs, &s, Phase::TWO).unwrap_or(false);
 
     // step 13
-    let A = (0..m - l)
-        .map(|i| smul1!(s[i], srs_s.2[i]))
-        .reduce(|acc, inc| acc + inc)
-        .unwrap();
-    let B = (0..m - l)
+    let (A, B) = (0..m - l)
+        .into_par_iter()
         .map(|i| {
             let sum = (0..n)
-                .map(|j| add1!(
-                    smul1!(u[i].coeff(j), srs_u.1[j].1),
-                    smul1!(v[i].coeff(j), srs_u.1[j].0),
+                .into_par_iter()
+                .map(|j| {
+                    smul1!(u[i].coeff(j), srs_u.1[j].1) +
+                    smul1!(v[i].coeff(j), srs_u.1[j].0) +
                     smul1!(w[i].coeff(j), srs_u.0[j].0)
-                ))
-                .reduce(|acc, inc| add1!(acc, inc))
-                .unwrap();
-            smul1!(s[i], sum)
+                })
+                .reduce(|| zeroG1!(), |acc, inc| acc + inc);
+            (
+                smul1!(s[i], srs_s.2[i]),
+                smul1!(s[i], sum),
+            )
         })
-        .reduce(|acc, inc| acc + inc)
-        .unwrap();
+        .reduce(|| (zeroG1!(), zeroG1!()),
+            |
+                (a1, b1),
+                (a2, b2),
+            | 
+            (a1 + a2, b1 + b2)
+        );
     let out_g = ct_eq!(pair!(A, srs_s.1), pair!(B, H));
 
     // step 14
-    let Gt = (0..n - 1)
+    let (Gt, A, B) = (0..n - 1)
         .into_par_iter()
-        .map(|j| smul1!(t.coeff(j), srs_u.0[j].0))
-        .reduce(|| zeroG1!(), |acc, inc| add1!(acc, inc));
-    let A = (0..n - 1)
-        .map(|i| smul1!(s[i], srs_s.3[i]))
-        .reduce(|acc, inc| acc + inc)
-        .unwrap();
-    let B = (0..n - 1)
-        .map(|i| smul2!(s[i], srs_u.0[i].1))
-        .reduce(|acc, inc| acc + inc)
-        .unwrap();
+        .map(|i| (
+            smul1!(t.coeff(i), srs_u.0[i].0),
+            smul1!(s[i], srs_s.3[i]),
+            smul2!(s[i], srs_u.0[i].1),
+        ))
+        .reduce(|| (zeroG1!(), zeroG1!(), zeroG2!()),
+            |
+                (a1, b1, c1), 
+                (a2, b2, c2)
+            | 
+            (
+                a1 + a2, 
+                b1 + b2, 
+                c1 + c2,
+            )
+        );
     let out_h = ct_eq!(pair!(A, srs_s.1), pair!(Gt, B));
     
 
