@@ -39,7 +39,7 @@ macro_rules! corrupt {
                 let val = &$batch.batch_2[$index].com.0;
                 $batch.batch_2[$index].com.0 = add1!(val, genG1!());
             }
-            _ => panic!("Batch comp may be either 1 or 2")
+            _ => panic!("Batch component may be either 1 or 2")
         }
 
     }
@@ -60,18 +60,32 @@ macro_rules! run_protocol {
 
             for (j, corrupt) in [$cor_1, $cor_2].iter().enumerate() {
                 let comp = j + 1;
-                let length = if comp == 1 { $nr_1 } else { $nr_2 };
+                let len = if comp == 1 { $nr_1 } else { $nr_2 };
                 match corrupt {
-                    &"all"        => for index in 0..length { corrupt!(batch, comp, index); },
-                    &"almost all" => for index in 1..length { corrupt!(batch, comp, index); },
-                    &"one"        => corrupt!(batch, comp, 0),
+                    &"all"        => for i in 0..len     { corrupt!(batch, comp, i); },
+                    &"almost all" => for i in 0..len - 1 { corrupt!(batch, comp, i); },
+                    &"one"        => corrupt!(batch, comp, len - 1),
                     _             => { /* Leave untouched*/ }
                 }
             }
 
-            protocol::verify_naive(&qap, &srs, &batch)
+            let res = protocol::verify(&qap, &srs, &batch);
+            assert_eq!(
+                protocol::verify_naive(&qap, &srs, &batch), 
+                res
+            );                                              // cross-check
+            res
         }
     }
+}
+
+#[test]
+fn test_success_without_updates() {
+    let res = run_protocol!(5, 4, 3, "random", 
+        0 => "ok", 
+        0 => "ok"
+    );
+    assert_eq!(bool::from(res), true);
 }
 
 #[test]
@@ -100,6 +114,42 @@ fn test_success_with_unit_trapdoor() {
     );
     assert_eq!(bool::from(res), true);
 }
+
+// #[test]
+// fn test_failure_edge_1() {
+//     let res = run_protocol!(5, 4, 3, "unit", 
+//         1 => "one", 
+//         1 => "ok"
+//     );
+//     assert_eq!(bool::from(res), false);
+// }
+// 
+// #[test]
+// fn test_failure_edge_2() {
+//     let res = run_protocol!(5, 4, 3, "unit", 
+//         1 => "ok", 
+//         1 => "one"
+//     );
+//     assert_eq!(bool::from(res), false);
+// }
+// 
+// #[test]
+// fn test_failure_edge_3() {
+//     let res = run_protocol!(5, 4, 3, "unit", 
+//         2 => "one", 
+//         1 => "ok"
+//     );
+//     assert_eq!(bool::from(res), false);
+// }
+// 
+// #[test]
+// fn test_failure_edge_4() {
+//     let res = run_protocol!(5, 4, 3, "unit", 
+//         1 => "ok", 
+//         2 => "one"
+//     );
+//     assert_eq!(bool::from(res), false);
+// }
 
 #[test]
 fn test_failure_with_one_phase_1_proof_tampered() {
@@ -156,7 +206,7 @@ fn test_failure_with_all_but_one_phase_2_proof_tampered() {
 }
 
 // Note: this test need not necessarily succeed, since it is below 
-// minimum honesty assumptions
+// minimum honesty assumptions; however, it generally does.
 //
 // #[test]
 // fn test_failure_with_all_proofs_tampered() {
