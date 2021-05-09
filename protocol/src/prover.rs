@@ -18,6 +18,8 @@ use ark_ff::ToBytes;
 use ark_std::rand::Rng as ArkRng;   // Must be in scope for rscalar
 use ark_bls12_381;
 
+use rayon::prelude::*;
+
 type G1 = G1Elem;
 type G2 = G2Elem;
 
@@ -268,55 +270,56 @@ impl BatchProof {
                 let mut out1 = true;
                 for j in 0..3 {
                     if batch_u.len() > 2 {
-                        let A = (2..batch_u.len())
-                            .map(|i| {
-                                let rho = &batch_u[i][j];                       // 4
-                                smul1!(s[i], rho.aux)
-                            })
-                            .reduce(|acc, inc| acc + inc)
-                            .unwrap();
-                        let B = (2..batch_u.len())
-                            .map(|i| {
-                                let rho      = &batch_u[i][j];                  // 4
+                        let (A, B) = (2..batch_u.len())
+                            .into_par_iter()
+                            .map(|i| {                                          // 4
+                                let rho      = &batch_u[i][j];
                                 let rho_prev = &batch_u[i - 1][j];
-                                pair!(smul1!(s[i], rho_prev.aux), rho.com.1)
+                                (
+                                    smul1!(s[i], rho.aux),
+                                    pair!(smul1!(s[i], rho_prev.aux), rho.com.1)
+                                )
                             })
-                            .reduce(|acc, inc| acc * inc)
-                            .unwrap();
+                            .reduce(|| (zeroG1!(), unit!()), 
+                                |
+                                    (a1, b1),
+                                    (a2, b2),
+                                |
+                                (
+                                    a1 + a2,
+                                    b1 * b2,
+                                )
+                            );
                         out1 = out1 & ct_eq!(pair!(A, H), B);                   // 5.(a)
                     }
                     if batch_u.len() > 1 {
-                        let C = (1..batch_u.len())
-                            .map(|i| {
-                                let rho = &batch_u[i][j];                       // 4
-                                smul1!(s[i], rho.com.0)
-                            })
-                            .fold(zeroG1!(), |acc, inc| add1!(acc, inc));
-                        let D = (1..batch_u.len())
-                            .map(|i| {
-                                let rho = &batch_u[i][j];                       // 4
-                                smul2!(s[i], rho.com.1)
-                            })
-                            .fold(zeroG2!(), |acc, inc| add2!(acc, inc));
-                        out1 = out1 & ct_eq!(pair!(C, H), pair!(G, D));         // 5.(b)
-
-                        let E = (1..batch_u.len())
-                            .map(|i| {
-                                let rho = &batch_u[i][j];                       // 4
-                                smul1!(s[i], rho.prf)
-                            })
-                            .reduce(|acc, inc| acc + inc)
-                            .unwrap();
-                        let F = (1..batch_u.len())
+                        let (C, D, E, F) = (1..batch_u.len())
+                            .into_par_iter()
                             .map(|i| {
                                 let rho      = &batch_u[i][j];                  // 4
-                                let R = Dlog::rndoracle(&rho.com);
                                 let rho_prev = &batch_u[i - 1][j];
-                                pair!(smul1!(s[i], R), rho.com.1)
+                                let R = Dlog::rndoracle(&rho.com);
+                                (
+                                    smul1!(s[i], rho.com.0),
+                                    smul2!(s[i], rho.com.1),
+                                    smul1!(s[i], rho.prf),
+                                    pair!(smul1!(s[i], R), rho.com.1),
+                                )
                             })
-                            .reduce(|acc, inc| acc * inc)
-                            .unwrap();
-                        out1 = out1 & ct_eq!(pair!(E, H), F);                   // 5.(c)
+                            .reduce(|| (zeroG1!(), zeroG2!(), zeroG1!(), unit!()), 
+                                |
+                                    (a1, b1, c1, d1),
+                                    (a2, b2, c2, d2),
+                                |
+                                (
+                                    a1 + a2,
+                                    b1 + b2,
+                                    c1 + c2,
+                                    d1 * d2,
+                                )
+                            );
+                        out1 = out1 & ct_eq!(pair!(C, H), pair!(G, D));         // 5.(b)
+                                    & ct_eq!(pair!(E, H), F);                   // 5.(c)
                     }
                 }
 
@@ -346,57 +349,56 @@ impl BatchProof {
                 // step 10-11
                 let mut out1 = true;
                 if batch_s.len() > 2 {
-                    let A = (2..batch_s.len())
-                        .map(|i| {
-                            let rho = &batch_s[i];                          // 10
-                            smul1!(s[i], rho.aux)
-                        })
-                        .reduce(|acc, inc| acc + inc)
-                        .unwrap();
-                    let B = (2..batch_s.len())
-                        .map(|i| {
-                            let rho      = &batch_s[i];                     // 10
+                    let (A, B) = (2..batch_s.len())
+                        .into_par_iter()
+                        .map(|i| {                                          // 10
+                            let rho      = &batch_s[i];
                             let rho_prev = &batch_s[i - 1];
-                            pair!(smul1!(s[i], rho_prev.aux), rho.com.1)
+                            (
+                                smul1!(s[i], rho.aux),
+                                pair!(smul1!(s[i], rho_prev.aux), rho.com.1)
+                            )
                         })
-                        .reduce(|acc, inc| acc * inc)
-                        .unwrap();
+                        .reduce(|| (zeroG1!(), unit!()), 
+                            |
+                                (a1, b1),
+                                (a2, b2),
+                            |
+                            (
+                                a1 + a2,
+                                b1 * b2,
+                            )
+                        );
                     out1 = out1 & ct_eq!(pair!(A, H), B);                   // 11.(a)
                 }
                 if batch_s.len() > 1 {
-                    let C = (1..batch_s.len())
+                    let (C, D, E, F) = (1..batch_s.len())
+                        .into_par_iter()
                         .map(|i| {
-                            let rho = &batch_s[i];                          //
-                            smul1!(s[i], rho.com.0)
-                        })
-                        .reduce(|acc, inc| acc + inc)
-                        .unwrap();
-                    let D = (1..batch_s.len())
-                        .map(|i| {
-                            let rho = &batch_s[i];                          // 10
-                            smul2!(s[i], rho.com.1)
-                        })
-                        .reduce(|acc, inc| acc + inc)
-                        .unwrap();
-                    out1 = out1 & ct_eq!(pair!(C, H), pair!(G, D));         // 11.(b)
-
-                    let E = (1..batch_s.len())
-                        .map(|i| {
-                            let rho = &batch_s[i];                          // 10
-                            smul1!(s[i], rho.prf)
-                        })
-                        .reduce(|acc, inc| acc + inc)
-                        .unwrap();
-                    let F = (1..batch_s.len())
-                        .map(|i| {
-                            let rho      = &batch_s[i];                     // 11
-                            let R = Dlog::rndoracle(&rho.com);
+                            let rho      = &batch_s[i];                     // 10
                             let rho_prev = &batch_s[i - 1];
-                            pair!(smul1!(s[i], R), rho.com.1)
+                            let R = Dlog::rndoracle(&rho.com);
+                            (
+                                smul1!(s[i], rho.com.0),
+                                smul2!(s[i], rho.com.1),
+                                smul1!(s[i], rho.prf),
+                                pair!(smul1!(s[i], R), rho.com.1),
+                            )
                         })
-                        .reduce(|acc, inc| acc * inc)
-                        .unwrap();
-                    out1 = out1 & ct_eq!(pair!(E, H), F);                   // 11.(c)
+                        .reduce(|| (zeroG1!(), zeroG2!(), zeroG1!(), unit!()), 
+                            |
+                                (a1, b1, c1, d1),
+                                (a2, b2, c2, d2),
+                            |
+                            (
+                                a1 + a2,
+                                b1 + b2,
+                                c1 + c2,
+                                d1 * d2,
+                            )
+                        );
+                    out1 = out1 & ct_eq!(pair!(C, H), pair!(G, D));         // 11.(b)
+                                & ct_eq!(pair!(E, H), F);                   // 11.(c)
                 }
  
                 // step 12
