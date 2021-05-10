@@ -5,7 +5,7 @@ usage_string="usage: ./$(basename "$0") [ARGS] [OPTIONS]
 Simulates execution of the Snarky Ceremonies protocol
 
 Arguments:
-  --shape <m> <n> <l>   m, n, l dimensions of constraint system 
+  --shape <m> <n> <l>   m, n, l dimensions of constraint system
                         (default: 50 40 30)
   --phases <nr1> <n2>   Number of updates (default: 4 3)
 
@@ -70,7 +70,7 @@ do
     ;;
   esac
 done
- 
+
 cargo run --example flow $cargo_opts \
    $MDIM \
    $NDIM \

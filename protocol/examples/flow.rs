@@ -9,8 +9,10 @@ fn main() {
     let n = util::parse_arg(2, "40", "n should be a positive integer");
     let l = util::parse_arg(3, "30", "l should be a positive integer");
 
-    let nr_1 = util::parse_arg(4, "3", "phase 1 repeats should be a non-negative integer");
-    let nr_2 = util::parse_arg(5, "2", "phase 2 repeats should be a non-negative integer");
+    let nr_1 = util::parse_arg(4, "5", "phase 1 repeats should be a non-negative integer");
+    let nr_2 = util::parse_arg(5, "5", "phase 2 repeats should be a non-negative integer");
+
+    let naive = util::parse_arg::<bool>(6, "false", "Should be truly");
 
     println!("--------------------------");
     let start = Instant::now();
@@ -68,7 +70,10 @@ fn main() {
 
     let res = {
         let start = Instant::now();
-        let res = protocol::verify(&qap, &srs, &batch);
+        let res = match naive {
+            true    => protocol::verify_naive(&qap, &srs, &batch),
+            false   => protocol::verify(&qap, &srs, &batch),
+        };
         println!("[+] {:?} ({:.2?})", res, start.elapsed());
         res
     };

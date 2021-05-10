@@ -63,6 +63,13 @@ macro_rules! zeroG2 {
 }
 
 #[macro_export]
+macro_rules! unit {
+    () => {
+        ::ark_bls12_381::Fq12::one()
+    }
+}
+
+#[macro_export]
 macro_rules! contained_in_group {
     ($elem:expr) => {
         bool::from($elem.is_on_curve())

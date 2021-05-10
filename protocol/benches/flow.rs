@@ -86,7 +86,7 @@ fn bench_verify(c: &mut Criterion) {
         protocol::update(&qap, &mut srs, &mut batch, Phase::TWO);
         group.bench_function(
             format!("Verify SRS with m:{}, n:{}, l{}", m, n, l),
-            |b| b.iter(|| protocol::verify(&qap, &srs, &batch)),
+            |b| b.iter(|| protocol::verify_naive(&qap, &srs, &batch)),
         );
     }
     group.finish();
@@ -108,7 +108,7 @@ fn bench_flow(c: &mut Criterion) {
                 let (mut srs, trp) = SRS::setup_with_random_trapdoor(&qap);
                 protocol::update(&qap, &mut srs, &mut batch, Phase::ONE);
                 protocol::update(&qap, &mut srs, &mut batch, Phase::TWO);
-                protocol::verify(&qap, &srs, &batch)
+                protocol::verify_naive(&qap, &srs, &batch)
             }),
         );
     }

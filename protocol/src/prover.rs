@@ -18,6 +18,8 @@ use ark_ff::ToBytes;
 use ark_std::rand::Rng as ArkRng;   // Must be in scope for rscalar
 use ark_bls12_381;
 
+use rayon::prelude::*;
+
 type G1 = G1Elem;
 type G2 = G2Elem;
 
@@ -172,7 +174,7 @@ impl BatchProof {
         }
     }
 
-    pub fn verify(&self, srs: &SRS, phase: Phase) -> Result<bool, ProofError> {
+    pub fn verify_naive(&self, srs: &SRS, phase: Phase) -> Result<bool, ProofError> {
         let (G, H) = (genG1!(), genG2!());
         let zero = zeroG1!();
         match phase {
@@ -234,6 +236,172 @@ impl BatchProof {
                     });
                 
                 // step 9
+                let out2 = {
+                    ct_eq!(pair!(srs_s.0, H), pair!(G, srs_s.1)) &
+                    {
+                        let len = batch_s.len();
+                        match len > 0 {
+                            false   => true,
+                            true    => {
+                                ct_eq!(srs_s.0, batch_s[len - 1].aux) &
+                                ct_ne!(batch_s[len - 1].aux, zero)
+                            }
+                        }
+                    }
+                };
+
+                match out1 & out2 {
+                    false   => return Err(ProofError::BatchFailure),
+                    _       => Ok(true)
+                }
+            }
+        }
+    }
+
+    pub fn verify(&self, srs: &SRS, s: &[backend::Scalar], phase: Phase) -> Result<bool, ProofError> {
+        let (G, H) = (genG1!(), genG2!());
+        let zero = zeroG1!();
+        match phase {
+            Phase::ONE => {
+                let batch_u = &self.batch_1;
+                let srs_u = &srs.u;
+
+                // step 4-5
+                let mut out1 = true;
+                for j in 0..3 {
+                    if batch_u.len() > 2 {
+                        let (A, B) = (2..batch_u.len())
+                            .into_par_iter()
+                            .map(|i| {                                          // 4
+                                let rho      = &batch_u[i][j];
+                                let rho_prev = &batch_u[i - 1][j];
+                                (
+                                    smul1!(s[i], rho.aux),
+                                    pair!(smul1!(s[i], rho_prev.aux), rho.com.1)
+                                )
+                            })
+                            .reduce(|| (zeroG1!(), unit!()), 
+                                |
+                                    (a1, b1),
+                                    (a2, b2),
+                                |
+                                (
+                                    a1 + a2,
+                                    b1 * b2,
+                                )
+                            );
+                        out1 = out1 & ct_eq!(pair!(A, H), B);                   // 5.(a)
+                    }
+                    if batch_u.len() > 1 {
+                        let (C, D, E, F) = (1..batch_u.len())
+                            .into_par_iter()
+                            .map(|i| {
+                                let rho      = &batch_u[i][j];                  // 4
+                                let rho_prev = &batch_u[i - 1][j];
+                                let R = Dlog::rndoracle(&rho.com);
+                                (
+                                    smul1!(s[i], rho.com.0),
+                                    smul2!(s[i], rho.com.1),
+                                    smul1!(s[i], rho.prf),
+                                    pair!(smul1!(s[i], R), rho.com.1),
+                                )
+                            })
+                            .reduce(|| (zeroG1!(), zeroG2!(), zeroG1!(), unit!()), 
+                                |
+                                    (a1, b1, c1, d1),
+                                    (a2, b2, c2, d2),
+                                |
+                                (
+                                    a1 + a2,
+                                    b1 + b2,
+                                    c1 + c2,
+                                    d1 * d2,
+                                )
+                            );
+                        out1 = out1 & ct_eq!(pair!(C, H), pair!(G, D));         // 5.(b)
+                                    & ct_eq!(pair!(E, H), F);                   // 5.(c)
+                    }
+                }
+
+                // step 6
+                let len = batch_u.len();
+                let out2 = match len > 0 {
+                    false   => true,
+                    true    => {
+                        ct_eq!(srs_u.0[1].0, batch_u[len - 1][2].aux) &
+                        ct_eq!(srs_u.1[0].0, batch_u[len - 1][0].aux) &
+                        ct_eq!(srs_u.1[0].1, batch_u[len - 1][1].aux) &
+                        ct_ne!(batch_u[len - 1][2].aux, zero) &
+                        ct_ne!(batch_u[len - 1][0].aux, zero) &
+                        ct_ne!(batch_u[len - 1][1].aux, zero)
+                    }
+                }; 
+                
+                match out1 & out2 {
+                    false   => Err(ProofError::BatchFailure),
+                    _       => Ok(true)
+                }
+            },
+            Phase::TWO => {
+                let batch_s = &self.batch_2;
+                let srs_s = &srs.s;
+
+                // step 10-11
+                let mut out1 = true;
+                if batch_s.len() > 2 {
+                    let (A, B) = (2..batch_s.len())
+                        .into_par_iter()
+                        .map(|i| {                                          // 10
+                            let rho      = &batch_s[i];
+                            let rho_prev = &batch_s[i - 1];
+                            (
+                                smul1!(s[i], rho.aux),
+                                pair!(smul1!(s[i], rho_prev.aux), rho.com.1)
+                            )
+                        })
+                        .reduce(|| (zeroG1!(), unit!()), 
+                            |
+                                (a1, b1),
+                                (a2, b2),
+                            |
+                            (
+                                a1 + a2,
+                                b1 * b2,
+                            )
+                        );
+                    out1 = out1 & ct_eq!(pair!(A, H), B);                   // 11.(a)
+                }
+                if batch_s.len() > 1 {
+                    let (C, D, E, F) = (1..batch_s.len())
+                        .into_par_iter()
+                        .map(|i| {
+                            let rho      = &batch_s[i];                     // 10
+                            let rho_prev = &batch_s[i - 1];
+                            let R = Dlog::rndoracle(&rho.com);
+                            (
+                                smul1!(s[i], rho.com.0),
+                                smul2!(s[i], rho.com.1),
+                                smul1!(s[i], rho.prf),
+                                pair!(smul1!(s[i], R), rho.com.1),
+                            )
+                        })
+                        .reduce(|| (zeroG1!(), zeroG2!(), zeroG1!(), unit!()), 
+                            |
+                                (a1, b1, c1, d1),
+                                (a2, b2, c2, d2),
+                            |
+                            (
+                                a1 + a2,
+                                b1 + b2,
+                                c1 + c2,
+                                d1 * d2,
+                            )
+                        );
+                    out1 = out1 & ct_eq!(pair!(C, H), pair!(G, D));         // 11.(b)
+                                & ct_eq!(pair!(E, H), F);                   // 11.(c)
+                }
+ 
+                // step 12
                 let out2 = {
                     ct_eq!(pair!(srs_s.0, H), pair!(G, srs_s.1)) &
                     {
