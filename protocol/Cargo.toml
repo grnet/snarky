@@ -12,6 +12,9 @@ ark-ff = "0.2.0"
 ark-ec = "0.2.0"
 ark-bls12-381 = "0.2.0"
 
+# clap = "2.33.3"
+clap = "3.0.0-beta.2"
+
 rayon = "1.5"
 
 # bls12_381 = "0.4.0"
@@ -26,6 +29,8 @@ polynomials = { path = "../polynomials" }
 circuits = { path = "../circuits" }
 
 [dev-dependencies]
+# clap = "2.33.3"
+clap = "3.0.0-beta.2"
 criterion = "0.3.4"
 
 [[bench]]
