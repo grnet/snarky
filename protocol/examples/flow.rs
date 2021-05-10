@@ -20,9 +20,9 @@ fn main() {
         match QAP::create_default(m, n, l) {
             Ok(qap) => {
                 println!("[+] Created QAP with m:{} n:{} l:{} ({:.2?})", 
-                    m, 
-                    n, 
-                    l, 
+                    m,
+                    n,
+                    l,
                     start.elapsed()
                 );
                 qap
