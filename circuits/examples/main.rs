@@ -1,4 +1,5 @@
 use std::time::Instant;
+use util::parse_arg;
 use circuits::QAP;
 
 fn main() {

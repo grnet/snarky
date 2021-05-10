@@ -16,24 +16,27 @@ You need to have installed Rust. Alternatively, run the dev container:
 
 ## Demo
 
-Run the demo with:
-
 ```commandline
-./demo.sh
-```
+$ ./demo.sh --help
 
-To run the demo with compiler optimizations (and view measurements 
-closer to those of a release version), do
+usage: ./demo.sh [ARGS] [OPTIONS]
 
-```commandline
-./demo.sh --release
-```
+Simulates execution of the Snarky Ceremonies protocol
 
-This creates a QAP with shape `(m, n, l) = (50, 40, 30)`. You can control these
-parameters by directly passing them to the command, that is,
+Arguments:
+  --shape <m> <n> <l>   m, n, l dimensions of constraint system 
+                        (default: 50 40 30)
+  --phases <nr1> <n2>   Number of updates (default: 4 3)
 
-```commandline
-./demo.sh [--release] 500 400 300
+Options:
+  -r, --release     Compile in release mode (optimized)
+  --naive           Run non-batched verification (non-optimized)
+  -h, --help        Display help message and exit
+
+Examples:
+ ./demo.sh --shape 50 40 30 --phases 12 10 --release
+ ./demo.sh --phases 50 50 --naive
+
 ```
 
 ## Usage
