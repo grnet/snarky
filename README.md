@@ -1,6 +1,7 @@
 # snarky
 
-Rust implementation of [Snarky Ceremonies](https://eprint.iacr.org/2021/219.pdf).
+Rust implementation of the [Snarky Ceremonies](https://eprint.iacr.org/2021/219.pdf) protocol
+over the BLS12-381 curve.
 
 ## Demo
 
@@ -48,7 +49,7 @@ cargo test [--release]
 ### Benchmarks
 
 ```commandline
-cargo bench
+cargo bench [--help]
 ```
 
 ### Documentation

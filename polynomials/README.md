@@ -18,8 +18,6 @@ let x = scalar!(666);
 let res = poly.evaluate(&x);
 ```
 
-See also [`examples/main.rs`](./examples/main.rs).
-
 ## Development
 
 ```commandline
