@@ -12,6 +12,6 @@ util = { path = "../util" }
 util = { path = "../util" }
 criterion = "0.3.4"
 
-# [[bench]]
-# name = "univariate"
-# harness = false
+[[bench]]
+name = "qap"
+harness = false

@@ -1,5 +1,5 @@
 use std::time::Instant;
-use circuits::QAP;
+use circuits::ConstraintSystem;
 use protocol::{SRS, Trapdoor, BatchProof, Phase, Verification};
 use protocol;
 
@@ -19,9 +19,9 @@ fn main() {
 
     let qap = {
         let start = Instant::now();
-        match QAP::create_default(m, n, l) {
+        match ConstraintSystem::create_default(m, n, l) {
             Ok(qap) => {
-                println!("[+] Created QAP with m:{} n:{} l:{} ({:.2?})", 
+                println!("[+] Created QAP with m:{} n:{} l:{} ({:.2?})",
                     m,
                     n,
                     l,

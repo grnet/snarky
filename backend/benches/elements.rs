@@ -1,11 +1,6 @@
-use ark_ec::AffineCurve;            // Needed for group inclusion check
-use ark_ec::PairingEngine;          // Needed for pairing
-use num_traits::identities::Zero;   // Needed for zero constructions
-use num_traits::identities::One;    // Needed for one constructions
-use ark_ff::fields::Field;          // Needed for pow
-use ark_ff::ToBytes;
-use ark_std::rand::Rng as ArkRng;   // Must be in scope for rscalar
-use ark_bls12_381;
+use ark_ec::AffineCurve;
+use num_traits::identities::Zero;
+use num_traits::identities::One;
 
 use criterion::{
     black_box, 
@@ -20,9 +15,10 @@ use backend::{
 };
 
 fn bench_scalar(c: &mut Criterion) {
+    let val = 1000u64;
     c.bench_function(
         "scalar!",
-        |b| b.iter(|| scalar!(1000u64))
+        |b| b.iter(|| scalar!(val))
     );
 }
 

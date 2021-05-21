@@ -1,14 +1,10 @@
 use backend::*;
 
 use backend::*;
-use ark_ec::AffineCurve;            // Needed for group inclusion check
-use ark_ec::PairingEngine;          // Needed for pairing
-use num_traits::identities::Zero;   // Needed for zero constructions
-use num_traits::identities::One;    // Needed for one constructions
-use ark_ff::fields::Field;          // Needed for pow
+use ark_ec::AffineCurve;
+use ark_ec::PairingEngine;
+use num_traits::identities::Zero;
 use ark_ff::ToBytes;
-use ark_std::rand::Rng as ArkRng;   // Must be in scope for rscalar
-use ark_bls12_381;
 
 #[test]
 fn test_genG1() {
@@ -77,8 +73,6 @@ fn test_ct_comparisons() {
     let elm1 = scalar!(0u64); 
     let elm2 = scalar!(0u64); 
     let elm3 = scalar!(1u64); 
-
-    // use subtle::ConstantTimeEq;  TODO: Enable when ready for ark_bls12_381
 
     assert!(ct_eq!(elm1, elm2));
     assert!(ct_ne!(elm1, elm3));

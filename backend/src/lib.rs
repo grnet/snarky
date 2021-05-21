@@ -98,32 +98,26 @@ macro_rules! bytes2 {
     }
 }
 
-// TODO: ct_eq, ct_ne
-
 #[macro_export]
-// Constant-time equality check
-// Note: Applies to all types of elements for bls12_381. The
-// bls12_831 backend uses subtle for contant-time operations:
-// https://docs.rs/subtle/2.4.0/subtle/
+// WARNING!: This is for the moment common equality check. It is
+// constant time only provided that equality provided by the wrapped
+// library is really constant time.
 macro_rules! ct_eq {
     ($elem1:expr, $elem2:expr) => {
-        // https://docs.rs/subtle/2.4.0/src/subtle/lib.rs.html#67
-        // bool::from($elem1.ct_eq(&$elem2))
-        // TODO: Properly implement when CT interface is ready for ark_bls12_381
+        // TODO: Properly implement when constant-time interface 
+        // is ready for ark_bls12_381?
         $elem1 == $elem2
     }
 }
 
 #[macro_export]
-// Constant-time inequality check
-// Note: Applies to all types of elements for bls12_381. The
-// bls12_831 backend uses subtle for contant-time operations:
-// https://docs.rs/subtle/2.4.0/subtle/
+// WARNING!: This is for the moment common inequality check. It is
+// constant time only provided that equality provided by the wrapped
+// library is really constant time.
 macro_rules! ct_ne {
     ($elem1:expr, $elem2:expr) => {
-        // https://docs.rs/subtle/2.4.0/src/subtle/lib.rs.html#67
-        // !bool::from($elem1.ct_eq(&$elem2))
-        // TODO: Properly implement when CT interface is ready for ark_bls12_381
+        // TODO: Properly implement when constant-time interface 
+        // is ready for ark_bls12_381?
         $elem1 != $elem2
     }
 }
@@ -191,7 +185,7 @@ macro_rules! hashG1 {
     // bytes must be of type &[u8]
     ($bytes:expr) => {
         {
-            // Alternative Sha256 version (not working well with bls12_381 scalars)
+            // Alternative Sha256 version
             //
             // let mut hasher = ::sha2::Sha256::default();
             // hasher.update($bytes);

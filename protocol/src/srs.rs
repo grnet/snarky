@@ -1,22 +1,14 @@
 use backend::*;
-use polynomials::Univariate;
-use circuits::QAP;
+use circuits::ConstraintSystem;
 use crate::prover::Witness;
-use rand::Rng;
 
-// use rand::Rng;
-
-use ark_ec::AffineCurve;            // Needed for group inclusion check
-use ark_ec::PairingEngine;          // Needed for pairing
-use num_traits::identities::Zero;   // Needed for zero constructions
-use num_traits::identities::One;    // Needed for one constructions
-use ark_ff::fields::Field;          // Needed for pow
-use ark_ff::ToBytes;
-use ark_std::rand::Rng as ArkRng;   // Must be in scope for rscalar
-use ark_std::rand::RngCore;
-use ark_bls12_381;
+use num_traits::identities::{Zero, One};
+use ark_ec::AffineCurve;
+use ark_ff::fields::Field;
+use ark_std::rand::Rng as ArkRng;
 
 use rayon::prelude::*;
+
 
 #[derive(Debug, PartialEq)]
 pub struct Trapdoor(
@@ -25,6 +17,7 @@ pub struct Trapdoor(
     pub Scalar,
     pub Scalar,
 );
+
 
 impl Trapdoor {
 
@@ -56,6 +49,7 @@ type G2 = G2Elem;
 pub type U = (Vec<(G1, G2)>, Vec<(G1, G1, G2, G2)>);
 pub type S = (G1, G2, Vec<G1>, Vec<G1>);
 
+
 #[derive(Debug, PartialEq)]
 pub struct SRS {
     pub u: U,
@@ -64,15 +58,15 @@ pub struct SRS {
 
 impl SRS {
 
-    pub fn setup_with_unit_trapdoor(qap: &QAP) -> (Self, Trapdoor) {
+    pub fn setup_with_unit_trapdoor(qap: &ConstraintSystem) -> (Self, Trapdoor) {
         SRS::setup(&qap, Some(Trapdoor::from_units()))
     }
 
-    pub fn setup_with_random_trapdoor(qap: &QAP) -> (Self, Trapdoor) {
+    pub fn setup_with_random_trapdoor(qap: &ConstraintSystem) -> (Self, Trapdoor) {
         SRS::setup(&qap, None)
     }
 
-    pub fn setup(qap: &QAP, trapdoor: Option::<Trapdoor>) -> (Self, Trapdoor) {
+    pub fn setup(qap: &ConstraintSystem, trapdoor: Option::<Trapdoor>) -> (Self, Trapdoor) {
         let trp = match trapdoor {
             Some(trp) => trp,
             None => Trapdoor::random()
@@ -81,14 +75,14 @@ impl SRS {
         (srs, trp)
     }
 
-    pub fn create(trp: &Trapdoor, qap: &QAP) -> Self {
+    pub fn create(trp: &Trapdoor, qap: &ConstraintSystem) -> Self {
         Self {
             u: Self::create_u(&trp, &qap),
             s: Self::create_s(&trp, &qap),
         }
     }
 
-    fn create_u(trp: &Trapdoor, qap: &QAP) -> U {
+    fn create_u(trp: &Trapdoor, qap: &ConstraintSystem) -> U {
         let (a, b, _, x) = trp.extract();
         let (_, n, _) = qap.shape();
 
@@ -122,7 +116,7 @@ impl SRS {
         (c1, c2)
     }
 
-    fn create_s(trp: &Trapdoor, qap: &QAP) -> S {
+    fn create_s(trp: &Trapdoor, qap: &ConstraintSystem) -> S {
         let (a, b, d, x) = trp.extract();
         let (m, n, l) = qap.shape();
         let (u, v, w, t) = qap.collections();
@@ -154,7 +148,7 @@ impl SRS {
         (c1, c2, c3, c4)
     }
 
-    pub fn update(&mut self, qap: &QAP, w: Witness) {
+    pub fn update(&mut self, qap: &ConstraintSystem, w: Witness) {
         let (m, n, l) = qap.shape();
         match w {
             Witness::ONE(a, b, x) => {
@@ -212,7 +206,7 @@ impl SRS {
         }
     }
 
-    fn specialize(qap: &QAP, srs_u: &U) -> S {
+    fn specialize(qap: &ConstraintSystem, srs_u: &U) -> S {
         let (m, n, l) = qap.shape();
         let (u, v, w, t) = qap.collections();
         let zero = zeroG1!();
@@ -246,7 +240,7 @@ impl SRS {
     }
 
     // verification: step 2
-    pub fn check_u(&self, qap: &QAP) -> Result<bool, SRSError> {
+    pub fn check_u(&self, qap: &ConstraintSystem) -> Result<bool, SRSError> {
         let (_, n, _) = qap.shape();
         let srs_u = &self.u;
         
@@ -279,7 +273,7 @@ impl SRS {
     }
 
     // verification: step 7
-    pub fn check_s(&self, qap: &QAP) -> Result<bool, SRSError> {
+    pub fn check_s(&self, qap: &ConstraintSystem) -> Result<bool, SRSError> {
         let (m, n, l) = qap.shape();
         let srs_s = &self.s;
         

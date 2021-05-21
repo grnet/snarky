@@ -1,12 +1,6 @@
-use ark_ec::AffineCurve;            // Needed for group inclusion check
-use ark_ec::PairingEngine;          // Needed for pairing
-use num_traits::identities::Zero;   // Needed for zero constructions
-use num_traits::identities::One;    // Needed for one constructions
-use ark_ff::fields::Field;          // Needed for pow
-use ark_ff::ToBytes;
-use ark_std::rand::Rng as ArkRng;   // Must be in scope for rscalar
-use ark_std::rand::RngCore;
-use ark_bls12_381;
+use backend::{scalar, genG1, genG2, smul1, smul2};
+use protocol::prover::Dlog;
+use ark_ec::AffineCurve;
 
 use criterion::{
     black_box,
@@ -15,8 +9,6 @@ use criterion::{
     Criterion,
     BenchmarkId,
 };
-use backend::{scalar, genG1, genG2, smul1, smul2};
-use protocol::prover::Dlog;
 
 fn bench_rndoracle(c: &mut Criterion) {
     let elm1 = genG1!();

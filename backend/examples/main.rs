@@ -1,18 +1,15 @@
+use num_traits::identities::{Zero, One};
 use std::time::Instant;
 
 use backend::*;
-use ark_ec::AffineCurve;            // Needed for group inclusion check
-use ark_ec::PairingEngine;          // Needed for pairing
-use num_traits::identities::Zero;   // Needed for zero constructions
-use num_traits::identities::One;    // Needed for one constructions
-use ark_ff::fields::Field;          // Needed for pow
-use ark_ff::ToBytes;
-// use ark_std::rand::Rng as ArkRng;   // Must be in scope for rscalar
-use ark_bls12_381;
+use ark_ec::{AffineCurve, PairingEngine};
+use ark_ff::{fields::Field, ToBytes};
+use ark_std::rand::Rng;
 
 fn main() {
 
     // Scalar definition
+    
     let start = Instant::now();
     let zero = zero!();
     println!("[+] zero ({:.2?})", start.elapsed());
@@ -35,9 +32,6 @@ fn main() {
 
     // Random scalar generation
 
-    use ark_std::rand::Rng;
-    use ark_std::rand::RngCore as ArkRngCore;
-    use ark_std::rand::SeedableRng;
     let start = Instant::now();
     let r = rscalar!(::util::snarky_rng());
     println!("[+] rscalar ({:.2?})", start.elapsed());
@@ -126,6 +120,7 @@ fn main() {
     let res = pair!(_7G, _9H);                              // 7G * 9H
     println!("[+] pair ({:.2?})", start.elapsed());
 
+
     // Bytes exports
 
     let z1 = zeroG1!();
@@ -137,29 +132,17 @@ fn main() {
     bytes2!(z2);
     println!("[+] bytes2 ({:.2?})", start.elapsed());
 
-    // hash-G1
 
-    use sha2::Digest;
+    // G1-hash
+
     use std::convert::TryInto;
-    use ark_ff::FromBytes;
     use std::io::Cursor;
+    use sha2::Digest;
+    use ark_ff::FromBytes;
 
     let bytes: Vec<u8> = (0..5).collect();
 
     let start = Instant::now();
     hashG1!(&bytes);
     println!("[+] Computed G1-hhash ({:.2?})", start.elapsed());
-
-    // // Constant-time comparisons
-    // use subtle::ConstantTimeEq;
-
-    // let elm1 = scalar!(0); 
-    // let elm2 = scalar!(0); 
-    // let elm3 = scalar!(1); 
-
-    // assert!(ct_eq!(elm1, elm2));
-    // assert!(ct_ne!(elm1, elm3));
-
-    // assert!(!ct_eq!(elm1, elm3));
-    // assert!(!ct_ne!(elm1, elm2));
 }

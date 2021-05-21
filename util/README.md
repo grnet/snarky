@@ -1,4 +1,4 @@
 # util
 
-Provides utilities commonly used accross the project.
+Provides utilities internally used by other crates.
 

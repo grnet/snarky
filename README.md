@@ -1,22 +1,11 @@
 # snarky
 
-Rust implementation of [Snarky Ceremonies](https://eprint.iacr.org/2021/219.pdf).
-
-## Setup
-
-```commandline
-git clone https://gitlab.grnet.gr/priviledge/snarky.git
-```
-
-You need to have installed Rust. Alternatively, run the dev container:
-
-```commandline
-./run-container.sh [--help]
-```
+Rust implementation of the [Snarky Ceremonies](https://eprint.iacr.org/2021/219.pdf) protocol
+over the BLS12-381 curve.
 
 ## Demo
 
-```commandline
+```
 $ ./demo.sh --help
 
 usage: ./demo.sh [ARGS] [OPTIONS]
@@ -45,6 +34,12 @@ See [`protocol`](./protocol)
 
 ## Development
 
+You need to have installed Rust. Alternatively, run the dev container:
+
+```commandline
+./run-container.sh [--help]
+```
+
 ### Tests
 
 ```commandline
@@ -54,7 +49,7 @@ cargo test [--release]
 ### Benchmarks
 
 ```commandline
-cargo bench
+cargo bench [--help]
 ```
 
 ### Documentation

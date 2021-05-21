@@ -1,6 +1,6 @@
 use std::time::Instant;
 use util::parse_arg;
-use circuits::QAP;
+use circuits::ConstraintSystem;
 
 fn main() {
 
@@ -10,9 +10,9 @@ fn main() {
 
     println!("-------------------");
     let start = Instant::now();
-    let qap = QAP::create_default(m, n, l)
+    let qap = ConstraintSystem::create_default(m, n, l)
         .unwrap_or_else(|err| {
             println!("{}", err); std::process::exit(1);
         });
-    println!("[+] Created QAP with m:{} n:{} l:{} ({:.2?})", m, n, l, start.elapsed());
+    println!("[+] Created ConstraintSystem with m:{} n:{} l:{} ({:.2?})", m, n, l, start.elapsed());
 }
