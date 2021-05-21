@@ -9,10 +9,10 @@ Builds on top of [`polynomials`]('../polynomials')
 ## Usage
 
 ```rust
-use circuits::QAP;
+use circuits::ConstraintSystem;
 
 let (m, n, l) = (50, 40, 30);
-let qap = QAP::create_default(m, n, l).unwrap()
+let qap = ConstraintSystem::create_default(m, n, l).unwrap()
 ```
 
 ## Development

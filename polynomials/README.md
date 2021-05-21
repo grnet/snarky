@@ -5,7 +5,7 @@ Provides univariate polynomials for constraint-systems.
 ## Overview
 
 A thin wrapper around
-[arkworks-rs/algebra/poly](https://github.com/arkworks-rs/algebra/tree/master/poly)
+[arkworks-rs/algebra/poly](https://github.com/arkworks-rs/algebra/tree/master/poly).
 
 ## Usage
 

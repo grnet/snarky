@@ -3,7 +3,7 @@ use polynomials::Univariate;
 use util::SnarkyError;
 
 #[derive(Debug, PartialEq)]
-pub struct QAP {
+pub struct ConstraintSystem {
     pub m: usize,
     pub n: usize,
     pub l: usize,
@@ -13,30 +13,30 @@ pub struct QAP {
     pub t: Univariate<F>,
 }
 
-impl QAP {
+impl ConstraintSystem {
 
     pub fn create(
-        u: Vec<Univariate<F>>, 
-        v: Vec<Univariate<F>>, 
-        w: Vec<Univariate<F>>, 
-        t: Univariate<F>, 
+        u: Vec<Univariate<F>>,
+        v: Vec<Univariate<F>>,
+        w: Vec<Univariate<F>>,
+        t: Univariate<F>,
         l: usize
     ) -> Result<Self, SnarkyError> {
         let m = u.len() - 1;
         if v.len() != m + 1 || w.len() != m + 1 {
             let line = line!() - 1;
             return Err(SnarkyError::create("Could not create QAP",
-                "Unequal lengths for u, v, w", 
-                file!(), 
-                line, 
+                "Unequal lengths for u, v, w",
+                file!(),
+                line,
                 101
             ))
         } else if l + 1 > m {
             let line = line!() - 1;
             return Err(SnarkyError::create("Could not create QAP", 
-                "l is not < m", 
-                file!(), 
-                line, 
+                "l is not < m",
+                file!(),
+                line,
                 102
             ))
         } else {
@@ -47,7 +47,7 @@ impl QAP {
                         let line = line!() - 1;
                         return Err(SnarkyError::create("Could not create QAP", 
                             "Detected degree unequal to n-1",
-                            file!(), 
+                            file!(),
                             line,
                             103,
                         ))
@@ -61,7 +61,7 @@ impl QAP {
     pub fn create_default(m: usize, n: usize, l: usize) -> Result<Self, SnarkyError> {
 
         let mut coeffs1 = vec![1];
-        coeffs1.append(&mut vec![0; n - 1]); // [1] + (n - 1) * [0]
+        coeffs1.append(&mut vec![0; n - 1]);    // [1] + (n - 1) * [0]
 
         let mut u = Vec::<Univariate<F>>::with_capacity(m + 1);
         let mut v = Vec::<Univariate<F>>::with_capacity(m + 1);
@@ -86,8 +86,8 @@ impl QAP {
         (m, n, l)
     }
 
-    pub fn collections(&self) -> 
-        (&Vec<Univariate<F>>, &Vec<Univariate<F>>, &Vec<Univariate<F>>, &Univariate<F>) 
+    pub fn collections(&self) ->
+        (&Vec<Univariate<F>>, &Vec<Univariate<F>>, &Vec<Univariate<F>>, &Univariate<F>)
     {
         let u = &self.u;
         let v = &self.v;

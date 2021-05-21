@@ -1,5 +1,5 @@
 use polynomials::Univariate;
-use circuits::QAP;
+use circuits::ConstraintSystem;
 use std::iter::FromIterator;
 
 macro_rules! create_polynomial_collections {
@@ -41,8 +41,8 @@ fn test_QAP_creation() {
     let (u1, v1, w1, t1) = create_polynomial_collections!(m, n, l, false);
     let (u2, v2, w2, t2) = create_polynomial_collections!(m, n, l, false);
     assert_eq!(
-        QAP::create(u1, v1, w1, t1, l).unwrap(),
-        QAP {
+        ConstraintSystem::create(u1, v1, w1, t1, l).unwrap(),
+        ConstraintSystem {
             m, n, l, 
             u: u2,
             v: v2,
@@ -57,7 +57,7 @@ fn test_SnarkyError_with_code_101() {
     let (m, n, l) = (5, 4, 3);
     let (mut u, v, w, t) = create_polynomial_collections!(m, n, l, false);
     u.pop();
-    let result = QAP::create(u, v, w, t, l);
+    let result = ConstraintSystem::create(u, v, w, t, l);
     assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, 101);
 }
@@ -66,7 +66,7 @@ fn test_SnarkyError_with_code_101() {
 fn test_SnarkyError_with_code_102() {
     let (m, n, l) = (3, 4, 3);
     let (u, v, w, t) = create_polynomial_collections!(m, n, l, false);
-    let result = QAP::create(u, v, w, t, l);
+    let result = ConstraintSystem::create(u, v, w, t, l);
     assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, 102);
 }
@@ -76,7 +76,7 @@ fn test_SnarkyError_with_code_103() {
     let (m, n, l) = (5, 4, 3);
     let (mut u, v, w, t) = create_polynomial_collections!(m, n, l, false);
     u[0] = Univariate::create_from_u64(&vec![0; n + 1]);
-    let result = QAP::create(u, v, w, t, l);
+    let result = ConstraintSystem::create(u, v, w, t, l);
     assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, 103);
 }
@@ -86,15 +86,15 @@ fn test_QAP_default_creation() {
     let (m, n, l) = (5, 4, 3);
     let (u, v, w, t) = create_polynomial_collections!(m, n, l, true);
     assert_eq!(
-        QAP::create_default(m, n, l).unwrap(),
-        QAP { m, n, l, u, v, w, t }
+        ConstraintSystem::create_default(m, n, l).unwrap(),
+        ConstraintSystem { m, n, l, u, v, w, t }
     );
 }
 
 #[test]
 fn test_SnarkyError_upon_default_creation() {
     let (m, n, l) = (3, 4, 3);
-    let result = QAP::create_default(m, n, l);
+    let result = ConstraintSystem::create_default(m, n, l);
     assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, 102);
 }

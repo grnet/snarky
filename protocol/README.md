@@ -5,12 +5,12 @@ This is the core crate, exposing also the user interface.
 ## Usage
 
 ```rust
-use circuits::QAP;
+use circuits::ConstraintSystem;
 use protocol::{SRS, Trapdoor, BatchProof, Phase};
 use protocol;
 
 let (m, n, l) = (5, 4, 3);
-let qap = QAP::create_default(m, n, l).unwrap();
+let qap = ConstraintSystem::create_default(m, n, l).unwrap();
 
 let (mut srs, trp) = SRS::setup_with_random_trapdoor(&qap);
 

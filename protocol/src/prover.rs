@@ -1,22 +1,15 @@
-use subtle::ConstantTimeEq; // Must be in scope for ct comparisons
-
 use sha2::Digest;
 use std::convert::TryInto;
-use ark_ff::FromBytes;
 use std::io::Cursor;
+use num_traits::identities::{Zero, One};
 
-use backend::*;
-use crate::srs::SRS;
-use crate::updater::Phase;
-
-use ark_ec::AffineCurve;            // Needed for group inclusion check
-use ark_ec::PairingEngine;          // Needed for pairing
-use num_traits::identities::Zero;   // Needed for zero constructions
-use num_traits::identities::One;    // Needed for one constructions
-use ark_ff::fields::Field;          // Needed for pow
+use ark_ec::{AffineCurve, PairingEngine};
+use ark_ff::FromBytes;
 use ark_ff::ToBytes;
-use ark_std::rand::Rng as ArkRng;   // Must be in scope for rscalar
-use ark_bls12_381;
+
+use crate::updater::Phase;
+use crate::srs::SRS;
+use backend::*;
 
 use rayon::prelude::*;
 
@@ -49,7 +42,6 @@ impl Dlog {
 
     pub fn verify(ctx: (&G1, &G2), c: &Commitment, prf: &G1) 
         -> Result<bool, ProofError> 
-    // TODO: ARK: Simplify signature
     {
         let (G, H) = ctx;
         match 
@@ -74,7 +66,6 @@ pub struct RhoProof {
 impl RhoProof {
     
     pub fn create(ctx: (&G1, &G2), base: &G1, w: &Scalar) -> Self {
-        // TODO: ARK: Simplify signatures
         let (G, H) = ctx;
         let aux = smul1!(*w, *base);
         let com = (smul1!(*w, *G), smul2!(*w, *H));
@@ -174,6 +165,7 @@ impl BatchProof {
         }
     }
 
+    // No batching; use only for testing
     pub fn verify_naive(&self, srs: &SRS, phase: Phase) -> Result<bool, ProofError> {
         let (G, H) = (genG1!(), genG2!());
         let zero = zeroG1!();

@@ -1,13 +1,13 @@
 use criterion::{
-    black_box, 
-    criterion_group, 
-    criterion_main, 
-    Criterion, 
+    black_box,
+    criterion_group,
+    criterion_main,
+    Criterion,
     BenchmarkId,
 };
 
 use polynomials::Univariate;
-use circuits::QAP;
+use circuits::ConstraintSystem;
 use backend::scalar;
 
 fn bench_create_default(c: &mut Criterion) {
@@ -20,7 +20,7 @@ fn bench_create_default(c: &mut Criterion) {
         group.bench_function(
             format!("Create default QAP with m:{}, n:{}, l:{}", m, n, l),
             |b| b.iter(|| {
-                QAP::create_default(*m, *n, *l);
+                ConstraintSystem::create_default(*m, *n, *l);
             }),
         );
     }

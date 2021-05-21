@@ -39,6 +39,15 @@ Field element from primitive numerical value.
 let seven = scalar!(7u64);
 ```
 
+### `rscalar`
+
+Random field element generation.
+
+```rust
+use ark_std::rand::Rng;
+let r = rscalar!(::util::snarky_rng());
+```
+
 ### `zero`
 
 Zero field element.

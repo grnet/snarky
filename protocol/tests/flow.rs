@@ -1,5 +1,5 @@
 use backend::*;
-use circuits::QAP;
+use circuits::ConstraintSystem;
 use protocol::{SRS, Trapdoor, BatchProof, Phase, Verification};
 use protocol;
 use num_traits::identities::Zero;
@@ -51,7 +51,7 @@ macro_rules! run_protocol {
         $nr_1: expr => $cor_1: expr, $nr_2: expr => $cor_2: expr
     ) => {
         {
-            let qap = QAP::create_default($m, $n, $l).unwrap();
+            let qap = ConstraintSystem::create_default($m, $n, $l).unwrap();
             let (mut srs, trp) = run_setup!(qap, $trapdoor);
 
             let mut batch = BatchProof::initiate();
