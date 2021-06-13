@@ -16,7 +16,7 @@ use ark_poly::univariate::DensePolynomial;
 #[derive(PartialEq, Debug)]
 pub struct Univariate<F: ark_ff::Field> {
     pub _poly: DensePolynomial::<F>,
-    pub degree: isize,  // TODO: Explain why degree should not be deg(_poly)
+    pub degree: isize,
 }
 
 impl<F: ark_ff::Field> Univariate<F> {
@@ -29,11 +29,11 @@ impl<F: ark_ff::Field> Univariate<F> {
     }
 
     pub fn degree(&self) -> isize {
-        self.degree     // TODO: Return usize?
+        self.degree
     }
 
     pub fn coeff(&self, i: usize) -> F {
-        // TODO: Explain why (arkworks truncates leading zeros)
+        // NOTE: arkworks truncates leading zeros
         // TODO: Guard against i >= degree?
         
         match self._poly.coeffs.len() {

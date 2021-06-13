@@ -33,14 +33,3 @@ test_protocol:
   script:
     - cd protocol
     - cargo test --release --verbose
-
-
-# check-benchmarks:
-#   interruptible: true
-#   script:
-#     - cargo bench --no-run
-# 
-# demo:
-#   interruptible: true
-#   script:
-#     - ./demo.sh --release 50 40 30 3 2 
