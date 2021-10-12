@@ -3,6 +3,32 @@
 Rust implementation of the [Snarky Ceremonies](https://eprint.iacr.org/2021/219.pdf) protocol
 over the BLS12-381 curve.
 
+## Overview
+
+Snarky fully implements the roles of prover and verifier of the protocol along with 
+its constraint-system, SRS and proof structures. This includes the SRS
+generation (ceremony) and update procedures. Verfication procedures have been
+optimized by the technique of batching for handling a large number of bilinear
+operations. It intends to serve as the first experimental version of a production-grade 
+library for real-life applications.
+
+### Usage
+
+See [`protocol`](./protocol)
+
+### Optimizations
+
+The protocol layer builds on top of polynomial and group-theoretic structures which use 
+[arkworks](https://github.com/arkworks-rs/algebra) as backend. Further boost to performance 
+is given by application of data-parallellism ([rayon](https://github.com/rayon-rs/rayon)), 
+which dynamically adapts the workload of iterators under account of runtime.
+
+### Security
+
+Unsafe Rust is nowhere used for the moment. Effort has been spent to mitigate timing 
+attacks by applying constant-time operations, which included elimination of short-circuit 
+evaluations and early returns. *Security review is desired*.
+
 ## Demo
 
 ```
@@ -27,10 +53,6 @@ Examples:
  ./demo.sh --phases 50 50 --naive
 
 ```
-
-## Usage
-
-See [`protocol`](./protocol)
 
 ## Development
 
